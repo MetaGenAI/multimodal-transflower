@@ -259,7 +259,7 @@ class MultimodalDataset(BaseDataset):
     def __getitem__(self, item):
         idx = find_example_idx(item, self.frame_cum_sums)
         base_filename = self.base_filenames[idx]
-        
+
         input_mods = self.opt.input_modalities.split(",")
         output_mods = self.opt.output_modalities.split(",")
 

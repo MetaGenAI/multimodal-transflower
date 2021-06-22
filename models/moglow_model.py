@@ -62,6 +62,8 @@ class MoglowModel(BaseModel):
         parser.add_argument('--flow_dist', type=str, default="normal")
         parser.add_argument('--flow_dist_param', type=int, default=50)
         parser.add_argument('--flow_coupling', type=str, default="affine")
+        parser.add_argument('--flow_coupling_dmodel', type=int, default=128)
+        parser.add_argument('--flow_coupling_nheads', type=int, default=10)
         parser.add_argument('--num_layers', type=int, default=2)
         parser.add_argument('--network_model', type=str, default="LSTM")
         parser.add_argument('--dropout', type=float, default=0.1)

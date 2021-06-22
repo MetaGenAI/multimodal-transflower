@@ -17,8 +17,11 @@ input_seq_lens: "1,60,80"
 output_lengths: "60"
 output_time_offsets: "60"
 flow_dist: studentT
+network_model: transformer
 glow_K: 24
-dhid: 84
+dhid: 256
+flow_coupling_dmodel: 100
+flow_coupling_nheads: 10
 dropout: 0.1
 gradient_clip_val: 0.5
 batch_size: 24

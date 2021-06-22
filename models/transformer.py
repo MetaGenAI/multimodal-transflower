@@ -75,24 +75,27 @@ class LearnedPositionalEncoding(nn.Module): # emm this isn't learned lol
 
 
 class BasicTransformerModel(nn.Module):
-    def __init__(self, dout, dinp, nhead, dhid, nlayers, dropout=0.5, ntokens=0, device=None, use_pos_emb=False, use_rel_pos_emb=False, input_length=0,use_x_transformers=False, opt=None, discrete_inputs=False):
+    def __init__(self, dout, dinp, nhead, dhid, nlayers, dropout=0, ntokens=0, device=None, use_pos_emb=False, use_rel_pos_emb=False, input_length=0,use_x_transformers=False, opt=None, discrete_inputs=False, dmodel=None):
         super(BasicTransformerModel, self).__init__()
         self.device = device
         self.model_type = 'Transformer'
         self.use_x_transformers = use_x_transformers
         self.discrete_inputs = discrete_inputs
+        if dmodel is None:
+            dmodel = dhid
         if not use_x_transformers:
             if discrete_inputs:
                 assert ntokens != 0 #ntoken needs to be set if we are to use an embedding layer (discrete inputs)
                 self.encoder = nn.Embedding(ntokens, dinp)
-            self.encoder1 = nn.Linear(dinp, dhid)
+            self.encoder1 = nn.Linear(dinp, dmodel)
             if use_pos_emb:
-                self.pos_encoder = LearnedPositionalEncoding(dhid, input_length, dropout)
-            encoder_layers = TransformerEncoderLayer(dhid, nhead, dhid, dropout)
+                self.pos_encoder = LearnedPositionalEncoding(dmodel, input_length, dropout)
+            encoder_layers = TransformerEncoderLayer(dmodel, nhead, dhid, dropout)
             self.transformer_encoder = TransformerEncoder(encoder_layers, nlayers)
             self.dinp = dinp
             self.dhid = dhid
-            self.decoder = nn.Linear(dhid, dout)
+            self.dmodel = dmodel
+            self.decoder = nn.Linear(dmodel, dout)
             self.use_pos_emb = use_pos_emb
             self.use_rel_pos_emb = use_rel_pos_emb
             self.input_length = input_length
@@ -114,7 +117,7 @@ class BasicTransformerModel(nn.Module):
                 max_seq_len = 1024,
                 use_pos_emb = use_pos_emb,
                 attn_layers = Encoder(
-                    dim = dhid,
+                    dim = dmodel,
                     depth = nlayers,
                     heads = nhead,
                     rotary_pos_emb = opt.use_rotary_pos_emb,
@@ -141,10 +144,10 @@ class BasicTransformerModel(nn.Module):
         if not self.use_x_transformers:
             src = self.encoder1(src)
             # import pdb;pdb.set_trace()
-            #src *= math.sqrt(self.dhid)
+            #src *= math.sqrt(self.dmodel)
             if self.use_pos_emb:
                 src = self.pos_encoder(src)
-            #src /= math.sqrt(self.dhid)
+            #src /= math.sqrt(self.dmodel)
             # print(src)
             # print(torch.mm(src[:,0,:],src[:,0,:].T))
             if self.use_rel_pos_emb and self.input_length > 1:
@@ -177,9 +180,11 @@ class BasicTransformerModel(nn.Module):
             return output.permute(1,0,2)
 
 class BasicTransformerModelCausal(nn.Module):
-    def __init__(self, dout, dinp, nhead, dhid, nlayers, dropout=0.5, ntokens=0, device=None, use_pos_emb=False, use_rel_pos_emb=False, input_length=0,use_x_transformers=False, opt=None, discrete_inputs=False):
-        self.model = BasicTransformerModel(self, dout, dinp, nhead, dhid, nlayers, dropout=0.5, ntokens=0, device=None, use_pos_emb=False, use_rel_pos_emb=False, input_length=0,use_x_transformers=False, opt=None, discrete_inputs=False)
-        self.mask = self.model.generate_square_subsequent_mask(input_length)
+    def __init__(self, dout, dinp, nhead, dhid, nlayers, dropout=0, ntokens=0, device=None, use_pos_emb=False, use_rel_pos_emb=False, input_length=0,use_x_transformers=False, opt=None, discrete_inputs=False, dmodel=None):
+        super(BasicTransformerModelCausal, self).__init__()
+        self.model = BasicTransformerModel(dout, dinp, nhead, dhid, nlayers, dropout=dropout, ntokens=ntokens, device=device, use_pos_emb=use_pos_emb, use_rel_pos_emb=use_rel_pos_emb, input_length=input_length,use_x_transformers=use_x_transformers, opt=opt, discrete_inputs=discrete_inputs, dmodel=dmodel)
+        mask = self.model.generate_square_subsequent_mask(input_length)
+        self.register_buffer('mask', mask)
     def init_weights(self):
         self.model.init_weights()
     def generate_square_subsequent_mask(self, sz, prefix_length = 1):
