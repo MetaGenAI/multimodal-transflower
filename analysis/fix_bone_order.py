@@ -18,7 +18,7 @@ p = BVHParser()
 # f2="data/dance_full/kth_streetdance_data/bvh/Streetdance_001.bvh"
 f1=sys.argv[1] #target file
 # f2=sys.argv[2] #file from which to source the offsets of the skeleton (bone names and hierarchy should be the same)
-f2="/home/guillefix/code/mt-lightning/data/dance_full/kth_streetdance_data/bvh/Streetdance_001.bvh"
+f2="analysis/skeleton.bvh"
 
 data1 = p.parse(f1)
 data2 = p.parse(f2)

@@ -13,7 +13,8 @@ class MoglowModel(BaseModel):
         douts = self.douts
 
         # import pdb;pdb.set_trace()
-        cond_dim = dins[0]*input_seq_lens[0]+dins[1]*input_seq_lens[1]
+        cond_dim = sum(map(lambda x: x[0]*x[1],zip(dins,input_seq_lens)))
+        assert len(douts) == 1 #TODO: generalize
         output_dim = douts[0]
         self.network_model = self.opt.network_model
         glow = Glow(output_dim, cond_dim, self.opt)
@@ -61,6 +62,8 @@ class MoglowModel(BaseModel):
         parser.add_argument('--flow_dist', type=str, default="normal")
         parser.add_argument('--flow_dist_param', type=int, default=50)
         parser.add_argument('--flow_coupling', type=str, default="affine")
+        parser.add_argument('--flow_coupling_dmodel', type=int, default=128)
+        parser.add_argument('--flow_coupling_nheads', type=int, default=10)
         parser.add_argument('--num_layers', type=int, default=2)
         parser.add_argument('--network_model', type=str, default="LSTM")
         parser.add_argument('--dropout', type=float, default=0.1)
@@ -155,6 +158,7 @@ class MoglowModel(BaseModel):
 
     def training_step(self, batch, batch_idx):
         self.set_inputs(batch)
+        # import pdb;pdb.set_trace()
         z, nll = self.net_glow(x=self.targets[0], cond=torch.cat(self.inputs, dim=1))
 
         # output = self.net_glow(z=None, cond=torch.cat(self.inputs, dim=1), eps_std=1.0, reverse=True, output_length=self.output_lengths[0])
