@@ -18,7 +18,7 @@ sys.path.append(ROOT_DIR)
 from audio_feature_utils import extract_features_hybrid, extract_features_mel, extract_features_multi_mel
 from utils import distribute_tasks
 
-parser = argparse.ArgumentParser(description="Preprocess songs data")
+parser = argparse.ArgumentParser(description="Combine features by concatenating")
 
 parser.add_argument("data_path", type=str, help="features path")
 parser.add_argument("base_filenames_file", type=str, help="File listing the base names for the files for which to combine features")
