@@ -126,14 +126,17 @@ class FlowStep(nn.Module):
     def reverse_flow(self, input, cond, logdet):
         # 1.coupling
         z1, z2 = thops.split_feature(input, "split")
-        # import pdb;pdb.set_trace()
         z1_cond = torch.cat((z1, cond), dim=1)
 
         if self.flow_coupling == "additive":
             z2 = z2 - self.f(z1_cond)
         elif self.flow_coupling == "affine":
-            h = self.f(z1_cond.permute(0, 2, 1)).permute(0, 2, 1)
+            if self.network_model=="transformer":
+                h = self.f(z1_cond.permute(2,0,1)).permute(1,2,0)
+            else:
+                h = self.f(z1_cond.permute(0, 2, 1)).permute(0, 2, 1)
             shift, scale = thops.split_feature(h, "cross")
+            #import pdb;pdb.set_trace()
             nan_throw(shift, "shift")
             nan_throw(scale, "scale")
             nan_throw(z2, "z2 unscaled")
@@ -142,6 +145,7 @@ class FlowStep(nn.Module):
             z2 = z2 - shift
             logdet = -thops.sum(torch.log(scale), dim=[1, 2]) + logdet
             
+        #import pdb;pdb.set_trace()
         z = thops.cat_feature(z1, z2)
         # 2. permute
         z, logdet = FlowStep.FlowPermutation[self.flow_permutation](

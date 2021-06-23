@@ -1,5 +1,6 @@
 
 import torch
+import torch.nn.functional as F
 
 #TODO: implement option to include the conditioning bit of input in the output
 def autoregressive_generation_multimodal(features, model, autoreg_mods=[], teacher_forcing=False, ground_truth=False):
@@ -10,7 +11,19 @@ def autoregressive_generation_multimodal(features, model, autoreg_mods=[], teach
             input_ = torch.from_numpy(input_).float().to(model.device)
         else:
             input_ = torch.from_numpy(input_).long().to(model.device)
+        if model.input_types[i] == "d" and model.opt.use_one_hot:
+            input_ = F.one_hot(input_,num_classes=model.input_num_tokens[i])
         inputs_.append(input_)
+    sequence_length = inputs_[-1].shape[0]
+    for i,mod in enumerate(model.input_mods):
+        input_ = inputs_[i]
+        if model.input_proc_types[i] == "tile":
+            print("tile")
+            assert input_.shape[0] == 1 # havent implemented other cases..
+            reps = [1 for a in input_.shape]
+            reps[0] = sequence_length
+            input_ = torch.tile(input_,tuple(reps))
+        inputs_[i] = input_
     output_time_offsets = model.output_time_offsets
     input_time_offsets = model.input_time_offsets
     input_lengths = model.input_lengths
@@ -30,7 +43,6 @@ def autoregressive_generation_multimodal(features, model, autoreg_mods=[], teach
     output_seq = []
     #sequence_length = inputs_[0].shape[0]
     #TODO: make this less ad-hoc
-    sequence_length = inputs_[-1].shape[0]
     print(sequence_length)
     #import pdb;pdb.set_trace()
     with torch.no_grad():
@@ -91,7 +103,7 @@ def autoregressive_generation_multimodal(features, model, autoreg_mods=[], teach
                         if not ground_truth:
                             print(torch.mean((inputs_[i][t+output_time_offsets[j]:t+output_time_offsets[j]+1]-outputs[j][:1].detach().clone())**2))
                     else:
-                        if model.input_fix_length_types[i] == "single":
+                        if model.input_proc_types[i] == "single":
                             #input_tmp[i] = torch.cat([input_tmp[i][1:],inputs_[i][input_time_offsets[i]+input_lengths[i]+t:input_time_offsets[i]+input_lengths[i]+t+1]],0)
                             pass
                         else:

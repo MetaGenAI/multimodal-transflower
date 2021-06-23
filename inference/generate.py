@@ -109,7 +109,7 @@ if __name__ == '__main__':
             feature = np.load(data_dir+"/"+seq_id+"."+mod+".npy")
         if args.max_length != -1:
             feature = feature[:args.max_length]
-        if model.input_fix_length_types[i] == "single":
+        if model.input_proc_types[i] == "single":
             features["in_"+mod] = np.expand_dims(np.expand_dims(feature,1),1)
         else:
             features["in_"+mod] = np.expand_dims(feature,1)

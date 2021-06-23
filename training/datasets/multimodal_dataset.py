@@ -174,7 +174,7 @@ class MultimodalDataset(BaseDataset):
             for i,mod in enumerate(output_mods):
                 if found_full_seq: break
                 if self.output_proc_types[i] == "none":
-                    sequence_length = self.outptut_features[mod][base_filename].shape[0]
+                    sequence_length = self.output_features[mod][base_filename].shape[0]
                     found_full_seq = True
                 if found_full_seq: break
             if not found_full_seq:
