@@ -32,7 +32,8 @@ if __name__ == '__main__':
     print("Hi")
     parser = argparse.ArgumentParser(description='Generate with model')
     parser.add_argument('--data_dir', type=str)
-    parser.add_argument('--seeds', type=str, help='in the format: mod,seq_id;mod,seq_id')
+    parser.add_argument('--seeds', type=str, help='sequences to use as seeds for each modality. in the format: mod,seq_id;mod,seq_id')
+    parser.add_argument('--zero_seeds', type=str, help='modalities to seed with zeros, in the format: mod,mod')
     parser.add_argument('--seeds_file', type=str, help='file from which to choose a random seed')
     parser.add_argument('--output_folder', type=str)
     parser.add_argument('--audio_format', type=str, default="wav")
@@ -54,6 +55,11 @@ if __name__ == '__main__':
         seeds = {mod:seq for mod,seq in [tuple(x.split(",")) for x in args.seeds.split(";")]}
     else:
         seeds = {}
+
+    if args.zero_seeds is not None:
+        zero_seeds = args.zero_seeds.split(",")
+    else:
+        zero_seeds = []
 
     if seq_id is None:
         temp_base_filenames = [x[:-1] for x in open(data_dir + "/base_filenames_test.txt", "r").readlines()]
@@ -105,6 +111,8 @@ if __name__ == '__main__':
     for i,mod in enumerate(input_mods):
         if mod in seeds:
             feature = np.load(data_dir+"/"+seeds[mod]+"."+mod+".npy")
+        elif mod in zero_seeds:
+            feature = np.zeros((model.input_lengths[i],model.dins[i]))
         else:
             feature = np.load(data_dir+"/"+seq_id+"."+mod+".npy")
         if args.max_length != -1:

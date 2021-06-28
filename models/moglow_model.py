@@ -66,12 +66,12 @@ class MoglowModel(BaseModel):
         parser.add_argument('--flow_dist', type=str, default="normal")
         parser.add_argument('--flow_dist_param', type=int, default=50)
         parser.add_argument('--flow_coupling', type=str, default="affine")
-        parser.add_argument('--flow_coupling_dmodel', type=int, default=128)
+        parser.add_argument('--flow_coupling_dmodel', type=int, default=400)
         parser.add_argument('--flow_coupling_nheads', type=int, default=10)
         parser.add_argument('--num_layers', type=int, default=2)
         parser.add_argument('--network_model', type=str, default="LSTM")
         parser.add_argument('--use_projection', action='store_true')
-        parser.add_argument('--cond_dims', type=int, default=256)
+        parser.add_argument('--cond_dim', type=int, default=256)
         parser.add_argument('--dropout', type=float, default=0.1)
         parser.add_argument('--LU_decomposed', action='store_true')
         return parser
@@ -91,7 +91,7 @@ class MoglowModel(BaseModel):
             data2.append(input_)
         cond = torch.cat(data2, dim=1)
         if self.opt.use_projection:
-            cond = self.net_projection(cond)
+            cond = self.net_projection(cond.permute(0,2,1)).permute(0,2,1)
         #import pdb;pdb.set_trace()
         if self.opt.network_model == "transformer":
             prev_outs = data[1][-59:].permute(1,2,0)
@@ -186,7 +186,7 @@ class MoglowModel(BaseModel):
         # import pdb;pdb.set_trace()
         cond = torch.cat(self.inputs, dim=1)
         if self.opt.use_projection:
-            cond = self.net_projection(cond)
+            cond = self.net_projection(cond.permute(0,2,1)).permute(0,2,1)
         z, nll = self.net_glow(x=self.targets[0], cond=cond)
 
         # output = self.net_glow(z=None, cond=torch.cat(self.inputs, dim=1), eps_std=1.0, reverse=True, output_length=self.output_lengths[0])
