@@ -76,7 +76,7 @@ class MoglowModel(BaseModel):
         parser.add_argument('--LU_decomposed', action='store_true')
         return parser
 
-    def forward(self, data, eps_std=1.0):
+    def forward(self, data, eps_std=1.0, output_index=1, zs=None):
         # import pdb;pdb.set_trace()
         data2 = []
         for i,mod in enumerate(self.input_mods):
@@ -94,23 +94,29 @@ class MoglowModel(BaseModel):
             cond = self.net_projection(cond.permute(0,2,1)).permute(0,2,1)
         #import pdb;pdb.set_trace()
         if self.opt.network_model == "transformer":
-            prev_outs = data[1][-59:].permute(1,2,0)
-            prev_outs = torch.cat([prev_outs,prev_outs[:,:,-1:]],dim=-1)
-            z, nll = self.net_glow(x=prev_outs, cond=cond)
             z_new = self.net_glow.distribution.sample(self.net_glow.z_shape, eps_std=eps_std, device=cond.device)
-            #z = torch.cat([z,z_new],dim=-1)
-            z[:,:,-1:] = z_new
+            if zs is None:
+                prev_outs = data[output_index][-self.output_lengths[0]-1:].permute(1,2,0)
+                prev_outs = torch.cat([prev_outs,prev_outs[:,:,-1:]],dim=-1)
+                z, nll = self.net_glow(x=prev_outs, cond=cond)
+                z[:,:,-1:] = z_new
+            else:
+                z = torch.cat([zs[:,:,1:],z_new],dim=-1)
             outputs = self.net_glow(z=z, cond=cond, eps_std=eps_std, reverse=True)
             outputs = outputs[:,:,-1:]
             #import pdb;pdb.set_trace()
+            return [outputs.permute(0,2,1)], z
         else:
             outputs = self.net_glow(z=None, cond=cond, eps_std=eps_std, reverse=True)
-        return [outputs.permute(0,2,1)]
+            return [outputs.permute(0,2,1)]
 
     def generate(self,features, teacher_forcing=False, ground_truth=False):
         if self.network_model=="LSTM":
             self.net_glow.init_lstm_hidden()
-        output_seq = autoregressive_generation_multimodal(features, self, autoreg_mods=self.output_mods, teacher_forcing=teacher_forcing, ground_truth=ground_truth)
+            keep_latents = False
+        else:
+            keep_latents = True
+        output_seq = autoregressive_generation_multimodal(features, self, autoreg_mods=self.output_mods, teacher_forcing=teacher_forcing, ground_truth=ground_truth, keep_latents=keep_latents)
         return output_seq
 
     def on_test_start(self):

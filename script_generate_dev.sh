@@ -9,7 +9,8 @@ py=python3
 #exp=transglower_residual_aistpp_expmap
 #exp=moglow_aistpp_expmap
 #exp=testing
-exp=moglow_expmap1_label_newdata2
+#exp=moglow_expmap1_label_newdata2
+exp=moglow_expmap1_label3c_newdata2
 #exp=transflower_expmap_old
 #exp=mowgli_expmap_stage2_newdata
 #exp=$1
@@ -29,8 +30,8 @@ mkdir inference/generated/${exp}/videos
 fps=20
 #fps=60
 #data_dir=data/aistpp_20hz
-#data_dir=data/dance_combined3
-data_dir=$SCRATCH/data/dance_combined3
+data_dir=data/dance_combined3
+#data_dir=$SCRATCH/data/dance_combined3
 #data_dir=data/aistpp_60hz
 
 # if we don't pass seq_id it will choose a random one from the test set
