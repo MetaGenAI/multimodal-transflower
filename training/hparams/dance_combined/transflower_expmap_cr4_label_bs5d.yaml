@@ -29,11 +29,13 @@ glow_norm_layer: actnorm
 glow_bn_momentum: 0.1
 dropout: 0
 #lr_policy: cosine
-lr_policy: multistep
-lr_decay_milestones: [40,80]
-learning_rate: 7e-5
+#lr_policy: multistep
+lr_policy: LinearWarmupCosineAnnealing
+warmup_epochs: 5
+#lr_decay_milestones: [40,80]
+learning_rate: 1e-4
 gradient_clip_val: 0.5
-batch_size: 64
+batch_size: 84
 
 
 

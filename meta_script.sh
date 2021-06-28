@@ -7,13 +7,15 @@
 #for exp in moglow_expmap1_label3
 #for exp in moglow_expmap1_label4
 #for exp in moglow_expmap1_label3b
-for exp in moglow_expmap1_label3c
+#for exp in moglow_expmap1_label3c
 #for exp in moglow_expmap1_label4b
 #for exp in moglow_expmap1_label4c
-#for exp in moglow_expmap1_label4d
+for exp in moglow_expmap1_label4d
 #for exp in moglow_expmap1_label4e
 #for exp in transflower_expmap_cr4_label_bs5c
 #for exp in transflower_expmap_cr4_label_bs5 transflower_expmap_cr
+#for exp in transflower_expmap_cr4_label_bs5
+#for exp in transflower_expmap_cr4_label_bs5d
 #for exp in transflower_expmap_cr_label2
 #for exp in transflower_expmap_cr_label3
 #for exp in transflower_expmap_cr_label5

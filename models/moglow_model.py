@@ -96,7 +96,9 @@ class MoglowModel(BaseModel):
         if self.opt.network_model == "transformer":
             z_new = self.net_glow.distribution.sample(self.net_glow.z_shape, eps_std=eps_std, device=cond.device)
             if zs is None:
-                prev_outs = data[output_index][-self.output_lengths[0]-1:].permute(1,2,0)
+                print(output_index)
+                print(self.output_lengths[0])
+                prev_outs = data[output_index][-(self.output_lengths[0]-1):].permute(1,2,0)
                 prev_outs = torch.cat([prev_outs,prev_outs[:,:,-1:]],dim=-1)
                 z, nll = self.net_glow(x=prev_outs, cond=cond)
                 z[:,:,-1:] = z_new
