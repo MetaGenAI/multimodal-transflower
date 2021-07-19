@@ -3,7 +3,7 @@ import torch
 import torch.nn.functional as F
 
 #TODO: implement option to include the conditioning bit of input in the output
-def autoregressive_generation_multimodal(features, model, autoreg_mods=[], teacher_forcing=False, ground_truth=False, keep_latents=False):
+def autoregressive_generation_multimodal(features, model, autoreg_mods=[], teacher_forcing=False, ground_truth=False, keep_latents=False, seed_lengths=None):
     inputs_ = []
     for i,mod in enumerate(model.input_mods):
         input_ = features["in_"+mod]
@@ -36,8 +36,13 @@ def autoregressive_generation_multimodal(features, model, autoreg_mods=[], teach
         assert mod in output_mods
 
     input_tmp = []
+    if seed_lengths is None:
+        seed_lengths = []
+        for i,mod in enumerate(input_mods):
+            seed_lengths.append(input_lengths[i])
+    #print(seed_lengths)
     for i,mod in enumerate(input_mods):
-        input_tmp.append(inputs_[i].clone()[input_time_offsets[i]:input_time_offsets[i]+input_lengths[i]])
+        input_tmp.append(inputs_[i].clone()[input_time_offsets[i]:input_time_offsets[i]+seed_lengths[i]])
 
     if keep_latents:
         latents = None
@@ -105,7 +110,10 @@ def autoregressive_generation_multimodal(features, model, autoreg_mods=[], teach
                             input_tmp[i] = torch.cat([input_tmp[i][1:],inputs_[i][t+input_time_offsets[i]+input_lengths[i]:t+input_time_offsets[i]+input_lengths[i]+1]],0)
                         else:
                             # import pdb;pdb.set_trace()
-                            input_tmp[i] = torch.cat([input_tmp[i][1:],output[:1].detach().clone()],0)
+                            if input_lengths[i]>1:
+                                input_tmp[i] = torch.cat([input_tmp[i][-(input_lengths[i]-1):],output[:1].detach().clone()],0)
+                            else:
+                                input_tmp[i] = output[:1].detach().clone()
                         # print(torch.mean((inputs_[i][t+input_time_offsets[i]+input_lengths[i]+1:t+input_time_offsets[i]+input_lengths[i]+1+1]-outputs[j][:1].detach().clone())**2))
 
                         if not ground_truth:
@@ -115,7 +123,10 @@ def autoregressive_generation_multimodal(features, model, autoreg_mods=[], teach
                             #input_tmp[i] = torch.cat([input_tmp[i][1:],inputs_[i][input_time_offsets[i]+input_lengths[i]+t:input_time_offsets[i]+input_lengths[i]+t+1]],0)
                             pass
                         else:
-                            input_tmp[i] = torch.cat([input_tmp[i][1:],inputs_[i][input_time_offsets[i]+input_lengths[i]+t:input_time_offsets[i]+input_lengths[i]+t+1]],0)
+                            if input_lengths[i]>1:
+                                input_tmp[i] = torch.cat([input_tmp[i][-(input_lengths[i]-1):],inputs_[i][input_time_offsets[i]+seed_lengths[i]+t:input_time_offsets[i]+seed_lengths[i]+t+1]],0)
+                            else:
+                                input_tmp[i] = inputs_[i][input_time_offsets[i]+seed_lengths[i]+t:input_time_offsets[i]+seed_lengths[i]+t+1]
 
     print("--- %s seconds ---" % (time.time() - start_time))
     return output_seq

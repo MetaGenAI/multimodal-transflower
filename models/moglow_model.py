@@ -3,6 +3,7 @@ from torch import nn
 from models import BaseModel
 from .util.generation import autoregressive_generation_multimodal
 from .moglow.models import Glow
+import torch.nn.functional as F
 
 class MoglowModel(BaseModel):
     def __init__(self, opt):
@@ -76,7 +77,7 @@ class MoglowModel(BaseModel):
         parser.add_argument('--LU_decomposed', action='store_true')
         return parser
 
-    def forward(self, data, eps_std=1.0, output_index=1, zs=None):
+    def forward(self, data, eps_std=1.0, output_index_in_input=1, zs=None):
         # import pdb;pdb.set_trace()
         data2 = []
         for i,mod in enumerate(self.input_mods):
@@ -88,6 +89,7 @@ class MoglowModel(BaseModel):
             else:
                 input_ = input_.permute(0,2,1)
             #data[i] = input_
+            #print(input_.shape)
             data2.append(input_)
         cond = torch.cat(data2, dim=1)
         if self.opt.use_projection:
@@ -95,19 +97,29 @@ class MoglowModel(BaseModel):
         #import pdb;pdb.set_trace()
         if self.opt.network_model == "transformer":
             z_new = self.net_glow.distribution.sample(self.net_glow.z_shape, eps_std=eps_std, device=cond.device)
+            output_index = cond.shape[2]-1
+            if cond.shape[2] < self.output_lengths[0]:
+                cond = F.pad(cond,(0,self.output_lengths[0]-cond.shape[2]),'constant',0)
+                #print(cond.shape)
             if zs is None:
-                print(output_index)
-                print(self.output_lengths[0])
-                prev_outs = data[output_index][-(self.output_lengths[0]-1):].permute(1,2,0)
-                prev_outs = torch.cat([prev_outs,prev_outs[:,:,-1:]],dim=-1)
+                #print(output_index)
+                #print(self.output_lengths[0])
+                #print(data[output_index_in_input])
+                prev_outs = data[output_index_in_input][-(self.output_lengths[0]-1):].permute(1,2,0)
+                #prev_outs = torch.cat([prev_outs,prev_outs[:,:,-1:]],dim=-1)
+                #print(prev_outs.shape)
+                prev_outs = F.pad(prev_outs,(0,self.output_lengths[0]-prev_outs.shape[2]),'constant',0)
+                #print(prev_outs.shape)
                 z, nll = self.net_glow(x=prev_outs, cond=cond)
-                z[:,:,-1:] = z_new
+                z[:,:,output_index:output_index+1] = z_new
             else:
-                z = torch.cat([zs[:,:,1:],z_new],dim=-1)
+                z = torch.cat([zs[:,:,-(self.output_lengths[0]-1):],z_new],dim=-1)
+                if z.shape[2] < self.output_lengths[0]:
+                    z = F.pad(z,(0,self.output_lengths[0]-z.shape[2]),'constant',0)
             outputs = self.net_glow(z=z, cond=cond, eps_std=eps_std, reverse=True)
-            outputs = outputs[:,:,-1:]
+            outputs = outputs[:,:,output_index:output_index+1]
             #import pdb;pdb.set_trace()
-            return [outputs.permute(0,2,1)], z
+            return [outputs.permute(0,2,1)], z[:,:,:output_index+1]
         else:
             outputs = self.net_glow(z=None, cond=cond, eps_std=eps_std, reverse=True)
             return [outputs.permute(0,2,1)]
@@ -118,7 +130,10 @@ class MoglowModel(BaseModel):
             keep_latents = False
         else:
             keep_latents = True
-        output_seq = autoregressive_generation_multimodal(features, self, autoreg_mods=self.output_mods, teacher_forcing=teacher_forcing, ground_truth=ground_truth, keep_latents=keep_latents)
+        if self.opt.network_model=="transformer":
+            output_seq = autoregressive_generation_multimodal(features, self, autoreg_mods=self.output_mods, teacher_forcing=teacher_forcing, ground_truth=ground_truth, keep_latents=keep_latents,seed_lengths=self.input_seq_lens)
+        else:
+            output_seq = autoregressive_generation_multimodal(features, self, autoreg_mods=self.output_mods, teacher_forcing=teacher_forcing, ground_truth=ground_truth, keep_latents=keep_latents)
         return output_seq
 
     def on_test_start(self):
