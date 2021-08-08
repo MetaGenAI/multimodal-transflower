@@ -30,6 +30,8 @@ base_filenames_file=base_filenames_test_test.txt
 #for exp in moglow_expmap1_label4d_newdata2 moglow_expmap1_label3c_newdata2
 #for exp in transflower_expmap_cr4_label_bs5_newdata
 #for exp in transflower_expmap_cr4_label_bs5_og_newdata
+#for exp in transflower_expmap_cr4_bs5_og_newdata
+#for exp in transflower_expmap_cr4_label_bs5_og_newdata
 for exp in transflower_expmap_cr4_bs5_og_newdata
 #for exp in transflower_expmap_cr4_label7_newdata
 #for exp in transflower_expmap_large_cr_newdata_nomirror
