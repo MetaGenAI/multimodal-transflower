@@ -32,7 +32,14 @@ base_filenames_file=base_filenames_test_test.txt
 #for exp in transflower_expmap_cr4_label_bs5_og_newdata
 #for exp in transflower_expmap_cr4_bs5_og_newdata
 #for exp in transflower_expmap_cr4_label_bs5_og_newdata
-for exp in transflower_expmap_cr4_bs5_og_newdata
+#for exp in transflower_expmap_cr4_bs5_og_newdata
+#for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss_test
+#for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss_aistpp
+#for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss_aistpp
+#for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss_60_aistpp
+for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss_bn_aistpp
+#for exp in transformer_expmap_cr_aistpp
+#for exp in transformer_expmap_cr_60_aistpp
 #for exp in transflower_expmap_cr4_label7_newdata
 #for exp in transflower_expmap_large_cr_newdata_nomirror
 #for exp in transflower_expmap_smoldata
@@ -62,7 +69,9 @@ do
 		#sbatch slurm_script_generate.slurm $exp $line --generate_bvh --data_dir $SCRATCH/data/dance_combined2_test --seeds expmap_cr_scaled_20,kthmisc_12
 		#sbatch slurm_script_generate.slurm $exp $line --generate_bvh --data_dir $SCRATCH/data/dance_combined2_test --seeds expmap_cr_scaled_20,kthmisc_12 --generate_video
 		#sbatch slurm_script_generate.slurm $exp $line --generate_bvh --data_dir $SCRATCH/data/dance_combined3_test --seeds expmap_cr_scaled_20,aistpp_gHO_sBM_cAll_d19_mHO3_ch10;dance_style,aistpp_gHO_sBM_cAll_d19_mHO3_ch10
-		sbatch slurm_script_generate.slurm $exp $line --generate_bvh --data_dir $SCRATCH/data/dance_combined3 --seeds "expmap_cr_scaled_20,aistpp_gHO_sBM_cAll_d19_mHO3_ch10;dance_style,aistpp_gHO_sBM_cAll_d19_mHO3_ch10" --generate_video #--max_length 1024
+		#sbatch slurm_script_generate.slurm $exp $line --generate_bvh --data_dir $SCRATCH/data/dance_combined3 --seeds "expmap_cr_scaled_20,aistpp_gKR_sBM_cAll_d28_mKR2_ch01;dance_style,aistpp_gKR_sBM_cAll_d28_mKR2_ch01" --generate_video #--max_length 1024
+		#sbatch slurm_script_generate.slurm $exp $line --generate_bvh --data_dir $SCRATCH/data/dance_combined3 --seeds "expmap_cr_scaled_20,aistpp_gKR_sBM_cAll_d28_mKR2_ch01;dance_style,aistpp_gKR_sBM_cAll_d28_mKR2_ch01" --generate_video #--max_length 1024
+		sbatch slurm_script_generate.slurm $exp $line --generate_bvh --data_dir $SCRATCH/data/dance_combined3 --seeds "expmap_cr_scaled_20,${line};dance_style,${line}" --generate_video #--max_length 1024
 		#sbatch slurm_script_generate.slurm $exp $line --generate_bvh --data_dir $SCRATCH/data/dance_combined3 --seeds "expmap_cr_scaled_20,justdance_gJD_sFM_cAll_d01_mCA31_ch31;dance_style,justdance_gJD_sFM_cAll_d01_mCA31_ch31" --generate_video --max_length 1024
 		#sbatch slurm_script_generate.slurm $exp $line --generate_bvh --data_dir $SCRATCH/data/dance_combined3 --seeds "dance_style,aistpp_gHO_sBM_cAll_d19_mHO3_ch10" --generate_video --max_length 1024 --zero_seeds "expmap_cr_scaled_20"
 		#sbatch slurm_script_generate.slurm $exp $line --generate_bvh --data_dir $SCRATCH/data/dance_combined3 --seeds "dance_style,justdance_gJD_sFM_cAll_d01_mCA31_ch31" --generate_video --zero_seeds "expmap_cr_scaled_20" #--max_length 1024 

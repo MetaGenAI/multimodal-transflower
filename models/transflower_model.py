@@ -120,7 +120,7 @@ class TransflowerModel(BaseModel):
         parser.add_argument('--use_transformer_nn', action='store_true', help="whether to use the internal attention for the FlowPlusPLus model")
         parser.add_argument('--use_rel_pos_emb_inputs', action='store_true', help="whether to use T5 relative positional embeddings for input modality transformers")
         parser.add_argument('--use_rel_pos_emb_output', action='store_true', help="whether to use T5 relative positional embeddings for output modality transformers")
-        parser.add_argument('--use_pos_emb_inputs', action='store_true', help="whether to use positional embeddings for output modality transformers")
+        parser.add_argument('--use_pos_emb_inputs', action='store_true', help="whether to use positional embeddings for input modality transformers")
         parser.add_argument('--use_pos_emb_output', action='store_true', help="whether to use positional embeddings for output modality transformers")
         parser.add_argument('--use_pos_emb_coupling', action='store_true', help="whether to use positional embeddings for the coupling layer transformers")
         parser.add_argument('--use_rel_pos_emb_coupling', action='store_true', help="whether to use T5 relative positional embeddings for the coupling layer transformers")
