@@ -121,6 +121,7 @@ for i in tasks:
         features = ResampleLinear1D(features,int(np.floor(features.shape[0]*0.01*fps)))
         # features = downsample_signal(features[0], 0.01666666666667/0.01)
         print(features.shape)
+        print(features_file)
         np.save(features_file,features)
         window = signal.hamming(ceil(HUMAN_DELTA/opt.step_size))
         smoothed_peaks = np.convolve(peak_probs,window,mode='same')

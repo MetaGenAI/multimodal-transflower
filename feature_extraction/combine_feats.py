@@ -46,10 +46,11 @@ for i in tasks:
     base_filename = data_path.joinpath(path).__str__()
     new_feature_file = base_filename+"."+new_feature_name+".npy"
     if replace_existing or not os.path.isfile(new_feature_file):
+        print(new_feature_file)
         features = None
-        for i,feature_name in enumerate(feature_names.split(",")):
+        for j,feature_name in enumerate(feature_names.split(",")):
             feature_file = base_filename+"."+feature_name+".npy"
-            if i == 0:
+            if j == 0:
                 features = np.load(feature_file)
             else:
                 feature = np.load(feature_file)
@@ -58,6 +59,8 @@ for i in tasks:
                 if len(feature) > len(features):
                     feature = feature[:-1]
                 if len(feature.shape) == 2:
+                    print(feature_name)
+                    print(feature.shape)
                     features = np.concatenate([features,feature],1)
                 elif len(feature.shape) == 1:
                     features = np.concatenate([features,np.expand_dims(feature,1)],1)

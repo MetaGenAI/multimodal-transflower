@@ -88,6 +88,7 @@ for i in tasks:
 
         shortest_length = 99999999999
         for feat in featuress:
+            print(feat.shape[0])
             if feat.shape[0] < shortest_length:
                 shortest_length = feat.shape[0]
         for i in range(len(featuress)):

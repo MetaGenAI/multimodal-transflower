@@ -19,7 +19,7 @@ def extract_features_spectral_flux(music_file,tgt_fps=20):
 
 def extract_features_madmombeat(music_file,tgt_fps=20):
     proc_dwn = madmom.features.RNNDownBeatProcessor()
-    beats = proc_dwn(music_file, fps=20)
+    beats = proc_dwn(music_file, fps=tgt_fps)
     return beats
 
 def extract_features_multi_mel(y, sr=44100.0, hop=512, nffts=[1024, 2048, 4096], mel_dim=100):
