@@ -45,30 +45,28 @@ class BaseModel(LightningModule):
                 raise Exception("number of input_time_offsets doesnt match number of input_mods")
 
         input_mods = self.input_mods
+        output_mods = self.output_mods
         if self.opt.input_types is None:
             input_types = ["c" for inp in input_mods]
         else:
             input_types = self.opt.input_types.split(",")
 
-        if self.opt.input_fix_length_types is None:
-            input_fix_length_types = ["end" for inp in input_mods]
+        if self.opt.input_proc_types is None:
+            input_proc_types = ["none" for inp in input_mods]
         else:
-            input_fix_length_types = self.opt.input_fix_length_types.split(",")
+            input_proc_types = self.opt.input_proc_types.split(",")
 
-        if self.opt.output_fix_length_types is None:
-            output_fix_length_types = ["end" for inp in input_mods]
+        if self.opt.output_proc_types is None:
+            output_proc_types = ["none" for out in output_mods]
         else:
-            output_fix_length_types = self.opt.output_fix_length_types.split(",")
-
-        #fix_length_types_dict = {mod:output_fix_length_types[i] for i,mod in enumerate(output_mods)}
-        #fix_length_types_dict.update({mod:input_fix_length_types[i] for i,mod in enumerate(input_mods)})
+            output_proc_types = self.opt.output_proc_types.split(",")
 
         assert len(input_types) == len(input_mods)
-        assert len(input_fix_length_types) == len(input_mods)
-        assert len(output_fix_length_types) == len(input_mods)
+        assert len(input_proc_types) == len(input_mods)
+        assert len(output_proc_types) == len(output_mods)
         self.input_types = input_types
-        self.input_fix_length_types = input_fix_length_types
-        self.output_fix_length_types = output_fix_length_types
+        self.input_proc_types = input_proc_types
+        self.output_proc_types = output_proc_types
 
         if self.opt.input_num_tokens is None:
             self.input_num_tokens = [0 for inp in self.input_mods]
@@ -106,8 +104,8 @@ class BaseModel(LightningModule):
             target_ = target_.permute(1,0,2)
             self.targets.append(target_)
 
-    def generate(self,features, teacher_forcing=False):
-        output_seq = autoregressive_generation_multimodal(features, self, autoreg_mods=self.output_mods, teacher_forcing=teacher_forcing)
+    def generate(self,features, teacher_forcing=False, ground_truth=False):
+        output_seq = autoregressive_generation_multimodal(features, self, autoreg_mods=self.output_mods, teacher_forcing=teacher_forcing, ground_truth=ground_truth)
         return output_seq
 
     # modify parser to add command line options,

@@ -3,6 +3,7 @@ from torch import nn
 from models import BaseModel
 from .util.generation import autoregressive_generation_multimodal
 from .moglow.models import Glow
+import torch.nn.functional as F
 
 class MoglowModel(BaseModel):
     def __init__(self, opt):
@@ -13,9 +14,14 @@ class MoglowModel(BaseModel):
         douts = self.douts
 
         # import pdb;pdb.set_trace()
-        cond_dim = dins[0]*input_seq_lens[0]+dins[1]*input_seq_lens[1]
+        cond_dim = sum(map(lambda x: x[0]*x[1],zip(dins,input_seq_lens)))
+        assert len(douts) == 1 #TODO: generalize
         output_dim = douts[0]
         self.network_model = self.opt.network_model
+        if self.opt.use_projection:
+            projection = nn.Linear(cond_dim,self.opt.cond_dim)
+            cond_dim = self.opt.cond_dim
+            setattr(self, "net"+"_projection", projection)
         glow = Glow(output_dim, cond_dim, self.opt)
         setattr(self, "net"+"_glow", glow)
 
@@ -61,28 +67,73 @@ class MoglowModel(BaseModel):
         parser.add_argument('--flow_dist', type=str, default="normal")
         parser.add_argument('--flow_dist_param', type=int, default=50)
         parser.add_argument('--flow_coupling', type=str, default="affine")
+        parser.add_argument('--flow_coupling_dmodel', type=int, default=400)
+        parser.add_argument('--flow_coupling_nheads', type=int, default=10)
         parser.add_argument('--num_layers', type=int, default=2)
         parser.add_argument('--network_model', type=str, default="LSTM")
+        parser.add_argument('--use_projection', action='store_true')
+        parser.add_argument('--cond_dim', type=int, default=256)
         parser.add_argument('--dropout', type=float, default=0.1)
         parser.add_argument('--LU_decomposed', action='store_true')
         return parser
 
-    def forward(self, data, eps_std=1.0):
+    def forward(self, data, eps_std=1.0, output_index_in_input=1, zs=None):
         # import pdb;pdb.set_trace()
+        data2 = []
         for i,mod in enumerate(self.input_mods):
             input_ = data[i]
             input_ = input_.permute(1,0,2)
-            input_ = self.concat_sequence(self.input_seq_lens[i], input_)
-            input_ = input_.permute(0,2,1)
-            data[i] = input_
-        outputs = self.net_glow(z=None, cond=torch.cat(data, dim=1), eps_std=eps_std, reverse=True)
-        # import pdb;pdb.set_trace()
-        return [outputs.permute(0,2,1)]
+            if self.input_seq_lens[i] > 1:
+                input_ = self.concat_sequence(self.input_seq_lens[i], input_)
+                input_ = input_.permute(0,2,1)
+            else:
+                input_ = input_.permute(0,2,1)
+            #data[i] = input_
+            #print(input_.shape)
+            data2.append(input_)
+        cond = torch.cat(data2, dim=1)
+        if self.opt.use_projection:
+            cond = self.net_projection(cond.permute(0,2,1)).permute(0,2,1)
+        #import pdb;pdb.set_trace()
+        if self.opt.network_model == "transformer":
+            z_new = self.net_glow.distribution.sample(self.net_glow.z_shape, eps_std=eps_std, device=cond.device)
+            output_index = cond.shape[2]-1
+            if cond.shape[2] < self.output_lengths[0]:
+                cond = F.pad(cond,(0,self.output_lengths[0]-cond.shape[2]),'constant',0)
+                #print(cond.shape)
+            if zs is None:
+                #print(output_index)
+                #print(self.output_lengths[0])
+                #print(data[output_index_in_input])
+                prev_outs = data[output_index_in_input][-(self.output_lengths[0]-1):].permute(1,2,0)
+                #prev_outs = torch.cat([prev_outs,prev_outs[:,:,-1:]],dim=-1)
+                #print(prev_outs.shape)
+                prev_outs = F.pad(prev_outs,(0,self.output_lengths[0]-prev_outs.shape[2]),'constant',0)
+                #print(prev_outs.shape)
+                z, nll = self.net_glow(x=prev_outs, cond=cond)
+                z[:,:,output_index:output_index+1] = z_new
+            else:
+                z = torch.cat([zs[:,:,-(self.output_lengths[0]-1):],z_new],dim=-1)
+                if z.shape[2] < self.output_lengths[0]:
+                    z = F.pad(z,(0,self.output_lengths[0]-z.shape[2]),'constant',0)
+            outputs = self.net_glow(z=z, cond=cond, eps_std=eps_std, reverse=True)
+            outputs = outputs[:,:,output_index:output_index+1]
+            #import pdb;pdb.set_trace()
+            return [outputs.permute(0,2,1)], z[:,:,:output_index+1]
+        else:
+            outputs = self.net_glow(z=None, cond=cond, eps_std=eps_std, reverse=True)
+            return [outputs.permute(0,2,1)]
 
-    def generate(self,features, teacher_forcing=False):
+    def generate(self,features, teacher_forcing=False, ground_truth=False):
         if self.network_model=="LSTM":
             self.net_glow.init_lstm_hidden()
-        output_seq = autoregressive_generation_multimodal(features, self, autoreg_mods=self.output_mods, teacher_forcing=teacher_forcing)
+            keep_latents = False
+        else:
+            keep_latents = True
+        if self.opt.network_model=="transformer":
+            output_seq = autoregressive_generation_multimodal(features, self, autoreg_mods=self.output_mods, teacher_forcing=teacher_forcing, ground_truth=ground_truth, keep_latents=keep_latents,seed_lengths=self.input_seq_lens)
+        else:
+            output_seq = autoregressive_generation_multimodal(features, self, autoreg_mods=self.output_mods, teacher_forcing=teacher_forcing, ground_truth=ground_truth, keep_latents=keep_latents)
         return output_seq
 
     def on_test_start(self):
@@ -155,7 +206,11 @@ class MoglowModel(BaseModel):
 
     def training_step(self, batch, batch_idx):
         self.set_inputs(batch)
-        z, nll = self.net_glow(x=self.targets[0], cond=torch.cat(self.inputs, dim=1))
+        # import pdb;pdb.set_trace()
+        cond = torch.cat(self.inputs, dim=1)
+        if self.opt.use_projection:
+            cond = self.net_projection(cond.permute(0,2,1)).permute(0,2,1)
+        z, nll = self.net_glow(x=self.targets[0], cond=cond)
 
         # output = self.net_glow(z=None, cond=torch.cat(self.inputs, dim=1), eps_std=1.0, reverse=True, output_length=self.output_lengths[0])
 

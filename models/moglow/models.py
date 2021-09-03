@@ -20,10 +20,10 @@ def nan_throw(tensor, name="tensor"):
             print(name + ": " + str(tensor))
             #raise ValueError(name + ' contains nans of infs')
 
-def f(in_channels, out_channels, hidden_channels, cond_channels, network_model, num_layers):
+def f(in_channels, out_channels, hidden_channels, cond_channels, network_model, num_layers, dmodel=None, nheads=10, input_length=-1):
     if network_model=="transformer":
         #return BasicTransformerModel(out_channels, in_channels + cond_channels, 10, hidden_channels, num_layers, use_pos_emb=True)
-        return BasicTransformerModelCausal(out_channels, in_channels + cond_channels, 10, hidden_channels, num_layers, use_pos_emb=True, input_length=70)
+        return BasicTransformerModelCausal(out_channels, in_channels + cond_channels, nheads, hidden_channels, num_layers, use_pos_emb=True, input_length=input_length, dmodel=dmodel)
     if network_model=="LSTM":
         return modules.LSTM(in_channels + cond_channels, hidden_channels, out_channels, num_layers)
     if network_model=="GRU":
@@ -49,6 +49,9 @@ class FlowStep(nn.Module):
                  flow_coupling="additive",
                  network_model="LSTM",
                  num_layers=2,
+                 dmodel=None,
+                 nheads=10,
+                 input_length=-1,
                  LU_decomposed=False):
                  
         # check configures
@@ -75,10 +78,10 @@ class FlowStep(nn.Module):
             self.reverse = modules.Permute2d(in_channels, shuffle=False)
         # 3. coupling
         if flow_coupling == "additive":
-            self.f = f(in_channels // 2, in_channels-in_channels // 2, hidden_channels, cond_channels, network_model, num_layers)
+            self.f = f(in_channels // 2, in_channels-in_channels // 2, hidden_channels, cond_channels, network_model, num_layers, dmodel=dmodel, nheads=nheads, input_length=input_length)
         elif flow_coupling == "affine":
             print("affine: in_channels = " + str(in_channels))
-            self.f = f(in_channels // 2, 2*(in_channels-in_channels // 2), hidden_channels, cond_channels, network_model, num_layers)
+            self.f = f(in_channels // 2, 2*(in_channels-in_channels // 2), hidden_channels, cond_channels, network_model, num_layers, dmodel=dmodel, nheads=nheads, input_length=input_length)
             print("Flowstep affine layer: " + str(in_channels))
 
     def init_lstm_hidden(self):
@@ -123,14 +126,17 @@ class FlowStep(nn.Module):
     def reverse_flow(self, input, cond, logdet):
         # 1.coupling
         z1, z2 = thops.split_feature(input, "split")
-        # import pdb;pdb.set_trace()
         z1_cond = torch.cat((z1, cond), dim=1)
 
         if self.flow_coupling == "additive":
             z2 = z2 - self.f(z1_cond)
         elif self.flow_coupling == "affine":
-            h = self.f(z1_cond.permute(0, 2, 1)).permute(0, 2, 1)
+            if self.network_model=="transformer":
+                h = self.f(z1_cond.permute(2,0,1)).permute(1,2,0)
+            else:
+                h = self.f(z1_cond.permute(0, 2, 1)).permute(0, 2, 1)
             shift, scale = thops.split_feature(h, "cross")
+            #import pdb;pdb.set_trace()
             nan_throw(shift, "shift")
             nan_throw(scale, "scale")
             nan_throw(z2, "z2 unscaled")
@@ -139,6 +145,7 @@ class FlowStep(nn.Module):
             z2 = z2 - shift
             logdet = -thops.sum(torch.log(scale), dim=[1, 2]) + logdet
             
+        #import pdb;pdb.set_trace()
         z = thops.cat_feature(z1, z2)
         # 2. permute
         z, logdet = FlowStep.FlowPermutation[self.flow_permutation](
@@ -156,6 +163,9 @@ class FlowNet(nn.Module):
                  flow_coupling="additive",
                  network_model="LSTM",
                  num_layers=2,
+                 dmodel=None,
+                 nheads=10,
+                 input_length=-1,
                  LU_decomposed=False):
                  
         super().__init__()
@@ -173,6 +183,9 @@ class FlowNet(nn.Module):
                          flow_coupling=flow_coupling,
                          network_model=network_model,
                          num_layers=num_layers,
+                         dmodel=dmodel,
+                         nheads=nheads,
+                         input_length=input_length,
                          LU_decomposed=LU_decomposed))
             self.output_shapes.append(
                 [-1, x_channels, 1])
@@ -205,8 +218,11 @@ class Glow(nn.Module):
                             actnorm_scale=opt.actnorm_scale,
                             flow_permutation=opt.flow_permutation,
                             flow_coupling=opt.flow_coupling,
+                            dmodel=opt.flow_coupling_dmodel,
                             network_model=opt.network_model,
                             num_layers=opt.num_layers,
+                            nheads=opt.flow_coupling_nheads,
+                            input_length=int(opt.output_lengths.split(",")[0]),
                             LU_decomposed=opt.LU_decomposed)
         self.opt = opt
         

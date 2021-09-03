@@ -6,7 +6,7 @@ output_modalities: expmap_cr_scaled_20
 input_lengths: 1,120,140
 output_lengths: 1
 output_time_offsets: 120
-input_fix_length_types: single,end,end
+input_proc_types: single,end,end
 input_types: d,c,c
 input_num_tokens: 16,0,0
 nlayers: 2

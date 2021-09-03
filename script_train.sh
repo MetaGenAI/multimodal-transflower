@@ -40,7 +40,7 @@ echo $SLURM_PROCID
 export LOCAL_RANK=$SLURM_LOCALID
 
 $py training/train.py --data_dir=${data_dir} \
-    --max_epochs=1000\
+    --max_epochs=10\
     --hparams_file=training/hparams/${hparams_file}.yaml \
     --experiment_name=$exp\
     --workers=$(nproc) \

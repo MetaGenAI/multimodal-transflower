@@ -52,8 +52,8 @@ root_dir=data
 
 ####dance_combined
 #data_dir=${root_dir}/dance_combined
-data_dir=${root_dir}/dance_combined2
-#data_dir=${root_dir}/dance_combined3
+#data_dir=${root_dir}/dance_combined2
+data_dir=${root_dir}/dance_combined3
 exp=$1
 #exp=transformer_expmap
 #exp=mowgli_expmap_stage2
