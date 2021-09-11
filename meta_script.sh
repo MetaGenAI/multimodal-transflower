@@ -20,10 +20,15 @@
 #for exp in transflower_expmap_cr4_bs5_og2_futureN
 #for exp in transflower_expmap_cr4_bs5_og_futureN
 for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss
+#for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss_simon
 #for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss_bn
 #for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss_60
 #for exp in transformer_expmap_cr_60
-#for exp in transflower_expmap_old
+#for exp in transformer_expmap_cr
+#for exp in transformer_expmap_cr transformer_expmap_cr_N7
+#for exp in transformer_expmap_cr_N7
+#for exp in transformer_expmap_cr_N7
+#for exp in transformer_expmap_simon
 #for exp in transflower_expmap_cr4_label_bs5d
 #for exp in transflower_expmap_cr_label2
 #for exp in transflower_expmap_cr_label3
@@ -31,8 +36,10 @@ for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss
 do
 	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_test --num_nodes 1 --max_epochs 1000 --data_dir=$SCRATCH/data/dance_combined2
 	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_test --num_nodes 1 --max_epochs 1000 --data_dir=$SCRATCH/data/dance_combined3
-	#sbatch slurm_script4.slurm $exp --experiment_name ${exp}_aistpp --num_nodes 1 --max_epochs 1000 --data_dir=$SCRATCH/data/dance_combined3 --base_filenames_file crossmodal_train_filtered2.txt
-	sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_aistpp --num_nodes 1 --max_epochs 1000 --data_dir=$SCRATCH/data/dance_combined3 --base_filenames_file crossmodal_train_filtered2.txt --continue_train
+	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_aistpp --num_nodes 1 --max_epochs 1000 --data_dir=$SCRATCH/data/dance_combined3 --base_filenames_file crossmodal_train_filtered2.txt
+	#sbatch slurm_script4.slurm $exp --experiment_name ${exp}_aistpp --num_nodes 1 --max_epochs 1000 --data_dir=$SCRATCH/data/dance_aistpp
+	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_aistpp --num_nodes 1 --max_epochs 1000 --data_dir=$SCRATCH/data/dance_combined3 --base_filenames_file crossmodal_train_filtered2.txt --continue_train
+	sbatch slurm_script4.slurm $exp --experiment_name ${exp}_newdata --num_nodes 1 --max_epochs 1000 --data_dir=$SCRATCH/data/dance_combined3 --continue_train
 	#sbatch slurm_script4.slurm $exp --experiment_name ${exp}_aistpp --num_nodes 1 --max_epochs 1000 --data_dir=$SCRATCH/data/dance_combined3 --base_filenames_file crossmodal_train_filtered2.txt --continue_train
 	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_aistpp --num_nodes 1 --max_epochs 1000 --data_dir=$SCRATCH/data/dance_combined3 --base_filenames_file crossmodal_train_filtered2.txt --continue_train
 	#sbatch slurm_script.slurm $exp --experiment_name ${exp}_newdata4 --num_nodes 8 --continue_train --no_load_hparams 

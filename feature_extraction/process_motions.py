@@ -42,27 +42,26 @@ size = comm.Get_size()
 print(rank)
 
 p = BVHParser()
+p = BVHParser()
 if do_mirror:
     data_pipe = Pipeline([
-        ('dwnsampl', DownSampler(tgt_fps=fps,  keep_all=False)),
+        ('dwnsampl', DownSampler(tgt_fps=fps, keep_all=False)),
         ('mir', Mirror(axis='X', append=True)),
-        ('root', RootTransformer('pos_rot_deltas')),
-        # ('jtsel', JointSelector(['Spine', 'Spine1', 'Spine2', 'Neck', 'Head', 'RightShoulder', 'RightArm', 'RightForeArm', 'RightHand', 'LeftShoulder', 'LeftArm', 'LeftForeArm', 'LeftHand', 'RightUpLeg', 'RightLeg', 'RightFoot', 'RightToeBase', 'LeftUpLeg', 'LeftLeg', 'LeftFoot', 'LeftToeBase'], include_root=True)),
-        ('jtsel', JointSelector(['Spine', 'Spine1', 'Neck', 'Head', 'RightShoulder', 'RightArm', 'RightForeArm', 'RightHand', 'LeftShoulder', 'LeftArm', 'LeftForeArm', 'LeftHand', 'RightUpLeg', 'RightLeg', 'RightFoot', 'RightToeBase', 'LeftUpLeg', 'LeftLeg', 'LeftFoot', 'LeftToeBase'], include_root=True)),
-        (param, MocapParameterizer(param)),
-        ('cnst', ConstantsRemover(only_cols=["Hips_Xposition", "Hips_Zposition"])),
-        ('np', Numpyfier())
+        ('jtsel', JointSelector(['Spine','Spine1','Neck','Head','RightShoulder', 'RightArm', 'RightForeArm', 'RightHand', 'LeftShoulder', 'LeftArm', 'LeftForeArm', 'LeftHand', 'RightUpLeg', 'RightLeg', 'RightFoot', 'LeftUpLeg', 'LeftLeg', 'LeftFoot'], include_root=True)),
+        ('root', RootTransformer('pos_rot_deltas', position_smoothing=3, rotation_smoothing=3)),
+        ('exp', MocapParameterizer('expmap')), 
+#            ('cnst', ConstantsRemover()),
+        ('npf', Numpyfier())
     ])
 else:
     data_pipe = Pipeline([
-        ('dwnsampl', DownSampler(tgt_fps=fps,  keep_all=False)),
-        ('root', RootTransformer('pos_rot_deltas')),
-        # ('mir', Mirror(axis='X', append=True)),
-        # ('jtsel', JointSelector(['Spine', 'Spine1', 'Spine2', 'Neck', 'Head', 'RightShoulder', 'RightArm', 'RightForeArm', 'RightHand', 'LeftShoulder', 'LeftArm', 'LeftForeArm', 'LeftHand', 'RightUpLeg', 'RightLeg', 'RightFoot', 'RightToeBase', 'LeftUpLeg', 'LeftLeg', 'LeftFoot', 'LeftToeBase'], include_root=True)),
-        ('jtsel', JointSelector(['Spine', 'Spine1', 'Neck', 'Head', 'RightShoulder', 'RightArm', 'RightForeArm', 'RightHand', 'LeftShoulder', 'LeftArm', 'LeftForeArm', 'LeftHand', 'RightUpLeg', 'RightLeg', 'RightFoot', 'RightToeBase', 'LeftUpLeg', 'LeftLeg', 'LeftFoot', 'LeftToeBase'], include_root=True)),
-        (param, MocapParameterizer(param)),
-        ('cnst', ConstantsRemover(only_cols=["Hips_Xposition", "Hips_Zposition"])),
-        ('np', Numpyfier())
+        ('dwnsampl', DownSampler(tgt_fps=fps, keep_all=False)),
+#        ('mir', Mirror(axis='X', append=True)),
+        ('jtsel', JointSelector(['Spine','Spine1','Neck','Head','RightShoulder', 'RightArm', 'RightForeArm', 'RightHand', 'LeftShoulder', 'LeftArm', 'LeftForeArm', 'LeftHand', 'RightUpLeg', 'RightLeg', 'RightFoot', 'LeftUpLeg', 'LeftLeg', 'LeftFoot'], include_root=True)),
+        ('root', RootTransformer('pos_rot_deltas', position_smoothing=3, rotation_smoothing=3)),
+        ('exp', MocapParameterizer('expmap')), 
+#            ('cnst', ConstantsRemover()),
+        ('npf', Numpyfier())
     ])
 
 def extract_joint_angles(files):

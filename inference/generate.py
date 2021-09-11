@@ -44,6 +44,7 @@ if __name__ == '__main__':
     parser.add_argument('--generate_video', action='store_true')
     parser.add_argument('--generate_bvh', action='store_true')
     parser.add_argument('--generate_ground_truth', action='store_true')
+    #parser.add_argument('--nostrict', action='store_true')
     parser.add_argument('--fps', type=int, default=20)
     args = parser.parse_args()
     data_dir = args.data_dir
@@ -104,6 +105,8 @@ if __name__ == '__main__':
 
     # Load latest trained checkpoint from experiment
     model = create_model(opt)
+    #model = model.load_from_checkpoint(latest_checkpoint, opt=opt)
+    #model = model.load_from_checkpoint(latest_checkpoint, opt=opt, strict=False)
     model = model.load_from_checkpoint(latest_checkpoint, opt=opt)
 
     # Load input features (sequences must have been processed previously into features)
@@ -154,7 +157,7 @@ if __name__ == '__main__':
 
                 if mod == "joint_angles_scaled":
                     generate_video_from_mats(predicted_features_file,output_folder,audio_file,trim_audio,fps,plot_mats)
-                elif mod == "expmap_scaled" or mod == "expmap_scaled_20" or mod == "expmap_cr_scaled_20":
+                elif mod[:13] == "expmap_scaled" or mod[:16] == "expmap_cr_scaled":
                     pipeline_file = f'{data_dir}/motion_{mod}_data_pipe.sav'
                     generate_video_from_expmaps(predicted_features_file,pipeline_file,output_folder,audio_file,trim_audio,args.generate_bvh)
                 elif mod == "position_scaled":

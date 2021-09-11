@@ -9,6 +9,7 @@
 
 #export PYTHONPATH=$SCRATCH/:${PYTHONPATH}
 
+module purge
 module load pytorch-gpu/py3/1.8.0
 
 #exp=$1
