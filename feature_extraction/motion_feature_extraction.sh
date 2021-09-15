@@ -14,18 +14,24 @@ fps=60
 param=expmap
 #param=position
 
-#old (without constant remover)
+#nompi
+$py feature_extraction/process_motions.py $@ --param ${param} --fps $fps --do_mirror
+#$py feature_extraction/extract_transform2.py $1 --feature_name bvh_${param} --transforms scaler
+#$py feature_extraction/apply_transforms.py $@ --feature_name bvh_${param} --transform_name scaler --new_feature_name ${param}_scaled_${fps}
+#cp $1/motion_expmap_data_pipe.sav $1/motion_${param}_scaled_${fps}_data_pipe.sav
+
+#new
 #mpirun -n $n $py feature_extraction/process_motions.py $@ --param ${param} --fps $fps --do_mirror
-##mpirun -n 1 $py feature_extraction/extract_transform2.py $1 --feature_name bvh_${param} --transforms scaler
+#mpirun -n 1 $py feature_extraction/extract_transform2.py $1 --feature_name bvh_${param} --transforms scaler
 #mpirun -n $n $py feature_extraction/apply_transforms.py $@ --feature_name bvh_${param} --transform_name scaler --new_feature_name ${param}_scaled_${fps}
 #cp $1/motion_expmap_data_pipe.sav $1/motion_${param}_scaled_${fps}_data_pipe.sav
 
-#with constant remover
-mpirun -n $n $py feature_extraction/process_motions.py $@ --param ${param} --fps $fps --do_mirror
-rename -f 's/bvh_expmap/bvh_expmap_cr/' $1/*bvh_expmap.npy
-mpirun -n 1 $py feature_extraction/extract_transform2.py $1 --feature_name bvh_${param}_cr --transforms scaler
-mpirun -n $n $py feature_extraction/apply_transforms.py $@ --feature_name bvh_${param}_cr --transform_name scaler --new_feature_name ${param}_cr_scaled_${fps}
-cp $1/motion_expmap_data_pipe.sav $1/motion_${param}_cr_scaled_${fps}_data_pipe.sav
+#with constant remover (old)
+#mpirun -n $n $py feature_extraction/process_motions.py $@ --param ${param} --fps $fps --do_mirror
+#rename -f 's/bvh_expmap/bvh_expmap_cr/' $1/*bvh_expmap.npy
+#mpirun -n 1 $py feature_extraction/extract_transform2.py $1 --feature_name bvh_${param}_cr --transforms scaler
+#mpirun -n $n $py feature_extraction/apply_transforms.py $@ --feature_name bvh_${param}_cr --transform_name scaler --new_feature_name ${param}_cr_scaled_${fps}
+#cp $1/motion_expmap_data_pipe.sav $1/motion_${param}_cr_scaled_${fps}_data_pipe.sav
 
 #if doing mirroring
 #feature_extraction/duplicate_features.sh $1 audio_feats_scaled_20
