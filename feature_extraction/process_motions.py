@@ -48,7 +48,8 @@ if do_mirror:
         ('dwnsampl', DownSampler(tgt_fps=fps, keep_all=False)),
         ('mir', Mirror(axis='X', append=True)),
         ('jtsel', JointSelector(['Spine','Spine1','Neck','Head','RightShoulder', 'RightArm', 'RightForeArm', 'RightHand', 'LeftShoulder', 'LeftArm', 'LeftForeArm', 'LeftHand', 'RightUpLeg', 'RightLeg', 'RightFoot', 'LeftUpLeg', 'LeftLeg', 'LeftFoot'], include_root=True)),
-        ('root', RootTransformer('pos_rot_deltas', position_smoothing=3, rotation_smoothing=3)),
+        #('root', RootTransformer('pos_rot_deltas', position_smoothing=3, rotation_smoothing=3)),
+        ('root', RootTransformer('pos_rot_deltas')),
         ('exp', MocapParameterizer('expmap')), 
 #            ('cnst', ConstantsRemover()),
         ('npf', Numpyfier())

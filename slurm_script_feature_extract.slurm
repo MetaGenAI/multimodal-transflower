@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=feature_extraction      # name of job
-#SBATCH --ntasks=40                # total number of MPI processes
+#SBATCH --ntasks=1                # total number of MPI processes
 ##SBATCH --ntasks-per-node=16       # number of MPI processes per node
 # /!\ Caution, "multithread" in Slurm vocabulary refers to hyperthreading.
 #SBATCH --hint=nomultithread       # 1 MPI process per physical core (no hyperthreading)
@@ -19,13 +19,18 @@ module purge
  
 # loading modules
 #module load intel-all/19.0.4
-module load pytorch-gpu/py3/1.8.0
+#module load pytorch-gpu/py3/1.8.0
+module load pytorch-cpu/py3/1.7.1
 #module load openmpi/4.0.5-cuda
  
 # echo of launched commands
 set -x
+
+export n=1
  
 # code execution
 #srun -n 16 ./feature_extraction/audio_feature_extraction_test.sh /gpfsscratch/rech/imi/usc19dv/data/aistpp_long_audios/ --replace_existing
-srun -n 40 -pty bash -c "./feature_extraction/motion_feature_extraction.sh /gpfsscratch/rech/imi/usc19dv/data/dance_combined3 --replace_existing"
+#srun -n 40 -pty bash -c "./feature_extraction/motion_feature_extraction.sh /gpfsscratch/rech/imi/usc19dv/data/dance_combined3 --replace_existing"
+#./feature_extraction/motion_feature_extraction.sh /gpfsscratch/rech/imi/usc19dv/data/dance_combined3 --replace_existing
+./feature_extraction/motion_feature_extraction.sh /gpfsscratch/rech/imi/usc19dv/data/testing_tmp --replace_existing
 #./feature_extraction/motion_feature_extraction.sh /gpfsscratch/rech/imi/usc19dv/data/dance_combined3 --replace_existing

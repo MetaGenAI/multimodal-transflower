@@ -1,11 +1,12 @@
 
 folder=$1
 py=python3
-n=$(nproc)
-#n=6
+#py=/gpfslocalsup/pub/anaconda-py3/2020.02/envs/pytorch-cpu-1.7.1/bin/python
+#n=$(nproc)
+#n=40
 
 #target fps
-fps=60
+fps=20
 
 # to convert aistpp to BVH with mixamo skeleton
 #mpirun -n $n $py feature_extraction/process_aistpp.py $@ --fps 60 # this fps is the source fps of aistpp which is 60Hz
@@ -15,9 +16,9 @@ param=expmap
 #param=position
 
 #nompi
-$py feature_extraction/process_motions.py $@ --param ${param} --fps $fps --do_mirror
-#$py feature_extraction/extract_transform2.py $1 --feature_name bvh_${param} --transforms scaler
-#$py feature_extraction/apply_transforms.py $@ --feature_name bvh_${param} --transform_name scaler --new_feature_name ${param}_scaled_${fps}
+srun -n $n -pty bash -c $py' ./feature_extraction/process_motions.py '$@' --param '${param}' --fps '$fps' --do_mirror'
+#srun -n 1 -pty $py feature_extraction/extract_transform2.py $1 --feature_name bvh_${param} --transforms scaler
+#srun -n $n $py feature_extraction/apply_transforms.py $@ --feature_name bvh_${param} --transform_name scaler --new_feature_name ${param}_scaled_${fps}
 #cp $1/motion_expmap_data_pipe.sav $1/motion_${param}_scaled_${fps}_data_pipe.sav
 
 #new
