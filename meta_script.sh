@@ -25,11 +25,25 @@ module load pytorch-gpu/py3/1.8.0
 #for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss
 #for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss2
 #for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss3
+for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss4
+#for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss4 transflower_expmap_cr4_bs5_og2_futureN_gauss5
+#for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss5
 #for exp in mowgli_expmapb
 #for exp in mowgli_expmap_nocond
 #for exp in mowgli_expmap_nocond2
 #for exp in mowgli_expmap_nocond4
-for exp in mowgli_expmap_nocond5
+#for exp in mowgli_expmap_nocond5
+#for exp in mowgli_expmap_nocond_output_chunking
+#for exp in mowgli_expmap_nocond_output_chunking2
+#for exp in mowgli_expmap_nocond_output_chunking2_stage2
+#for exp in mowgli_expmap_nocond_output_chunking2b_stage2
+#for exp in mowgli_expmap_nocond_output_chunking3
+#for exp in mowgli_expmap_nocond_output_chunking3_stage2
+#for exp in mowgli_expmap_nocond_output_chunking3_stage2 mowgli_expmap_nocond_output_chunking2_stage2 
+#for exp in mowgli_expmap_nocond_output_chunking4
+#for exp in mowgli_expmap_nocond_output_chunking5
+#for exp in mowgli_expmap_nocond_output_chunking6
+#for exp in mowgli_expmap_nocond_output_chunking3b_stage2
 #for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss_simon
 #for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss_bn
 #for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss_60
@@ -50,8 +64,19 @@ do
 	#sbatch slurm_script4.slurm $exp --experiment_name ${exp}_aistpp --num_nodes 1 --max_epochs 1000 --data_dir=$SCRATCH/data/dance_aistpp
 	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_aistpp --num_nodes 1 --max_epochs 1000 --data_dir=$SCRATCH/data/dance_combined3 --base_filenames_file crossmodal_train_filtered2.txt --continue_train
 	#sbatch slurm_script4.slurm $exp --experiment_name ${exp}_newdata --num_nodes 1 --max_epochs 1000 --data_dir=$SCRATCH/data/dance_combined3
-	#sbatch slurm_script4.slurm $exp --experiment_name ${exp}_newdata_filtered --num_nodes 1 --max_epochs 1000 --data_dir=$SCRATCH/data/dance_combined3 --base_filenames_file base_filenames_train_filtered2.txt
-	sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_newdata_filtered_gc --num_nodes 1 --max_epochs 1000 --data_dir=$SCRATCH/data/dance_combined3 --base_filenames_file base_filenames_train_filtered2.txt --gradient_clip_val 0.1
+	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_newdata_filtered --num_nodes 1 --max_epochs 1500 --data_dir=$SCRATCH/data/dance_combined3 --base_filenames_file base_filenames_train_filtered2.txt
+	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_newdata_filtered_gc --num_nodes 1 --max_epochs 3000 --data_dir=$SCRATCH/data/dance_combined3 --base_filenames_file base_filenames_train_filtered2.txt --gradient_clip_val 0.1 --continue_train
+	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_newdata_filtered_gc10_short --num_nodes 1 --max_epochs 300 --data_dir=$SCRATCH/data/dance_combined3 --base_filenames_file base_filenames_train_filtered2.txt --gradient_clip_val 10.0
+	#sbatch slurm_script4.slurm $exp --experiment_name ${exp}_newdata_filtered_gc10_short --num_nodes 1 --max_epochs 300 --data_dir=$SCRATCH/data/dance_combined3 --base_filenames_file base_filenames_train_filtered2.txt --gradient_clip_val 10.0 --continue_train
+#	sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_newdata_filtered_gc10_lr1 --num_nodes 1 --max_epochs 300 --data_dir=$SCRATCH/data/dance_combined3 --base_filenames_file base_filenames_train_filtered2.txt --gradient_clip_val 10.0 --learning_rate 1e-5
+	#sbatch slurm_script4.slurm $exp --experiment_name ${exp}_newdata_filtered_gc10_lr1 --num_nodes 1 --max_epochs 300 --data_dir=$SCRATCH/data/dance_combined3 --base_filenames_file base_filenames_train_filtered2.txt --gradient_clip_val 10.0 --learning_rate 1e-5 --continue_train
+	#sbatch slurm_script4.slurm $exp --experiment_name ${exp}_newdata_filtered_gc_short --num_nodes 1 --max_epochs 300 --data_dir=$SCRATCH/data/dance_combined3 --base_filenames_file base_filenames_train_filtered2.txt --gradient_clip_val 1.0
+#	sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_newdata_filtered_gc_short --num_nodes 1 --max_epochs 2000 --data_dir=$SCRATCH/data/dance_combined3 --base_filenames_file base_filenames_train_filtered2.txt --gradient_clip_val 1.0 --continue_train
+	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_newdata_filtered_gc_short --num_nodes 1 --max_epochs 100 --data_dir=$SCRATCH/data/dance_combined3 --base_filenames_file base_filenames_train_filtered2.txt --gradient_clip_val 0.1 --continue_train --load_weights_only --no_load_hparams
+	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_newdata_filtered_gc_short2 --num_nodes 1 --max_epochs 100 --data_dir=$SCRATCH/data/dance_combined3 --base_filenames_file base_filenames_train_filtered2.txt --gradient_clip_val 0.1 --continue_train --load_weights_only --no_load_hparams --batch_size 84 --learning_rate 5e-4
+	#sbatch slurm_script4.slurm $exp --experiment_name ${exp}_newdata_filtered_gc_short --num_nodes 1 --max_epochs 300 --data_dir=$SCRATCH/data/dance_combined3 --base_filenames_file base_filenames_train_filtered2.txt --gradient_clip_val 0.1 --continue_train
+#	sbatch slurm_script4.slurm $exp --experiment_name ${exp}_newdata_filtered_gc_short --num_nodes 1 --max_epochs 300 --data_dir=$SCRATCH/data/dance_combined3 --base_filenames_file base_filenames_train_filtered2.txt --gradient_clip_val 10 --continue_train --learning_rate 1e-6 --load_weights_only
+	sbatch slurm_script4.slurm $exp --experiment_name ${exp}_newdata_filtered_gc_short --num_nodes 1 --max_epochs 300 --data_dir=$SCRATCH/data/dance_combined3 --base_filenames_file base_filenames_train_filtered2.txt --gradient_clip_val 10 --continue_train --learning_rate 1e-6
 	#sbatch slurm_script4.slurm $exp --experiment_name ${exp}_newdata --num_nodes 1 --max_epochs 1000 --data_dir=$SCRATCH/data/dance_combined3 --continue_train
 	#sbatch slurm_script4.slurm $exp --experiment_name ${exp}_aistpp --num_nodes 1 --max_epochs 1000 --data_dir=$SCRATCH/data/dance_combined3 --base_filenames_file crossmodal_train_filtered2.txt --continue_train
 	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_aistpp --num_nodes 1 --max_epochs 1000 --data_dir=$SCRATCH/data/dance_combined3 --base_filenames_file crossmodal_train_filtered2.txt --continue_train

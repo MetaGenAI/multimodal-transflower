@@ -20,6 +20,7 @@ class MowgliModel(BaseModel):
         douts = self.douts
         input_lengths = self.input_lengths
         output_lengths = self.output_lengths
+        self.outputs_chunking = outputs_chunking = [int(x) for x in str(self.opt.outputs_chunking).split(",")]
 
         self.input_mod_nets = []
         self.output_mod_nets = []
@@ -40,10 +41,12 @@ class MowgliModel(BaseModel):
                 self.module_names.append(name)
         for i, mod in enumerate(output_mods):
 
+            assert douts[i] % outputs_chunking[i] == 0 #TODO: implement padding to avoid this restrictiion
+
             # import pdb;pdb.set_trace()
             vae = ConditionalDiscreteVAE(
-                input_shape = (output_lengths[i], 1),
-                channels = douts[i],
+                input_shape = (output_lengths[i]*outputs_chunking[i], 1),
+                channels = douts[i]//outputs_chunking[i],
                 num_layers = opt.vae_num_layers,           # number of downsamples - ex. 256 / (2 ** 3) = (32 x 32 feature map)
                 num_tokens = opt.vae_num_tokens,        # number of visual tokens. in the paper, they used 8192, but could be smaller for downsized projects
                 codebook_dim = opt.vae_codebook_dim,       # codebook dimension
@@ -136,6 +139,7 @@ class MowgliModel(BaseModel):
         parser.add_argument('--prior_no_use_pos_emb', action='store_true', help="dont use positional embeddings for the prior transformer")
         parser.add_argument('--stage2', action='store_true', help="stage2: train the prior, rather than the VAE")
         parser.add_argument('--cond_vae', action='store_true', help="whether to use a conditional vae")
+        parser.add_argument('--outputs_chunking', type=str, default="1", help="number of chunks in which the inputs are chunked")
         return parser
 
     def forward(self, data, temp=1.0):
@@ -154,6 +158,8 @@ class MowgliModel(BaseModel):
                 # residual, _ = self.output_mod_glows[i](x=None, cond=trans_output.permute(1,0,2), reverse=True)
                 residual = self.output_mod_vaes[i].generate(trans_output.permute(1,2,0), temp=temp)
                 residual = residual.squeeze(-1)
+                shap = residual.shape
+                residual = residual.view(shap[0],shap[1]*self.outputs_chunking[i],shap[2]//self.outputs_chunking[i])
                 output = predicted_mean + residual.permute(2,0,1)
                 outputs.append(output)
         else:
@@ -162,7 +168,9 @@ class MowgliModel(BaseModel):
                 output = self.output_mod_vaes[i].generate(trans_output.permute(1,2,0), temp=temp)
                 # import pdb;pdb.set_trace()
                 output = output.squeeze(-1)
-                outputs.append(output.permute(2,0,1))
+                shap = output.shape
+                output = output.view(shap[0],shap[1]*self.outputs_chunking[i],shap[2]//self.outputs_chunking[i])
+                outputs.append(output.permute(2,0,1)) #out: time, batch, features
         return outputs
 
     def on_train_epoch_start(self):
@@ -172,6 +180,12 @@ class MowgliModel(BaseModel):
     def training_step(self, batch, batch_idx):
         opt = self.opt
         self.set_inputs(batch)
+        targets = []
+        for i, mod in enumerate(self.output_mods):
+            targets.append(self.targets[i])
+            targets_shape = targets[i].shape
+            targets[i] = torch.stack(torch.chunk(targets[i],self.outputs_chunking[i], dim=2), dim=2)
+            targets[i] = targets[i].permute(1,0,2,3).reshape(targets_shape[1], targets_shape[0]*self.outputs_chunking[i], targets_shape[2]//self.outputs_chunking[i]).permute(1,0,2)
         # print(self.input_mod_nets[0].encoder1.weight.data)
         # print(self.targets[0])
         if opt.cond_vae or opt.stage2:
@@ -193,16 +207,16 @@ class MowgliModel(BaseModel):
                     predicted_mean = self.output_mod_mean_nets[i](trans_predicted_mean_latents)
                     vae = self.output_mod_vaes[i]
                     if not self.opt.stage2:
-                        nll_loss += vae((self.targets[i] - predicted_mean).permute(1,2,0), cond=latents1.permute(1,2,0), return_loss=True, temp=self.vae_temp) #time, batch, features -> batch, features, time
+                        nll_loss += vae((targets[i] - predicted_mean).permute(1,2,0), cond=latents1.permute(1,2,0), return_loss=True, temp=self.vae_temp) #time, batch, features -> batch, features, time
                         if self.opt.max_prior_loss_weight > 0:
-                            prior_loss, accuracy = vae.prior_logp((self.targets[i] - predicted_mean).permute(1,2,0), cond=latents2.permute(1,2,0), return_accuracy=True)
+                            prior_loss, accuracy = vae.prior_logp((targets[i] - predicted_mean).permute(1,2,0), cond=latents2.permute(1,2,0), return_accuracy=True)
                             accuracies.append(accuracy)
                             nll_loss += self.prior_loss_weight * prior_loss
                     else:
-                        prior_loss, accuracy = vae.prior_logp((self.targets[i] - predicted_mean).permute(1,2,0), cond=latents2.permute(1,2,0), return_accuracy=True, detach_cond=True)
+                        prior_loss, accuracy = vae.prior_logp((targets[i] - predicted_mean).permute(1,2,0), cond=latents2.permute(1,2,0), return_accuracy=True, detach_cond=True)
                         nll_loss += prior_loss
                         accuracies.append(accuracy)
-                    mse_loss += 100*self.mean_loss(predicted_mean[i], self.targets[i])
+                    mse_loss += 100*self.mean_loss(predicted_mean[i], targets[i])
                 loss = nll_loss + mse_loss
                 self.mse_loss = mse_loss
                 self.nll_loss = nll_loss
@@ -219,21 +233,21 @@ class MowgliModel(BaseModel):
                     output2 = output1
                     vae = self.output_mod_vaes[i]
                     if not self.opt.stage2:
-                        loss += vae(self.targets[i].permute(1,2,0), cond=output1.permute(1,2,0), return_loss=True, temp=self.vae_temp) #time, batch, features -> batch, features, time
+                        loss += vae(targets[i].permute(1,2,0), cond=output1.permute(1,2,0), return_loss=True, temp=self.vae_temp) #time, batch, features -> batch, features, time
                         if self.opt.max_prior_loss_weight > 0:
-                            prior_loss, accuracy = vae.prior_logp(self.targets[i].permute(1,2,0), cond=output2.permute(1,2,0), return_accuracy=True)
+                            prior_loss, accuracy = vae.prior_logp(targets[i].permute(1,2,0), cond=output2.permute(1,2,0), return_accuracy=True)
                             loss += self.prior_loss_weight * prior_loss
                             accuracies.append(accuracy)
                     else:
-                        prior_loss, accuracy = vae.prior_logp(self.targets[i].permute(1,2,0), cond=output2.permute(1,2,0), return_accuracy=True, detach_cond=True)
-                        ##prior_loss, accuracy = vae.prior_logp(self.targets[i].permute(1,2,0), return_accuracy=True, detach_cond=True)
+                        prior_loss, accuracy = vae.prior_logp(targets[i].permute(1,2,0), cond=output2.permute(1,2,0), return_accuracy=True, detach_cond=True)
+                        ##prior_loss, accuracy = vae.prior_logp(targets[i].permute(1,2,0), return_accuracy=True, detach_cond=True)
                         loss += prior_loss
                         accuracies.append(accuracy)
         else:
             loss = 0
             for i, mod in enumerate(self.output_mods):
                 vae = self.output_mod_vaes[i]
-                loss += vae(self.targets[i].permute(1,2,0), cond=None, return_loss=True, temp=self.vae_temp) #time, batch, features -> batch, features, time
+                loss += vae(targets[i].permute(1,2,0), cond=None, return_loss=True, temp=self.vae_temp) #time, batch, features -> batch, features, time
 
         self.log('loss', loss)
         if opt.cond_vae or opt.stage2:
