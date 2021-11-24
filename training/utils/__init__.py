@@ -10,8 +10,11 @@ def mkdirs(paths):
 
 
 def mkdir(path):
-    if not os.path.exists(path):
-        os.makedirs(path)
+    try:
+        if not os.path.exists(path):
+            os.makedirs(path)
+    except FileExistsError:
+        pass
 
 def get_latest_checkpoint(logs_path):
     def get_checkpoint_files(dir):

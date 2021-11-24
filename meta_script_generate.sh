@@ -20,83 +20,19 @@
 #base_filenames_file=base_filenames_aistpp_train_sample.txt
 #base_filenames_file=base_filenames_test_test2.txt
 base_filenames_file=base_filenames_test2.txt
+line=data_U_dekatron_R_00ee7d25_447d_4a2e_9d72_07c055ac4d40_S-d03a6c7b-1767-4582-8ffc-9277d5f5d4b5_4f45c65b-8524-4c2e-849d-e3c2cf17bd48_2_ID2C00_streams
+#exp=transflower_expmap_cr4_bs5_og2_futureN_gauss4_neosraw
+exp=moglow_expmap1_tf2_neosraw
+#sbatch slurm_script_generate.slurm $exp $line --data_dir $SCRATCH/data/dekaworld_alex_guille_neosdata --seeds "combined_streams_scaled,data_U_dekatron_R_00ee7d25_447d_4a2e_9d72_07c055ac4d40_S-d03a6c7b-1767-4582-8ffc-9277d5f5d4b5_4f45c65b-8524-4c2e-849d-e3c2cf17bd48_1_ID1E66900_streams" --max_length 1024
+#sbatch slurm_script_generate.slurm $exp $line --data_dir $SCRATCH/data/dekaworld_alex_guille_neosdata --zero_seeds "combined_streams_scaled" --sequence_length 1024
+sbatch slurm_script_generate.slurm $exp $line --data_dir $SCRATCH/data/dekaworld_alex_guille_neosdata --seeds "combined_streams_scaled,data_U_dekatron_R_00ee7d25_447d_4a2e_9d72_07c055ac4d40_S-d03a6c7b-1767-4582-8ffc-9277d5f5d4b5_4f45c65b-8524-4c2e-849d-e3c2cf17bd48_1_ID1E66900_streams" --sequence_length 2048 --max_length 120
+#sbatch slurm_script_generate.slurm $exp $line --data_dir $SCRATCH/data/dekaworld_alex_guille_neosdata --seeds "combined_streams_scaled,data_U_dekatron_R_00ee7d25_447d_4a2e_9d72_07c055ac4d40_S-d03a6c7b-1767-4582-8ffc-9277d5f5d4b5_4f45c65b-8524-4c2e-849d-e3c2cf17bd48_1_ID1E66900_streams" --sequence_length 1024 --max_length 1144 #--generate_ground_truth
 
-#for exp in moglow_expmap
-#for exp in transflower_expmap_cr4_label_bs5_newdata
-#for exp in moglow_expmap1_label_newdata2
-#for exp in moglow_expmap1_label3_newdata2
-#for exp in moglow_expmap1_label4d_newdata2
-#for exp in moglow_expmap1_label3c_newdata2
-#for exp in transflower_expmap_cr_label5_newdata2
-#for exp in moglow_expmap1_label3c_newdata2
-#for exp in moglow_expmap1_label4d_newdata2
-#for exp in moglow_expmap1_label4d_newdata2 moglow_expmap1_label3c_newdata2
-#for exp in transflower_expmap_cr4_label_bs5_newdata
-#for exp in transflower_expmap_cr4_label_bs5_og_newdata
-#for exp in transflower_expmap_cr4_bs5_og_newdata
-#for exp in transflower_expmap_cr4_label_bs5_og_newdata
-#for exp in transflower_expmap_cr4_bs5_og_newdata
-#for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss_test
-#for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss_aistpp
-#for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss_newdata
-#for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss2_newdata
-#for exp in mowgli_expmap_nocond_output_chunking2_stage2_newdata_filtered_gc_short
-#for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss5_newdata_filtered_gc_short
-for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss4_newdata_filtered_gc_short
-#for exp in mowgli_expmap_nocond_output_chunking3_stage2_newdata_filtered_gc_short
-#for exp in transflower_expmap_old
-#for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss_simon_aistpp
-#for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss_60_aistpp
-#for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss_bn_aistpp
-#for exp in transformer_expmap_cr_aistpp
-#for exp in transformer_expmap_cr_N7_aistpp
-#for exp in transformer_expmap_cr_60_aistpp
-#for exp in transflower_expmap_cr4_label7_newdata
-#for exp in transflower_expmap_large_cr_newdata_nomirror
-#for exp in transflower_expmap_smoldata
-#for exp in mowgli_expmap_stage2_newdata3
-#for exp in transflower_expmap
+for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss4_neosraw
 
-#for exp in transformer_expmap
-#for exp in mowgli_expmap_stage2_newdata
-#for exp in transflower_expmap
-#for exp in transflower_expmap_finetune2 transformer_expmap1
-#for exp in transformer_expmap1
-#for exp in transflower_expmap_newdata
-#for exp in transformer_expmap1
-#for exp in transflower_expmap2
-#for exp in mowgli_expmap_future10_fix transflower_residual_expmap
 do
 	while read line; do
 		  echo "$line"
-		#sbatch slurm_script_generate.slurm $exp $line
-		#sbatch slurm_script_generate.slurm $exp $line --generate_bvh --data_dir $SCRATCH/data/dance_combined_test_original_seeds
-		#sbatch slurm_script_generate.slurm $exp $line --generate_bvh --data_dir $SCRATCH/data/dance_combined_test1
-		#sbatch slurm_script_generate.slurm $exp $line --generate_bvh --data_dir $SCRATCH/data/dance_combined_test1
-		#sbatch slurm_script_generate.slurm $exp $line --generate_bvh --data_dir $SCRATCH/data/dance_combined_test1 --seeds expmap_scaled_20,the_basement
-		#sbatch slurm_script_generate.slurm $exp $line --generate_bvh --data_dir $SCRATCH/data/dance_combined_test1 --seeds_file expmap_scaled_20,the_basement
-		#sbatch slurm_script_generate.slurm $exp $line --generate_bvh --data_dir $SCRATCH/data/dance_combined2_test
-		#sbatch slurm_script_generate.slurm $exp $line --generate_bvh --data_dir $SCRATCH/data/dance_combined2_test --seeds expmap_scaled_20,kthmisc_12
-		#sbatch slurm_script_generate.slurm $exp $line --generate_bvh --data_dir $SCRATCH/data/dance_combined2_test --seeds expmap_cr_scaled_20,kthmisc_12
-		#sbatch slurm_script_generate.slurm $exp $line --generate_bvh --data_dir $SCRATCH/data/dance_combined2_test --seeds expmap_cr_scaled_20,kthmisc_12 --generate_video
-		#sbatch slurm_script_generate.slurm $exp $line --generate_bvh --data_dir $SCRATCH/data/dance_combined3_test --seeds expmap_cr_scaled_20,aistpp_gHO_sBM_cAll_d19_mHO3_ch10;dance_style,aistpp_gHO_sBM_cAll_d19_mHO3_ch10
-		#sbatch slurm_script_generate.slurm $exp $line --generate_bvh --data_dir $SCRATCH/data/dance_combined3 --seeds "expmap_cr_scaled_20,aistpp_gKR_sBM_cAll_d28_mKR2_ch01;dance_style,aistpp_gKR_sBM_cAll_d28_mKR2_ch01" --generate_video #--max_length 1024
-		#sbatch slurm_script_generate.slurm $exp $line --generate_bvh --data_dir $SCRATCH/data/dance_combined3 --seeds "expmap_cr_scaled_20,aistpp_gKR_sBM_cAll_d28_mKR2_ch01;dance_style,aistpp_gKR_sBM_cAll_d28_mKR2_ch01" --generate_video --max_length 1024
-		#sbatch slurm_script_generate.slurm $exp $line --generate_bvh --data_dir $SCRATCH/data/dance_combined3 --seeds "expmap_cr_scaled_20,${line};dance_style,${line}" --generate_video #--max_length 1024
-		#sbatch slurm_script_generate.slurm $exp $line --generate_bvh --data_dir $SCRATCH/data/aistpp_long_audios --seeds "expmap_cr_scaled_20,${line};dance_style,${line}" --generate_video #--max_length 1024
-
-		#sbatch slurm_script_generate.slurm $exp $line --generate_bvh --data_dir $SCRATCH/data/aistpp_long_audios --seeds "expmap_cr_scaled_60,${line}" --generate_video #--max_length 1024
-		#sbatch slurm_script_generate.slurm $exp $line --generate_bvh --data_dir $SCRATCH/data/dance_combined3 --seeds "expmap_cr_scaled_60,${line}" --generate_video #--max_length 1024
-
-		
-		#sbatch slurm_script_generate.slurm $exp $line --generate_bvh --data_dir $SCRATCH/data/aistpp_long_audios_simon --seeds "expmap_cr_scaled_20,${line};dance_style,${line}" --generate_video #--max_length 1024
-		#sbatch slurm_script_generate.slurm $exp $line --generate_bvh --data_dir $SCRATCH/data/dance_combined3 --seeds "expmap_cr_scaled_20,${line};dance_style,${line}" --generate_video #--max_length 1024
-		#sbatch slurm_script_generate.slurm $exp $line --generate_bvh --data_dir $SCRATCH/data/dance_aistpp --seeds "expmap_cr_scaled_20,${line}" --generate_video #--max_length 1024
-		#sbatch slurm_script_generate.slurm $exp $line --generate_bvh --data_dir $SCRATCH/data/dance_combined3 --seeds "expmap_cr_scaled_20,justdance_gJD_sFM_cAll_d01_mCA31_ch31;dance_style,justdance_gJD_sFM_cAll_d01_mCA31_ch31" --generate_video --max_length 1024
-		#sbatch slurm_script_generate.slurm $exp $line --generate_bvh --data_dir $SCRATCH/data/dance_combined3 --seeds "dance_style,aistpp_gHO_sBM_cAll_d19_mHO3_ch10" --generate_video --max_length 1024 --zero_seeds "expmap_cr_scaled_20" --generate_ground_truth
-		#sbatch slurm_script_generate.slurm $exp $line --generate_bvh --data_dir $SCRATCH/data/dance_combined3 --seeds "expmap_cr_scaled_20,aistpp_gJS_sFM_cAll_d01_mJS3_ch04" --generate_video --max_length 2048
-		#sbatch slurm_script_generate.slurm $exp $line --generate_bvh --data_dir $SCRATCH/data/dance_combined3 --seeds "expmap_scaled_20,aistpp_gJS_sFM_cAll_d01_mJS3_ch04" --generate_video --max_length 2048
-		sbatch slurm_script_generate.slurm $exp $line --generate_bvh --data_dir $SCRATCH/data/dance_combined3 --seeds "expmap_scaled_20,aistpp_gHO_sBM_cAll_d19_mHO3_ch10" --generate_video --max_length 1024
 		#sbatch slurm_script_generate.slurm $exp $line --generate_bvh --data_dir $SCRATCH/data/dance_combined3 --seeds "expmap_cr_scaled_20,kthmisc_gCA_sFM_cAll_d01_mCA_ch14" --generate_video --max_length 1024 --zero_seeds "expmap_cr_scaled_20" #--generate_ground_truth
 		#sbatch slurm_script_generate.slurm $exp $line --generate_bvh --data_dir $SCRATCH/data/dance_combined3 --seeds "dance_style,justdance_gJD_sFM_cAll_d01_mCA31_ch31" --generate_video --zero_seeds "expmap_cr_scaled_20" #--max_length 1024 
 		#sbatch slurm_script_generate.slurm $exp $line --generate_bvh --data_dir $SCRATCH/data/dance_combined3 --seeds "expmap_cr_scaled_20,kthmisc_gCA_sFM_cAll_d01_mCA_ch14;dance_style,kthmisc_gCA_sFM_cAll_d01_mCA_ch14" --generate_video --max_length 1024 --audio_format wav --generate_ground_truth

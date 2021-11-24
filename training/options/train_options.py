@@ -18,6 +18,7 @@ class TrainOptions(BaseOptions):
         parser.add_argument('--lr_decay_iters', type=int, default=50, help='multiply by a gamma every lr_decay_iters iterations')
         parser.add_argument('--lr_decay_factor', default=0.1, type=float, help="decay factor to use with multiplicative learning rate schedulers")
         parser.add_argument('--lr_decay_milestones', type=str, default='[500,1000]', help='the milestones at which to decay the learning rate, when using the multi step lr policy')
+        parser.add_argument('--scheduler_interval', type=str, default='epoch', help='sets the interval at which the scheduler is called. Either every epoch or every step')
         parser = Trainer.add_argparse_args(parser)
         self.parser = parser
         self.is_train = True

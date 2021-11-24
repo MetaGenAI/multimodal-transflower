@@ -37,6 +37,7 @@ if __name__ == '__main__':
     parser.add_argument('--seeds_file', type=str, help='file from which to choose a random seed')
     parser.add_argument('--output_folder', type=str)
     parser.add_argument('--audio_format', type=str, default="wav")
+    parser.add_argument('--sequence_length', type=int, default=-1)
     parser.add_argument('--experiment_name', type=str)
     parser.add_argument('--seq_id', type=str)
     parser.add_argument('--max_length', type=int, default=-1)
@@ -69,6 +70,9 @@ if __name__ == '__main__':
         print("choosing random seed from "+args.seeds_file)
         temp_base_filenames = [x[:-1] for x in open(args.seeds_file, "r").readlines()]
         seq_id = np.random.choice(temp_base_filenames)
+
+    sequence_length=args.sequence_length
+    if sequence_length==-1: sequence_length=None
 
 
     print(seq_id)
@@ -131,7 +135,7 @@ if __name__ == '__main__':
     #import pdb;pdb.set_trace()
     #import time
     #start_time = time.time()
-    predicted_mods = model.generate(features, ground_truth=args.generate_ground_truth)
+    predicted_mods = model.generate(features, ground_truth=args.generate_ground_truth, sequence_length=sequence_length)
     #print("--- %s seconds ---" % (time.time() - start_time))
     if len(predicted_mods) == 0:
         print("Sequence too short!")

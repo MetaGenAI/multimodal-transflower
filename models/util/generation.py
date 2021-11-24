@@ -3,7 +3,7 @@ import torch
 import torch.nn.functional as F
 
 #TODO: implement option to include the conditioning bit of input in the output
-def autoregressive_generation_multimodal(features, model, autoreg_mods=[], teacher_forcing=False, ground_truth=False, keep_latents=False, seed_lengths=None):
+def autoregressive_generation_multimodal(features, model, autoreg_mods=[], teacher_forcing=False, ground_truth=False, keep_latents=False, seed_lengths=None, sequence_length=None):
     inputs_ = []
     for i,mod in enumerate(model.input_mods):
         input_ = features["in_"+mod]
@@ -15,7 +15,8 @@ def autoregressive_generation_multimodal(features, model, autoreg_mods=[], teach
             input_ = F.one_hot(input_,num_classes=model.input_num_tokens[i])
         inputs_.append(input_)
     #NOTE: we are currently assuming the last modality is the one determining the sequence length
-    sequence_length = inputs_[-1].shape[0]
+    if sequence_length is None:
+        sequence_length = inputs_[-1].shape[0]
     for i,mod in enumerate(model.input_mods):
         input_ = inputs_[i]
         if model.input_proc_types[i] == "tile":

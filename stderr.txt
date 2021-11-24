@@ -1,0 +1,35 @@
+[D 14:33:56.801 NotebookApp] Searching ['/gpfsdswork/projects/rech/imi/usc19dv/mt-lightning', '/gpfs7kw/linkhome/rech/genini01/usc19dv/.jupyter', '/gpfslocalsup/pub/anaconda-py3/2020.02/envs/pytorch-gpu-1.8.0/etc/jupyter', '/usr/local/etc/jupyter', '/etc/jupyter'] for config files
+[D 14:33:56.801 NotebookApp] Looking for jupyter_config in /etc/jupyter
+[D 14:33:56.802 NotebookApp] Looking for jupyter_config in /usr/local/etc/jupyter
+[D 14:33:56.802 NotebookApp] Looking for jupyter_config in /gpfslocalsup/pub/anaconda-py3/2020.02/envs/pytorch-gpu-1.8.0/etc/jupyter
+[D 14:33:56.802 NotebookApp] Looking for jupyter_config in /gpfs7kw/linkhome/rech/genini01/usc19dv/.jupyter
+[D 14:33:56.802 NotebookApp] Looking for jupyter_config in /gpfsdswork/projects/rech/imi/usc19dv/mt-lightning
+[D 14:33:56.803 NotebookApp] Looking for jupyter_notebook_config in /etc/jupyter
+[D 14:33:56.803 NotebookApp] Looking for jupyter_notebook_config in /usr/local/etc/jupyter
+[D 14:33:56.803 NotebookApp] Looking for jupyter_notebook_config in /gpfslocalsup/pub/anaconda-py3/2020.02/envs/pytorch-gpu-1.8.0/etc/jupyter
+[D 14:33:56.803 NotebookApp] Loaded config file: /gpfslocalsup/pub/anaconda-py3/2020.02/envs/pytorch-gpu-1.8.0/etc/jupyter/jupyter_notebook_config.json
+[D 14:33:56.803 NotebookApp] Looking for jupyter_notebook_config in /gpfs7kw/linkhome/rech/genini01/usc19dv/.jupyter
+[D 14:33:56.803 NotebookApp] Loaded config file: /gpfs7kw/linkhome/rech/genini01/usc19dv/.jupyter/jupyter_notebook_config.py
+[D 14:33:56.804 NotebookApp] Loaded config file: /gpfs7kw/linkhome/rech/genini01/usc19dv/.jupyter/jupyter_notebook_config.json
+[D 14:33:56.804 NotebookApp] Looking for jupyter_notebook_config in /gpfsdswork/projects/rech/imi/usc19dv/mt-lightning
+[D 14:33:56.809 NotebookApp] Paths used for configuration of jupyter_notebook_config: 
+    	/etc/jupyter/jupyter_notebook_config.json
+[D 14:33:56.809 NotebookApp] Paths used for configuration of jupyter_notebook_config: 
+    	/usr/local/etc/jupyter/jupyter_notebook_config.json
+[D 14:33:56.809 NotebookApp] Paths used for configuration of jupyter_notebook_config: 
+    	/gpfslocalsup/pub/anaconda-py3/2020.02/envs/pytorch-gpu-1.8.0/etc/jupyter/jupyter_notebook_config.d/ipyparallel-serverextension.json
+    	/gpfslocalsup/pub/anaconda-py3/2020.02/envs/pytorch-gpu-1.8.0/etc/jupyter/jupyter_notebook_config.d/jupyterlab.json
+    	/gpfslocalsup/pub/anaconda-py3/2020.02/envs/pytorch-gpu-1.8.0/etc/jupyter/jupyter_notebook_config.json
+[D 14:33:56.810 NotebookApp] Paths used for configuration of jupyter_notebook_config: 
+    	/gpfs7kw/linkhome/rech/genini01/usc19dv/.jupyter/jupyter_notebook_config.json
+[I 14:33:57.171 NotebookApp] Loading IPython parallel extension
+[I 14:33:57.284 NotebookApp] JupyterLab extension loaded from /gpfslocalsup/pub/anaconda-py3/2020.02/envs/pytorch-gpu-1.8.0/lib/python3.7/site-packages/jupyterlab
+[I 14:33:57.284 NotebookApp] JupyterLab application directory is /gpfslocalsup/pub/anaconda-py3/2020.02/envs/pytorch-gpu-1.8.0/share/jupyter/lab
+[D 14:33:57.285 NotebookApp] NodeJS was not found. Yarn user configuration is ignored.
+[I 14:33:57.288 NotebookApp] Serving notebooks from local directory: /linkhome/rech/genini01/usc19dv
+[I 14:33:57.288 NotebookApp] Jupyter Notebook 6.2.0 is running at:
+[I 14:33:57.288 NotebookApp] https://jean-zay1:8010/jean-zay1_8010/
+[I 14:33:57.288 NotebookApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
+[I 14:35:31.533 NotebookApp] Interrupted...
+[I 14:35:31.534 NotebookApp] Shutting down 0 kernels
+[I 14:35:31.534 NotebookApp] Shutting down 0 terminals

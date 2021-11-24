@@ -77,7 +77,7 @@ class MoglowModel(BaseModel):
         parser.add_argument('--LU_decomposed', action='store_true')
         return parser
 
-    def forward(self, data, eps_std=1.0, output_index_in_input=1, zs=None):
+    def forward(self, data, eps_std=1.0, output_index_in_input=0, zs=None):
         # import pdb;pdb.set_trace()
         data2 = []
         for i,mod in enumerate(self.input_mods):
@@ -124,16 +124,16 @@ class MoglowModel(BaseModel):
             outputs = self.net_glow(z=None, cond=cond, eps_std=eps_std, reverse=True)
             return [outputs.permute(0,2,1)]
 
-    def generate(self,features, teacher_forcing=False, ground_truth=False):
+    def generate(self,features, teacher_forcing=False, ground_truth=False, sequence_length=None):
         if self.network_model=="LSTM":
             self.net_glow.init_lstm_hidden()
             keep_latents = False
         else:
             keep_latents = True
         if self.opt.network_model=="transformer":
-            output_seq = autoregressive_generation_multimodal(features, self, autoreg_mods=self.output_mods, teacher_forcing=teacher_forcing, ground_truth=ground_truth, keep_latents=keep_latents,seed_lengths=self.input_seq_lens)
+            output_seq = autoregressive_generation_multimodal(features, self, autoreg_mods=self.output_mods, teacher_forcing=teacher_forcing, ground_truth=ground_truth, keep_latents=keep_latents,seed_lengths=self.input_seq_lens, sequence_length=sequence_length)
         else:
-            output_seq = autoregressive_generation_multimodal(features, self, autoreg_mods=self.output_mods, teacher_forcing=teacher_forcing, ground_truth=ground_truth, keep_latents=keep_latents)
+            output_seq = autoregressive_generation_multimodal(features, self, autoreg_mods=self.output_mods, teacher_forcing=teacher_forcing, ground_truth=ground_truth, keep_latents=keep_latents, sequence_length=sequence_length)
         return output_seq
 
     def on_test_start(self):

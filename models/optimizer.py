@@ -31,6 +31,7 @@ def get_optimizers(net, opt):
     return [optimizer]
 
 def get_scheduler(optimizer, opt):
+    interval = opt.scheduler_interval
     if opt.lr_policy == 'lambda':
         def lambda_rule(epoch):
             nepochs = opt.max_epochs - opt.nepoch_decay #number of epochs before beginning to decay
@@ -39,6 +40,9 @@ def get_scheduler(optimizer, opt):
         scheduler = lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda_rule)
     elif opt.lr_policy == 'exponential':
         scheduler = lr_scheduler.ExponentialLR(optimizer = optimizer, gamma = opt.lr_decay_factor)
+    elif opt.lr_policy == 'exponential_step':
+        scheduler = lr_scheduler.ExponentialLRSchedulerStep(optimizer = optimizer, decay_steps = opt.lr_decay_iters, gamma = opt.lr_decay_factor, base_lr = opt.learning_rate)
+        interval = 'step'
     elif opt.lr_policy == 'step':
         scheduler = lr_scheduler.StepLR(optimizer, step_size=opt.lr_decay_iters, gamma=opt.lr_decay_factor)
     elif opt.lr_policy == 'multistep':
@@ -56,7 +60,7 @@ def get_scheduler(optimizer, opt):
         scheduler = LinearWarmupCosineAnnealingLR(optimizer, warmup_epochs=opt.warmup_epochs, max_epochs=opt.max_epochs)
     else:
         return NotImplementedError('learning rate policy [%s] is not implemented', opt.lr_policy)
-    return scheduler
+    return {'scheduler': scheduler, 'interval': interval}
 
 
 class CyclicLR(object):
@@ -211,3 +215,28 @@ class CyclicLR(object):
                 lr = base_lr + base_height * self.scale_fn(self.last_batch_iteration)
             lrs.append(lr)
         return lrs
+
+class ExponentialLRSchedulerStep(torch.optim.lr_scheduler._LRScheduler):
+    """
+        optimizer (Optimizer): wrapped optimizer.
+        gamma (DictConfig): LR decay factor
+    """
+    def __init__(
+            self,
+            optimizer,
+            decay_steps,
+            gamma,
+            base_lr,
+    ):
+        super(ExponentialLRSchedulerStep, self).__init__(optimizer, base_lr)
+        self.update_steps = 1
+        self.lr = base_lr
+        self.gamma = gamma
+        self.decay_steps = decay_steps
+
+    def step(self, val_loss = None):
+        if self.update_steps % self.decay_steps == 0:
+            self.lr *= self.gamma
+        self.set_lr(self.optimizer, self.lr)
+        self.update_steps += 1
+        return self.lr
