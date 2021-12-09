@@ -103,8 +103,10 @@ if __name__ == '__main__':
     output_mods = opt.output_modalities.split(",")
     output_time_offsets = [int(x) for x in str(opt.output_time_offsets).split(",")]
     if args.use_scalers:
+        print("USING SCALERS")
         scalers = [x+"_scaler.pkl" for x in output_mods]
     else:
+        print("NOT USING SCALERS")
         scalers = []
 
     # Load latest trained checkpoint from experiment
@@ -117,6 +119,7 @@ if __name__ == '__main__':
     features = {}
     for i,mod in enumerate(input_mods):
         if mod in seeds:
+            print("loading", data_dir+"/"+seeds[mod]+"."+mod+".npy")
             feature = np.load(data_dir+"/"+seeds[mod]+"."+mod+".npy")
         elif mod in zero_seeds:
             feature = np.zeros((model.input_lengths[i],model.dins[i]))
@@ -144,9 +147,12 @@ if __name__ == '__main__':
         for i, mod in enumerate(output_mods):
             predicted_mod = predicted_mods[i].cpu().numpy()
             if len(scalers)>0:
+                print(scalers[i])
                 transform = pickle.load(open(data_dir+"/"+scalers[i], "rb"))
                 predicted_mod = transform.inverse_transform(predicted_mod)
-            print(predicted_mod)
+                #predicted_mod = transform.inverse_transform(feature)
+            print(feature.shape)
+            print(predicted_mod.shape)
             predicted_features_file = output_folder+"/"+args.experiment_name+"/predicted_mods/"+seq_id+"."+mod+".generated"
             np.save(predicted_features_file,predicted_mod)
             predicted_features_file += ".npy"
