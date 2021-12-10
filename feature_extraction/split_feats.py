@@ -23,10 +23,10 @@ import json
 parser = argparse.ArgumentParser(description="Extract features from filenames")
 
 parser.add_argument("data_path", type=str, help="Directory contining Beat Saber level folders")
-parser.add_argument("--files_extension", type=str, help="file extension (the stuff after the base filename) to match")
-parser.add_argument("--length", type=int, help="total length to pad to")
-parser.add_argument("--padding_const", type=float, default=0.0, help="the constant to fill the padding with")
+parser.add_argument("--feature_name", metavar='', type=str, default=None, help="feature name to extract delta for")
+parser.add_argument("--split_index", metavar='', type=int, default=None, help="index at which to split the features")
 parser.add_argument("--replace_existing", action="store_true")
+parser.add_argument("--new_feature_names", metavar='', type=str, default=None, help="coma separated list of the new features produced after splitting")
 
 args = parser.parse_args()
 
@@ -44,16 +44,21 @@ print(rank)
 
 assert size == 1 # this should be done with one process
 
-files = sorted(data_path.glob('**/*.'+files_extension), key=lambda path: path.parent.__str__())
-tasks = distribute_tasks(files,rank,size)
+candidate_files = sorted(data_path.glob('**/*'+feature_name+'.npy'), key=lambda path: path.parent.__str__())
+tasks = distribute_tasks(candidate_files,rank,size)
 
 for i in tasks:
-    path = files[i]
-    # base_filename = data_path.joinpath(path).__str__()
-    # new_feature_file = base_filename+"."+new_feature_name+".npy"
+    path = candidate_files[i]
+    print(path)
+    feature_file = path.__str__()
+    base_filename = feature_file[:-(len(feature_name)+4)]
     features = np.load(path)
-    if args.length > features.shape[0]:
-        features = np.concatenate([features, args.padding_const*np.ones((args.length-features.shape[0],features.shape[1]))])
-        np.save(path, features)
-    else:
-        print(features.shape[0])
+    new_features = np.split(features,[args.split_index], axis=1)
+    left_feats = new_features[0]
+    right_feats = new_features[1]
+    left_feat_name, right_feat_name = new_feature_names.split(",")
+    new_feature_left_file = base_filename+left_feat_name
+    new_feature_right_file = base_filename+right_feat_name
+    np.save(new_feature_left_file, left_feats)
+    np.save(new_feature_right_file, right_feats)
+

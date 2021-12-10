@@ -15,15 +15,19 @@ class MoglowModel(BaseModel):
 
         # import pdb;pdb.set_trace()
         cond_dim = sum(map(lambda x: x[0]*x[1],zip(dins,input_seq_lens)))
-        assert len(douts) == 1 #TODO: generalize
-        output_dim = douts[0]
-        self.network_model = self.opt.network_model
-        if self.opt.use_projection:
-            projection = nn.Linear(cond_dim,self.opt.cond_dim)
-            cond_dim = self.opt.cond_dim
-            setattr(self, "net"+"_projection", projection)
-        glow = Glow(output_dim, cond_dim, self.opt)
-        setattr(self, "net"+"_glow", glow)
+        # assert len(douts) == 1 #TODO: generalize
+        self.output_mod_glows = []
+        for i, mod in enumerate(self.output_mods):
+            output_dim = douts[i]
+            self.network_model = self.opt.network_model
+            if self.opt.use_projection:
+                projection = nn.Linear(cond_dim,self.opt.cond_dim)
+                cond_dim = self.opt.cond_dim
+                setattr(self, "net"+"_projection", projection)
+            glow = Glow(output_dim, cond_dim, self.opt)
+            name = "_output_glow_"+mod
+            setattr(self, "net"+name, glow)
+            self.output_mod_glows.append(glow)
 
         self.inputs = []
         self.targets = []
@@ -77,7 +81,7 @@ class MoglowModel(BaseModel):
         parser.add_argument('--LU_decomposed', action='store_true')
         return parser
 
-    def forward(self, data, eps_std=1.0, output_index_in_input=0, zs=None):
+    def forward(self, data, eps_std=1.0, zss=None):
         # import pdb;pdb.set_trace()
         data2 = []
         for i,mod in enumerate(self.input_mods):
@@ -96,33 +100,46 @@ class MoglowModel(BaseModel):
             cond = self.net_projection(cond.permute(0,2,1)).permute(0,2,1)
         #import pdb;pdb.set_trace()
         if self.opt.network_model == "transformer":
-            z_new = self.net_glow.distribution.sample(self.net_glow.z_shape, eps_std=eps_std, device=cond.device)
+            compute_zs = zss is None
+            zss_new = []
             output_index = cond.shape[2]-1
-            if cond.shape[2] < self.output_lengths[0]:
-                cond = F.pad(cond,(0,self.output_lengths[0]-cond.shape[2]),'constant',0)
+            if cond.shape[2] < self.output_lengths[i]:
+                cond = F.pad(cond,(0,self.output_lengths[i]-cond.shape[2]),'constant',0)
                 #print(cond.shape)
-            if zs is None:
-                #print(output_index)
-                #print(self.output_lengths[0])
-                #print(data[output_index_in_input])
-                prev_outs = data[output_index_in_input][-(self.output_lengths[0]-1):].permute(1,2,0)
-                #prev_outs = torch.cat([prev_outs,prev_outs[:,:,-1:]],dim=-1)
-                #print(prev_outs.shape)
-                prev_outs = F.pad(prev_outs,(0,self.output_lengths[0]-prev_outs.shape[2]),'constant',0)
-                #print(prev_outs.shape)
-                z, nll = self.net_glow(x=prev_outs, cond=cond)
-                z[:,:,output_index:output_index+1] = z_new
-            else:
-                z = torch.cat([zs[:,:,-(self.output_lengths[0]-1):],z_new],dim=-1)
-                if z.shape[2] < self.output_lengths[0]:
-                    z = F.pad(z,(0,self.output_lengths[0]-z.shape[2]),'constant',0)
-            outputs = self.net_glow(z=z, cond=cond, eps_std=eps_std, reverse=True)
-            outputs = outputs[:,:,output_index:output_index+1]
-            #import pdb;pdb.set_trace()
-            return [outputs.permute(0,2,1)], z[:,:,:output_index+1]
+            outputs = []
+            for i, mod in enumerate(self.output_mods):
+                z_new = self.output_mod_glows[i].distribution.sample(self.output_mod_glows[i].z_shape, eps_std=eps_std, device=cond.device)
+                if compute_zs:
+                    #print(output_index)
+                    #print(self.output_lengths[0])
+                    #print(data[output_index_in_input])
+                    output_index_in_input = self.input_mods.index(mod)
+                    prev_outs = data[output_index_in_input][-(self.output_lengths[i]-1):].permute(1,2,0)
+                    #prev_outs = torch.cat([prev_outs,prev_outs[:,:,-1:]],dim=-1)
+                    #print(prev_outs.shape)
+                    prev_outs = F.pad(prev_outs,(0,self.output_lengths[i]-prev_outs.shape[2]),'constant',0)
+                    #print(prev_outs.shape)
+                    z, nll = self.output_mod_glows[i](x=prev_outs, cond=cond)
+                    z[:,:,output_index:output_index+1] = z_new
+                else:
+                    z = torch.cat([zss[i][:,:,-(self.output_lengths[i]-1):],z_new],dim=-1)
+                    if z.shape[2] < self.output_lengths[i]:
+                        z = F.pad(z,(0,self.output_lengths[i]-z.shape[2]),'constant',0)
+
+                # import pdb;pdb.set_trace()
+                output = self.output_mod_glows[i](z=z, cond=cond, eps_std=eps_std, reverse=True)
+                output = output[:,:,output_index:output_index+1]
+                outputs.append(output.permute(0,2,1))
+                # import pdb;pdb.set_trace()
+                zss_new.append(z[:,:,:output_index+1])
+            zss = zss_new
+            return outputs, zss
         else:
-            outputs = self.net_glow(z=None, cond=cond, eps_std=eps_std, reverse=True)
-            return [outputs.permute(0,2,1)]
+            outputs = []
+            for i, mod in enumerate(self.output_mods):
+                output = self.output_mod_glows[i](z=None, cond=cond, eps_std=eps_std, reverse=True)
+                outputs.append(output.permute(0,2,1))
+            return outputs
 
     def generate(self,features, teacher_forcing=False, ground_truth=False, sequence_length=None):
         if self.network_model=="LSTM":
@@ -210,14 +227,16 @@ class MoglowModel(BaseModel):
         cond = torch.cat(self.inputs, dim=1)
         if self.opt.use_projection:
             cond = self.net_projection(cond.permute(0,2,1)).permute(0,2,1)
-        z, nll = self.net_glow(x=self.targets[0], cond=cond)
+        loss=0
+        for i, mod in enumerate(self.output_mods):
+            z, nll = self.output_mod_glows[i](x=self.targets[i], cond=cond)
+            nll_loss = Glow.loss_generative(nll)
+            loss += nll_loss
 
         # output = self.net_glow(z=None, cond=torch.cat(self.inputs, dim=1), eps_std=1.0, reverse=True, output_length=self.output_lengths[0])
 
-        nll_loss = Glow.loss_generative(nll)
         # mse_loss = self.criterion(output, self.targets[0])
         # loss = 0.1*nll_loss + 100*mse_loss
-        loss = nll_loss
         # loss = mse_loss
         # print(nll_loss)
         # print(mse_loss)

@@ -17,6 +17,7 @@ def autoregressive_generation_multimodal(features, model, autoreg_mods=[], teach
     #NOTE: we are currently assuming the last modality is the one determining the sequence length
     if sequence_length is None:
         sequence_length = inputs_[-1].shape[0]
+        #TODO: make this less ad-hoc
     for i,mod in enumerate(model.input_mods):
         input_ = inputs_[i]
         if model.input_proc_types[i] == "tile":
@@ -47,13 +48,10 @@ def autoregressive_generation_multimodal(features, model, autoreg_mods=[], teach
 
     if keep_latents:
         latents = None
-        output_index = input_mods.index(output_mods[0])
 
     #TODO: append the initial conditioning bit to the output too
     model.eval()
     output_seq = []
-    #sequence_length = inputs_[0].shape[0]
-    #TODO: make this less ad-hoc
     print(sequence_length)
     #import pdb;pdb.set_trace()
     with torch.no_grad():
@@ -68,7 +66,7 @@ def autoregressive_generation_multimodal(features, model, autoreg_mods=[], teach
 
             if not ground_truth:
                 if keep_latents:
-                    outputs, latents = model.forward(inputs, output_index, zs=latents)
+                    outputs, latents = model.forward(inputs, zss=latents)
                 else:
                     outputs = model.forward(inputs)
 
@@ -79,6 +77,7 @@ def autoregressive_generation_multimodal(features, model, autoreg_mods=[], teach
                     # output[:,0,:-3] = torch.clamp(output[:,0,:-3],-3,3)
 
                     if not ground_truth:
+                        # import pdb;pdb.set_trace()
                         output = outputs[i]
                     else:
                         j = input_mods.index(mod)

@@ -206,6 +206,7 @@ class MultimodalDataset(BaseDataset):
         parser.add_argument('--input_types', default=None, help='Comma-separated list of input types: d for discrete, c for continuous. E.g. d,c,c. Assumes continuous if not specified')
         parser.add_argument('--input_proc_types', default=None, help='Comma-separated list of approaches to process input: tile for tiling, single for non-timedsynnced, e.g. Assumes none if not specified')
         parser.add_argument('--output_proc_types', default=None, help='Comma-separated list of approaches to process outputs: tile for tiling, single for non-timedsynnced, e.g.. Assumes none if not specified')
+        # parser.add_argument('--predict_deltas', default="false", help='Comma-separated list of true or false, specifying whether to predict deltas (changes) for each the output modalities')
         parser.add_argument('--output_lengths', help='output sequence length')
         parser.add_argument('--output_time_offsets', default="1", help='time shift between the last read input, and the output predicted. The default value of 1 corresponds to predicting the next output')
         parser.add_argument('--input_time_offsets', default="0", help='time shift between the beginning of each modality and the first modality')
