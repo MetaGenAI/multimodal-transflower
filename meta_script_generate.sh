@@ -21,13 +21,17 @@
 #base_filenames_file=base_filenames_test_test2.txt
 base_filenames_file=base_filenames_test2.txt
 line=data_U_dekatron_R_00ee7d25_447d_4a2e_9d72_07c055ac4d40_S-d03a6c7b-1767-4582-8ffc-9277d5f5d4b5_4f45c65b-8524-4c2e-849d-e3c2cf17bd48_2_ID2C00_streams
+#line=data_kulzaworld_guille_neosdata_U_Kulza_R_57ea6247_a178_45c5_a3bb_a95af490bfb0_S-898a7978-79fa-4fd0-8f4d-e7cfb8a1e397_a06ffd39-1343-4854-8d2f-225156c7cf5d_2_ID2C00_streams
 #exp=transflower_expmap_cr4_bs5_og2_futureN_gauss4_neosraw2
 #exp=moglow_expmap1_tf2_neosraw2
 exp=transflower_expmap_cr4_bs5_og2_futureN_gauss4_neosraw4
+#exp=transflower_expmap_cr4_bs5_og2_futureN_gauss4_single_kulzaworld_neosraw
+#exp=moglow_expmap1_tf2_single_kulzaworld_neosraw
 #sbatch slurm_script_generate.slurm $exp $line --data_dir $SCRATCH/data/dekaworld_alex_guille_neosdata --seeds "combined_streams_scaled,data_U_dekatron_R_00ee7d25_447d_4a2e_9d72_07c055ac4d40_S-d03a6c7b-1767-4582-8ffc-9277d5f5d4b5_4f45c65b-8524-4c2e-849d-e3c2cf17bd48_1_ID1E66900_streams" --max_length 1024
 #sbatch slurm_script_generate.slurm $exp $line --data_dir $SCRATCH/data/dekaworld_alex_guille_neosdata --zero_seeds "combined_streams_scaled" --sequence_length 1024
 #sbatch slurm_script_generate.slurm $exp $line --data_dir data/dekaworld_alex_guille_neosdata2 --seeds "combined_streams_scaled,data_U_dekatron_R_00ee7d25_447d_4a2e_9d72_07c055ac4d40_S-d03a6c7b-1767-4582-8ffc-9277d5f5d4b5_4f45c65b-8524-4c2e-849d-e3c2cf17bd48_2_ID2C00_streams" --sequence_length 2048 --max_length 120 #--generate_ground_truth
 sbatch slurm_script_generate.slurm $exp $line --data_dir $SCRATCH/data/dekaworld_alex_guille_neosdata3 --seeds "combined_streams_scaled,data_U_dekatron_R_00ee7d25_447d_4a2e_9d72_07c055ac4d40_S-d03a6c7b-1767-4582-8ffc-9277d5f5d4b5_4f45c65b-8524-4c2e-849d-e3c2cf17bd48_2_ID2C00_streams" --sequence_length 2048 --max_length 120 #--generate_ground_truth
+#sbatch slurm_script_generate.slurm $exp $line --data_dir $SCRATCH/data/kulzaworld_guille_neosdata_npy --seeds "person1_scaled,data_kulzaworld_guille_neosdata_U_Kulza_R_57ea6247_a178_45c5_a3bb_a95af490bfb0_S-898a7978-79fa-4fd0-8f4d-e7cfb8a1e397_a06ffd39-1343-4854-8d2f-225156c7cf5d_2_ID2C00_streams" --sequence_length 2048 --max_length 120 #--generate_ground_truth
 #sbatch slurm_script_generate.slurm $exp $line --data_dir $SCRATCH/data/dekaworld_alex_guille_neosdata --seeds "combined_streams_scaled,data_U_dekatron_R_00ee7d25_447d_4a2e_9d72_07c055ac4d40_S-d03a6c7b-1767-4582-8ffc-9277d5f5d4b5_4f45c65b-8524-4c2e-849d-e3c2cf17bd48_1_ID1E66900_streams" --sequence_length 1024 --max_length 1144 #--generate_ground_truth
 
 #for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss4_neosraw

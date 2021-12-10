@@ -156,6 +156,8 @@ class BasicTransformerModel(nn.Module):
                 if src_mask is not None:
                     output = self.transformer_encoder(src, src_mask + self.pos_emb)
                 else:
+                    #print(src.shape)
+                    #print(self.pos_emb.shape)
                     output = self.transformer_encoder(src, self.pos_emb)
                 #output = self.transformer_encoder(src, self.pos_emb)
             else:
