@@ -24,7 +24,8 @@ parser = argparse.ArgumentParser(description="Extract features from filenames")
 
 parser.add_argument("data_path", type=str, help="Directory contining Beat Saber level folders")
 parser.add_argument("--files_extension", type=str, help="file extension (the stuff after the base filename) to match")
-parser.add_argument("--name_processing_function", type=str, default="dance_style", help="function for processing the names")
+parser.add_argument("--length", type=int, help="total length to pad to")
+parser.add_argument("--padding_const", type=float, default=0.0, help="the constant to fill the padding with")
 parser.add_argument("--replace_existing", action="store_true")
 
 args = parser.parse_args()
@@ -44,22 +45,15 @@ print(rank)
 assert size == 1 # this should be done with one process
 
 files = sorted(data_path.glob('**/*.'+files_extension), key=lambda path: path.parent.__str__())
-# tasks = distribute_tasks(candidate_motion_files,rank,size)
+tasks = distribute_tasks(files,rank,size)
 
-import name_processing_functions
-func = getattr(name_processing_functions, name_processing_function)
-anns = list(map(func,files))
-unique_labels = np.unique(sum(anns,[]))
-print(unique_labels)
-label_index = {c:i for i,c in enumerate(unique_labels)}
-label_index_reverse = {i:c for i,c in enumerate(unique_labels)}
-with open(str(data_path) + "/" + files_extension+"."+name_processing_function+'class_index.json', 'w') as f:
-    json.dump(label_index, f)
-with open(str(data_path) + "/" + files_extension+"."+name_processing_function+'class_index_reverse.json', 'w') as f:
-    json.dump(label_index_reverse, f)
-
-for file,ann in zip(files,anns):
-    # print(file, label)
-    feature_name = str(file)+"."+name_processing_function
-    feature = np.array([label_index[token] for token in ann])
-    np.save(feature_name, feature)
+for i in tasks:
+    path = files[i]
+    # base_filename = data_path.joinpath(path).__str__()
+    # new_feature_file = base_filename+"."+new_feature_name+".npy"
+    features = np.load(path)
+    if args.length > features.shape[0]:
+        features = np.concatenate([features, args.padding_const*np.ones((args.length-features.shape[0]))])
+        np.save(path, features)
+    else:
+        print(features.shape[0])

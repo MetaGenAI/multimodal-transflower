@@ -53,7 +53,7 @@ root_dir=data
 ####dance_combined
 #data_dir=${root_dir}/dance_combined
 #data_dir=${root_dir}/dance_combined2
-data_dir=${root_dir}/dance_combined3
+#data_dir=${root_dir}/dance_combined3
 exp=$1
 #exp=transformer_expmap
 #exp=mowgli_expmap_stage2
@@ -65,7 +65,14 @@ exp=$1
 #exp=transflower_aistpp_expmap
 #exp=residualflower2_transflower_aistpp_expmap
 #exp=moglow_aistpp_expmap
-hparams_file=dance_combined/${exp}
+#hparams_file=dance_combined/${exp}
+
+#####tianwei
+#data_dir=${root_dir}/tianwei
+
+#####neos
+data_dir=${root_dir}/kulzaworld_guille_neosdata_npy
+hparams_file=neos/${exp}
 
 #exp=${exp}_future3_actnorm
 #exp=${exp}_future3
