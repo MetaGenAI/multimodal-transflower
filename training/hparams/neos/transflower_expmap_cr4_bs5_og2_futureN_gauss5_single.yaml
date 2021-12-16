@@ -6,7 +6,6 @@ output_modalities: root_pos_scaled,proc_feats
 input_lengths: 120,120
 output_lengths: 3,3
 output_time_offsets: 120,120
-input_proc_types: end,end
 input_types: c,c
 input_num_tokens: 0,0
 nlayers: 12
@@ -35,7 +34,7 @@ lr_decay_milestones: [10,20,40,80,160,320,640]
 lr_decay_factor: 0.5
 learning_rate: 1e-5
 gradient_clip_val: 10
-batch_size: 64
+batch_size: 48
 
 
 

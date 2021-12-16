@@ -140,7 +140,8 @@ class BasicTransformerModel(nn.Module):
     def forward(self, src, src_mask=None):
         #print(src.shape)
         if self.discrete_inputs:
-            src = self.encoder(src.squeeze(0))
+            #src = self.encoder(src.squeeze(0))
+            src = self.encoder(src)
         if not self.use_x_transformers:
             src = self.encoder1(src)
             # import pdb;pdb.set_trace()

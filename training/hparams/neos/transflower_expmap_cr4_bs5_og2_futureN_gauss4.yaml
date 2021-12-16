@@ -6,7 +6,6 @@ output_modalities: combined_streams_scaled
 input_lengths: 120
 output_lengths: 3
 output_time_offsets: 120
-input_proc_types: end
 input_types: c
 input_num_tokens: 0
 nlayers: 12

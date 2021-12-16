@@ -103,6 +103,7 @@ class MultimodalDataset(BaseDataset):
 
         #Get the list of files containing features (in numpy format for now), and populate the dictionaries of input and output features (separated by modality)
         for base_filename in temp_base_filenames:
+            length_0 = 1
             file_too_short = False
             first_length=True
             for i, mod in enumerate(input_mods):
@@ -126,6 +127,13 @@ class MultimodalDataset(BaseDataset):
 
             if file_too_short: continue
 
+            for i, mod in enumerate(input_mods):
+                feature_file = data_path.joinpath(base_filename+"."+mod+".npy")
+                features = np.load(feature_file)
+                features = self.preprocess_inputs(i,features,tile_length=length_0) #assumes the sequence length of things to be tiled is 1
+                self.input_features[mod][base_filename] = features
+
+            length_0 = 1
             first_length=True
             for i, mod in enumerate(output_mods):
                 feature_file = data_path.joinpath(base_filename+"."+mod+".npy")
@@ -146,12 +154,6 @@ class MultimodalDataset(BaseDataset):
                     raise Exception("An unprocessed output feature found "+base_filename+"."+mod+"; need to run preprocessing script before starting to train with them")
 
             if file_too_short: continue
-
-            for i, mod in enumerate(input_mods):
-                feature_file = data_path.joinpath(base_filename+"."+mod+".npy")
-                features = np.load(feature_file)
-                features = self.preprocess_inputs(i,features,tile_length=length_0) #assumes the sequence length of things to be tiled is 1
-                self.input_features[mod][base_filename] = features
 
             for i, mod in enumerate(output_mods):
                 feature_file = data_path.joinpath(base_filename+"."+mod+".npy")
