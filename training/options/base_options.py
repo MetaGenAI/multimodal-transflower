@@ -41,6 +41,7 @@ class BaseOptions:
         ### CHECKPOINTING STUFF
         parser.add_argument('--checkpoints_dir', default="training/experiments", type=str, help='checkpoint folder')
         parser.add_argument('--load_weights_only', action='store_true', help='if specified, we load the model weights from the last checkpoint for the specified experiment, WITHOUT loading the optimizer parameters! (allows to continue traning while changing the optimizer)')
+        parser.add_argument('--load_optimizer_states', action='store_true', help='if specified, we load the opitmizer states, if doing load_weights_only. Useful to change stuff like learning rate or other optimizer-related hyperparams')
         parser.add_argument('--no_load_hparams', action='store_true', help='if specified, we dont load the saved experiment hparams when doing continue_train')
         parser.add_argument('--ignore_in_state_dict', type=str, default="", help="substring to match in state dict, to then ignore the corresponding saved weights. Sometimes useful for models where only some part was trained e.g.")
         parser.add_argument('--only_load_in_state_dict', type=str, default="", help="substring to match in state dict, to then only load the corresponding saved weights. Sometimes useful for models where only some part was trained e.g.")

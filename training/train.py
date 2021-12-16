@@ -97,8 +97,8 @@ if __name__ == '__main__':
         latest_file = get_latest_checkpoint(logs_path)
         print(latest_file)
         if opt.load_weights_only:
-            state_dict = torch.load(latest_file)
-            state_dict = state_dict['state_dict']
+            checkpoint_dict = torch.load(latest_file)
+            state_dict = checkpoint_dict['state_dict']
             load_strict = True
             if opt.only_load_in_state_dict != "":
                 state_dict = {k:v for k,v in state_dict.items() if (opt.only_load_in_state_dict in k)}
@@ -108,6 +108,11 @@ if __name__ == '__main__':
                 load_strict = False
             model.load_state_dict(state_dict, strict=load_strict)
             trainer = Trainer.from_argparse_args(args, logger=logger, default_root_dir=default_save_path, plugins=plugins, callbacks=callbacks)
+            if opt.load_optimizer_states:
+                optims = model.optimizers
+                #print(type(checkpoint_dict['optimizer_states']))
+                for i,optim in enumerate(optims):
+                    optim.load_state_dict(checkpoint_dict['optimizer_states'][i])
         else:
             trainer = Trainer.from_argparse_args(args, logger=logger, default_root_dir=default_save_path, resume_from_checkpoint=latest_file, plugins=plugins, callbacks=callbacks)
     else:

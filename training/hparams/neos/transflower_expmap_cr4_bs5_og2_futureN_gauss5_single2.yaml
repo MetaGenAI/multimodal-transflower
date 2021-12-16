@@ -1,13 +1,13 @@
 model: transflower
-dins: 31
-douts: 31
-input_modalities: "person1_scaled"
-output_modalities: person1_scaled
-input_lengths: 120
-output_lengths: 3
-output_time_offsets: 120
-input_types: c
-input_num_tokens: 0
+dins: 3,31
+douts: 3,31
+input_modalities: "root_pos_scaled,proc_feats"
+output_modalities: root_pos_scaled,proc_feats
+input_lengths: 120,120
+output_lengths: 3,3
+output_time_offsets: 120,120
+input_types: c,c
+input_num_tokens: 0,0
 nlayers: 12
 nhead: 10
 scales: "[[16,0]]"
@@ -30,11 +30,11 @@ dropout: 0
 #lr_policy: cosine
 lr_policy: multistep
 #lr_decay_milestones: [1,2,4,8,16,32,64]
-lr_decay_milestones: [10,20,40,80,160,320,640]
+lr_decay_milestones: [100,200,400,800,1600,3200,6400]
 lr_decay_factor: 0.5
 learning_rate: 1e-5
 gradient_clip_val: 10
-batch_size: 64
+batch_size: 48
 
 
 

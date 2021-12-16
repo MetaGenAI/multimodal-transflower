@@ -58,6 +58,8 @@ def get_scheduler(optimizer, opt):
         scheduler = ReduceLROnPlateau(optimizer, 'min', factor=0.2)
     elif opt.lr_policy == 'LinearWarmupCosineAnnealing':
         scheduler = LinearWarmupCosineAnnealingLR(optimizer, warmup_epochs=opt.warmup_epochs, max_epochs=opt.max_epochs)
+    elif opt.lr_policy == 'none':
+        scheduler = None
     else:
         return NotImplementedError('learning rate policy [%s] is not implemented', opt.lr_policy)
     return {'scheduler': scheduler, 'interval': interval}

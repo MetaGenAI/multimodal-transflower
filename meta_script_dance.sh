@@ -45,8 +45,8 @@ module load pytorch-gpu/py3/1.8.0
 #for exp in mowgli_expmap_nocond_output_chunking3_stage2 mowgli_expmap_nocond_output_chunking2_stage2 
 #for exp in mowgli_expmap_nocond_output_chunking4
 #for exp in mowgli_expmap_nocond_output_chunking5
-#for exp in mowgli_expmap_nocond_output_chunking6
-for exp in mowgli_expmap_nocond_output_chunking6_stage2
+for exp in mowgli_expmap_nocond_output_chunking6
+#for exp in mowgli_expmap_nocond_output_chunking6_stage2
 #for exp in mowgli_expmap_nocond_output_chunking3b_stage2
 #for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss_simon
 #for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss_bn
@@ -64,7 +64,8 @@ for exp in mowgli_expmap_nocond_output_chunking6_stage2
 
 do
 
-	sbatch slurm_script4s.slurm $exp --hparams_file=training/hparams/dance_combined/${exp}.yaml --experiment_name ${exp}_newdata_filtered_aistpp --num_nodes 1 --max_epochs 3000 --data_dir=$SCRATCH/data/dance_combined3 --base_filenames_file base_filenames_train_filtered3.txt --learning_rate 1e-4 --continue_train
+	#sbatch slurm_script4s.slurm $exp --hparams_file=training/hparams/dance_combined/${exp}.yaml --experiment_name ${exp}_newdata_filtered_aistpp --num_nodes 1 --max_epochs 3000 --data_dir=$SCRATCH/data/dance_combined3 --base_filenames_file base_filenames_train_filtered3.txt --continue_train --load_weights_only --no_load_hparams
+	sbatch slurm_script4s.slurm $exp --hparams_file=training/hparams/dance_combined/${exp}.yaml --experiment_name ${exp}_newdata_filtered_aistpp --num_nodes 1 --max_epochs 3000 --data_dir=$SCRATCH/data/dance_combined3 --base_filenames_file base_filenames_train_filtered3.txt --continue_train --load_weights_only --no_load_hparams
 
 #	sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_newdata_filtered_aistpp --num_nodes 1 --max_epochs 300 --data_dir=$SCRATCH/data/dance_combined3 --base_filenames_file base_filenames_train_filtered3.txt --learning_rate 1e-4 --continue_train
 #	sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_newdata_filtered_aistppkth --num_nodes 1 --max_epochs 300 --data_dir=$SCRATCH/data/dance_combined3 --base_filenames_file base_filenames_train_filtered8.txt --learning_rate 1e-4 --continue_train

@@ -28,9 +28,12 @@ glow_norm_layer: batchnorm
 glow_bn_momentum: 0.1
 dropout: 0
 #lr_policy: cosine
-lr_policy: multistep
+#lr_policy: multistep
+lr_policy: LinearWarmupCosineAnnealing
+warmup_epochs: 50
+max_epochs: 6000
 #lr_decay_milestones: [1,2,4,8,16,32,64]
-lr_decay_milestones: [10,20,40,80,160,320,640]
+#lr_decay_milestones: [100,200,400,800,1600,3200,6400]
 lr_decay_factor: 0.5
 learning_rate: 1e-5
 gradient_clip_val: 10
