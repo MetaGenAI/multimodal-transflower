@@ -13,6 +13,7 @@ py=python3
 
 #root_dir=$SCRATCH/data
 root_dir=data
+exp=$1
 
 ####aistpp_60hz
 #data_dir=${root_dir}/scaled_features
@@ -54,7 +55,6 @@ root_dir=data
 #data_dir=${root_dir}/dance_combined
 #data_dir=${root_dir}/dance_combined2
 #data_dir=${root_dir}/dance_combined3
-exp=$1
 #exp=transformer_expmap
 #exp=mowgli_expmap_stage2
 #exp=mowgli_expmap
@@ -68,11 +68,12 @@ exp=$1
 #hparams_file=dance_combined/${exp}
 
 #####tianwei
-#data_dir=${root_dir}/tianwei
+data_dir=${root_dir}/UR5_processed
+hparams_file=tw/${exp}
 
 #####neos
-data_dir=${root_dir}/kulzaworld_guille_neosdata_npy
-hparams_file=neos/${exp}
+#data_dir=${root_dir}/kulzaworld_guille_neosdata_npy
+#hparams_file=neos/${exp}
 
 #exp=${exp}_future3_actnorm
 #exp=${exp}_future3

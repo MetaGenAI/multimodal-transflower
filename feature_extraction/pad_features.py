@@ -42,8 +42,6 @@ rank = comm.Get_rank()
 size = comm.Get_size()
 print(rank)
 
-assert size == 1 # this should be done with one process
-
 files = sorted(data_path.glob('**/*.'+files_extension), key=lambda path: path.parent.__str__())
 tasks = distribute_tasks(files,rank,size)
 
@@ -53,7 +51,11 @@ for i in tasks:
     # new_feature_file = base_filename+"."+new_feature_name+".npy"
     features = np.load(path)
     if args.length > features.shape[0]:
-        features = np.concatenate([features, args.padding_const*np.ones((args.length-features.shape[0],features.shape[1]))])
+        if len(features.shape) == 1:
+            features = np.concatenate([features, args.padding_const*np.ones((args.length-features.shape[0]))])
+        elif len(features.shape) == 2:
+            features_dim = features.shape[1]
+            features = np.concatenate([features, args.padding_const*np.ones((args.length-features.shape[0],features_dim))])
         np.save(path, features)
     else:
         print(features.shape[0])

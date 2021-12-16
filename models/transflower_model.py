@@ -181,6 +181,7 @@ class TransflowerModel(BaseModel):
         for i, mod in enumerate(self.input_mods):
             latents.append(self.input_mod_nets[i].forward(self.inputs[i]))
 
+        # import pdb;pdb.set_trace()
         latent = torch.cat(latents)
         # print(latent)
         if self.opt.residual:

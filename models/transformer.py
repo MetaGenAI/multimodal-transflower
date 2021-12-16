@@ -141,8 +141,10 @@ class BasicTransformerModel(nn.Module):
         #print(src.shape)
         if self.discrete_inputs:
             #src = self.encoder(src.squeeze(0))
-            src = self.encoder(src)
+            # import pdb;pdb.set_trace()
+            src = self.encoder(src[:,:,0])
         if not self.use_x_transformers:
+            # import pdb;pdb.set_trace()
             src = self.encoder1(src)
             # import pdb;pdb.set_trace()
             #src *= math.sqrt(self.dmodel)
@@ -159,6 +161,7 @@ class BasicTransformerModel(nn.Module):
                 else:
                     #print(src.shape)
                     #print(self.pos_emb.shape)
+                    # import pdb;pdb.set_trace()
                     output = self.transformer_encoder(src, self.pos_emb)
                 #output = self.transformer_encoder(src, self.pos_emb)
             else:
@@ -169,11 +172,11 @@ class BasicTransformerModel(nn.Module):
                 #output = self.transformer_encoder(src)
             output = self.decoder(output)
             #print(output.shape)
-            if self.discrete_inputs:
-                #return output.unsqueeze(0)
-                return output.permute(1,0,2)
-            else:
-                return output
+            # if self.discrete_inputs:
+            #     #return output.unsqueeze(0)
+            #     return output.permute(1,0,2)
+            # else:
+            return output
         else:
             assert src_mask == None
             src = src.permute(1,0,2)
