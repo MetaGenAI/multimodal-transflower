@@ -13,7 +13,7 @@
 ##SBATCH --nodes=1 --ntasks-per-node=4 --cpus-per-task=6 --gres=gpu:4
 ##SBATCH --partition=gpu_p2
 #SBATCH -A imi@gpu
-##SBATCH -C v100-32g
+#SBATCH -C v100-32g
 #SBATCH --exclusive
 
 export MASTER_PORT=1234

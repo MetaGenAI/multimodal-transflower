@@ -93,7 +93,8 @@ def create_dataloader(dataset, split="train"):
     is_eval = (split == "val" or split == "test")
     return DataLoader(dataset,
                       batch_size=dataset.opt.batch_size if not is_eval else dataset.opt.val_batch_size,
-                      shuffle=not is_eval,
+                      shuffle=not (is_eval or dataset.opt.not_shuffle),
+                      #shuffle=not is_eval,
                       # collate_fn=meta_collate_fn(dataset.opt.pad_batches,dataset.opt.model),
                       collate_fn=None,
                       #pin_memory=True,

@@ -214,6 +214,7 @@ class MultimodalDataset(BaseDataset):
         parser.add_argument('--input_time_offsets', default="0", help='time shift between the beginning of each modality and the first modality')
         parser.add_argument('--max_token_seq_len', type=int, default=1024)
         parser.add_argument('--use_one_hot', action='store_true', help='whether to use one hot representation for discrete inputs')
+        parser.add_argument('--not_shuffle', action='store_true', help='whether to not shuffle the dataset')
         parser.add_argument('--num_train_samples', type=int, default=0, help='if 0 then use all of them')
 
         return parser

@@ -97,7 +97,7 @@ if __name__ == '__main__':
         latest_file = get_latest_checkpoint(logs_path)
         print(latest_file)
         if opt.load_weights_only:
-            checkpoint_dict = torch.load(latest_file)
+            checkpoint_dict = torch.load(latest_file, map_location=torch.device('cpu'))
             state_dict = checkpoint_dict['state_dict']
             load_strict = True
             if opt.only_load_in_state_dict != "":

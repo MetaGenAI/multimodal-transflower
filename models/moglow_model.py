@@ -103,11 +103,11 @@ class MoglowModel(BaseModel):
             compute_zs = zss is None
             zss_new = []
             output_index = cond.shape[2]-1
-            if cond.shape[2] < self.output_lengths[i]:
-                cond = F.pad(cond,(0,self.output_lengths[i]-cond.shape[2]),'constant',0)
-                #print(cond.shape)
             outputs = []
             for i, mod in enumerate(self.output_mods):
+                if cond.shape[2] < self.output_lengths[i]:
+                    cond = F.pad(cond,(0,self.output_lengths[i]-cond.shape[2]),'constant',0)
+                    #print(cond.shape)
                 z_new = self.output_mod_glows[i].distribution.sample(self.output_mod_glows[i].z_shape, eps_std=eps_std, device=cond.device)
                 if compute_zs:
                     #print(output_index)

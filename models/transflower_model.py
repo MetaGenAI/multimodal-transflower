@@ -36,7 +36,7 @@ class TransflowerModel(BaseModel):
                                         use_x_transformers=opt.use_x_transformers,
                                         opt=opt,
                                         discrete_inputs=self.input_types[i] == 'd')
-            name = "_input_"+mod
+            name = "_input_"+mod.replace(".","_")
             setattr(self,"net"+name, net)
             self.input_mod_nets.append(net)
             self.module_names.append(name)
@@ -51,7 +51,7 @@ class TransflowerModel(BaseModel):
                                         opt=opt)
             # else:
             #     net = BasicTransformerModel(douts[i]//2, opt.dhid, opt.nhead, opt.dhid, opt.nlayers, opt.dropout, self.device, use_pos_emb=opt.use_pos_emb_output, input_length=sum(input_lengths), use_x_transformers=opt.use_x_transformers, opt=opt)
-            name = "_output_"+mod
+            name = "_output_"+mod.replace(".","_")
             setattr(self, "net"+name, net)
             self.output_mod_nets.append(net)
             self.module_names.append(name)
@@ -85,7 +85,7 @@ class TransflowerModel(BaseModel):
                                      flow_dist_param=opt.flow_dist_param,
                                      cond_seq_len=self.conditioning_seq_lens[i],
                                 )
-            name = "_output_glow_"+mod
+            name = "_output_glow_"+mod.replace(".","_")
             setattr(self, "net"+name, glow)
             self.output_mod_glows.append(glow)
 

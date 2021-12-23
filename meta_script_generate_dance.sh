@@ -16,10 +16,10 @@
 
 #base_filenames_file=base_filenames_test.txt
 #base_filenames_file=base_filenames_test_test.txt
-base_filenames_file=base_filenames_aistpp_test.txt
+#base_filenames_file=base_filenames_aistpp_test.txt
 #base_filenames_file=base_filenames_aistpp_train_sample.txt
 #base_filenames_file=base_filenames_test_test2.txt
-#base_filenames_file=base_filenames_test2.txt
+base_filenames_file=base_filenames_test2.txt
 
 #for exp in moglow_expmap
 #for exp in transflower_expmap_cr4_label_bs5_newdata
@@ -45,9 +45,10 @@ base_filenames_file=base_filenames_aistpp_test.txt
 #for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss4_newdata_filtered_gc_short
 #for exp in moglow_expmap1_tf2_newdata_filtered
 #for exp in moglow_expmap1_tf2_newdata_filtered_aistpp
-#for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss4_newdata_filtered_gc10_lr1
 
-for exp in mowgli_expmap_nocond_output_chunking6_stage2_newdata_filtered_aistpp
+for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss4_newdata_filtered_gc10_lr1
+
+#for exp in mowgli_expmap_nocond_output_chunking6_stage2_newdata_filtered_aistpp
 #for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss4_newdata_filtered_gc10_lr1a_aistpp
 #for exp in moglow_expmap1_tf2_newdata_filtered_lr2_aistpp
 #for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss4_newdata_filtered_gc10_lr1a_aistpp

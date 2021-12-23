@@ -5,7 +5,7 @@ input_modalities: "expmap_scaled_20,audio_feats_scaled_20"
 output_modalities: expmap_scaled_20
 input_lengths: 120,140
 #output_lengths: 10
-output_lengths: 3
+output_lengths: 1
 outputs_chunking: 9
 output_time_offsets: 120
 nlayers: 12
