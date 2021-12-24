@@ -32,7 +32,9 @@ line=data_kulzaworld_guille_neosdata_U_Kulza_R_57ea6247_a178_45c5_a3bb_a95af490b
 #for exp in moglow_expmap1_tf2_single_kulzaworld_neosraw moglow_expmap1_tf3_single_kulzaworld_neosraw transflower_expmap_cr4_bs5_og2_futureN_gauss5_single2_kulzaworld_neosraw
 #for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss5_rel_single2_kulzaworld_neosraw_rel
 #for exp in moglow_expmap1_tf3_rel_single_kulzaworld_neosraw_rel
-for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss5_rel_single2_kulzaworld_neosraw_rel_nonshuff
+#for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss5_rel_single2_kulzaworld_neosraw_rel_nonshuff
+#for exp in discrete_model_kulzaworld_neosraw_rel2
+for exp in discrete_model_kulzaworld_neosraw_rel
 #for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss5_single3_kulzaworld_neosraw_fixed
 #for exp in moglow_expmap1_tf2_single_kulzaworld_neosraw
 
@@ -48,7 +50,8 @@ do
 #sbatch slurm_script_generate.slurm $exp $line --data_dir $SCRATCH/data/kulzaworld_guille_neosdata_npy --sequence_length 2000 --max_length 120 #--generate_ground_truth
 
 #sbatch slurm_script_generate.slurm $exp $line --data_dir $SCRATCH/data/kulzaworld_guille_neosdata_npy2 --sequence_length 2048 --seeds "root_pos_scaled,data_kulzaworld_guille_neosdata_U_Kulza_R_57ea6247_a178_45c5_a3bb_a95af490bfb0_S-898a7978-79fa-4fd0-8f4d-e7cfb8a1e397_a06ffd39-1343-4854-8d2f-225156c7cf5d_2_ID2C00_streams" --zero_seeds "feats_proc_scaled" #--generate_ground_truth
-sbatch slurm_script_generate.slurm $exp $line --data_dir $SCRATCH/data/kulzaworld_guille_neosdata_npy_relative --sequence_length 2048 --seeds "root_pos_scaled,data_kulzaworld_guille_neosdata_U_Kulza_R_57ea6247_a178_45c5_a3bb_a95af490bfb0_S-898a7978-79fa-4fd0-8f4d-e7cfb8a1e397_a06ffd39-1343-4854-8d2f-225156c7cf5d_3_ID2C00_streams"
+#sbatch slurm_script_generate.slurm $exp $line --data_dir $SCRATCH/data/kulzaworld_guille_neosdata_npy_relative --sequence_length 2048 --seeds "root_pos_scaled,data_kulzaworld_guille_neosdata_U_Kulza_R_57ea6247_a178_45c5_a3bb_a95af490bfb0_S-898a7978-79fa-4fd0-8f4d-e7cfb8a1e397_a06ffd39-1343-4854-8d2f-225156c7cf5d_3_ID2C00_streams"
+sbatch slurm_script_generate.slurm $exp $line --data_dir $SCRATCH/data/kulzaworld_guille_neosdata_npy_relative --sequence_length 1024 --teacher_forcing
 #sbatch slurm_script_generate.slurm $exp $line --data_dir $SCRATCH/data/kulzaworld_guille_neosdata_npy2 --sequence_length 2048 --seeds "person1_scaled,data_kulzaworld_guille_neosdata_U_Kulza_R_57ea6247_a178_45c5_a3bb_a95af490bfb0_S-898a7978-79fa-4fd0-8f4d-e7cfb8a1e397_a06ffd39-1343-4854-8d2f-225156c7cf5d_3_ID2C00_streams"
 #
 #sbatch slurm_script_generate.slurm $exp $line --data_dir $SCRATCH/data/dekaworld_alex_guille_neosdata --seeds "combined_streams_scaled,data_U_dekatron_R_00ee7d25_447d_4a2e_9d72_07c055ac4d40_S-d03a6c7b-1767-4582-8ffc-9277d5f5d4b5_4f45c65b-8524-4c2e-849d-e3c2cf17bd48_1_ID1E66900_streams" --sequence_length 1024 --max_length 1144 #--generate_ground_truth

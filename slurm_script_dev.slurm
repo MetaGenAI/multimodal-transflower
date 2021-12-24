@@ -2,7 +2,7 @@
 
 ##SBATCH --time=100:00:00
 ##SBATCH --time=20:00:00
-#SBATCH --time=01:00:00
+#SBATCH --time=00:10:00
 ##SBATCH --qos=qos_gpu-t4
 ##SBATCH --qos=qos_gpu-t3
 #SBATCH --qos=qos_gpu-dev

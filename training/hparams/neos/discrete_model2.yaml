@@ -6,7 +6,7 @@ output_modalities: rel_feats_scaled
 input_lengths: 120,120
 #output_lengths: 10
 output_lengths: 1
-num_tokens: 256
+num_tokens: 2048
 output_time_offsets: 120
 nlayers: 12
 nhead: 10

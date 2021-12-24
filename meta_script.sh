@@ -31,7 +31,7 @@ module load pytorch-gpu/py3/1.8.0
 #for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss5_single
 #for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss5_single2
 #for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss5_single3
-for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss5_rel_single2
+#for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss5_rel_single2
 #for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss4 transflower_expmap_cr4_bs5_og2_futureN_gauss5
 #for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss5
 #for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss6
@@ -40,6 +40,8 @@ for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss5_rel_single2
 #for exp in moglow_expmap1_tf2_single moglow_expmap1_tf3_single
 #for exp in moglow_expmap1_tf3_single
 #for exp in moglow_expmap1_tf3_rel_single
+#for exp in discrete_model
+for exp in discrete_model2
 
 #for exp in moglow_expmap1_tf3
 #for exp in mowgli_expmapb
@@ -94,8 +96,11 @@ do
 
 	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_neosraw4 --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/dekaworld_alex_guille_neosdata3 --base_filenames_file base_filenames.txt --gradient_clip_val 10.0 --learning_rate 1e-5
 
+	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_kulzaworld_neosraw_rel --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/kulzaworld_guille_neosdata_npy_relative --base_filenames_file base_filenames.txt --learning_rate 1e-4
+	sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_kulzaworld_neosraw_rel2 --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/kulzaworld_guille_neosdata_npy_relative --base_filenames_file base_filenames.txt
+	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_kulzaworld_neosraw_rel2 --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/kulzaworld_guille_neosdata_npy_relative --base_filenames_file base_filenames.txt --learning_rate 1e-6 --continue_train --load_weights_only --no_load_hparams --load_optimizer_states --lr_policy none 
 	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_kulzaworld_neosraw_rel --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/kulzaworld_guille_neosdata_npy_relative --base_filenames_file base_filenames.txt --gradient_clip_val 10.0 --learning_rate 1e-5 --continue_train
-	sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_kulzaworld_neosraw_rel_nonshuff --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/kulzaworld_guille_neosdata_npy_relative --base_filenames_file base_filenames.txt --gradient_clip_val 20.0 --learning_rate 5e-6 --not_shuffle
+	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_kulzaworld_neosraw_rel_nonshuff --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/kulzaworld_guille_neosdata_npy_relative --base_filenames_file base_filenames.txt --gradient_clip_val 20.0 --learning_rate 5e-6 --not_shuffle
 
 	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_kulzaworld_neosraw_fixed --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/kulzaworld_guille_neosdata_npy2 --base_filenames_file base_filenames.txt --continue_train
 
