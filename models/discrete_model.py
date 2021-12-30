@@ -32,7 +32,8 @@ class DiscreteModel(BaseModel):
         self.input_mod_nets = []
         self.output_mod_nets = []
         self.output_mod_mean_nets = []
-        self.output_mod_vaes = []
+        self.output_mod_trans = []
+        #self.output_mod_vaes = []
         self.module_names = []
         self.out_temp = opt.out_temp
         for i, mod in enumerate(input_mods):
@@ -47,7 +48,7 @@ class DiscreteModel(BaseModel):
             assert output_lengths[i] == 1
 
             # import pdb;pdb.set_trace()
-            vae = ConditionalDiscretizedModel(
+            trans = ConditionalDiscretizedModel(
                 input_shape = (output_lengths[i], 1),
                 output_dim = douts[i],
                 cond_len=self.conditioning_seq_lens[i],
@@ -62,9 +63,11 @@ class DiscreteModel(BaseModel):
                 use_x_transformers = opt.out_use_x_transformers,
                 opt = opt
             )
+            #name = "_output_trans_"+mod
             name = "_output_vae_"+mod
-            setattr(self, "net"+name, vae)
-            self.output_mod_vaes.append(vae)
+            setattr(self, "net"+name, trans)
+            self.output_mod_trans.append(trans)
+            #self.output_mod_vaes.append(trans)
 
             net = BasicTransformerModel(opt.dhid, opt.dhid, opt.nhead, opt.dhid, opt.nlayers, opt.dropout, self.device, use_pos_emb=opt.use_pos_emb_output, input_length=sum(input_lengths), use_x_transformers=opt.use_x_transformers, opt=opt)
             name = "_output_"+mod
@@ -144,7 +147,7 @@ class DiscreteModel(BaseModel):
         #else:
         for i, mod in enumerate(self.output_mods):
             trans_output = self.output_mod_nets[i].forward(latent)[:self.conditioning_seq_lens[i]]
-            output = self.output_mod_vaes[i].generate(trans_output.permute(1,2,0), temp=temp)
+            output = self.output_mod_trans[i].generate(trans_output.permute(1,2,0), temp=temp)
             #import pdb;pdb.set_trace()
             #output = output.squeeze(-1)
             #shap = output.shape
@@ -205,10 +208,10 @@ class DiscreteModel(BaseModel):
         # import pdb;pdb.set_trace()
         for i, mod in enumerate(self.output_mods):
             output1 = self.output_mod_nets[i].forward(latent)[:self.conditioning_seq_lens[i]]
-            vae = self.output_mod_vaes[i]
-            prior_loss, accuracy = vae(targets[i].permute(1,2,0), cond=output1.permute(1,2,0), return_accuracy=True)
-            ##prior_loss, accuracy = vae.prior_logp(targets[i].permute(1,2,0), return_accuracy=True, detach_cond=True)
-            loss += prior_loss
+            trans = self.output_mod_trans[i]
+            trans_loss, accuracy = trans(targets[i].permute(1,2,0), cond=output1.permute(1,2,0), return_accuracy=True)
+            ##prior_loss, accuracy = trans.prior_logp(targets[i].permute(1,2,0), return_accuracy=True, detach_cond=True)
+            loss += trans_loss
             accuracies.append(accuracy)
 
         self.log('loss', loss)

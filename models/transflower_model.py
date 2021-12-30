@@ -146,7 +146,7 @@ class TransflowerModel(BaseModel):
     #         self.register_buffer('out_mask_'+str(i), mask)
     #         self.output_masks.append(mask)
 
-    def forward(self, data):
+    def forward(self, data, temp=1.0):
         # in lightning, forward defines the prediction/inference actions
         latents = []
         for i, mod in enumerate(self.input_mods):
@@ -158,13 +158,13 @@ class TransflowerModel(BaseModel):
                 trans_output = self.output_mod_nets[i].forward(latent)[:self.conditioning_seq_lens[i]]
                 trans_predicted_mean_latents = self.output_mod_nets[i].forward(latent)[self.conditioning_seq_lens[i]:self.conditioning_seq_lens[i]+self.output_lengths[i]]
                 predicted_mean = self.output_mod_mean_nets[i](trans_predicted_mean_latents)
-                residual, _ = self.output_mod_glows[i](x=None, cond=trans_output.permute(1,0,2), reverse=True)
+                residual, _ = self.output_mod_glows[i](x=None, cond=trans_output.permute(1,0,2), reverse=True, eps_std=temp)
                 output = predicted_mean + residual.permute(1,0,2)
                 outputs.append(output)
         else:
             for i, mod in enumerate(self.output_mods):
                 trans_output = self.output_mod_nets[i].forward(latent)[:self.conditioning_seq_lens[i]]
-                output, _ = self.output_mod_glows[i](x=None, cond=trans_output.permute(1,0,2), reverse=True)
+                output, _ = self.output_mod_glows[i](x=None, cond=trans_output.permute(1,0,2), reverse=True, eps_std=temp)
                 outputs.append(output.permute(1,0,2))
 
         return outputs

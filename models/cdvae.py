@@ -602,12 +602,14 @@ class ConditionalDiscretizedModel(nn.Module):
         tokens = []
         for i in range(self.output_dim):
             # print(i)
-            logits = self.transformer(cond.squeeze(-1).permute(2,0,1), torch.cat(tokens+[dummy], 0)).permute(1,2,0)[:,-1,:]
+            logits = self.transformer(cond.squeeze(-1).permute(2,0,1), torch.cat(tokens+[dummy], 0)).permute(1,0,2)[:,-1,:]
+            #import pdb;pdb.set_trace()
             filtered_logits = top_k(logits, thres = filter_thres)
             probs = F.softmax(filtered_logits / temp, dim = -1)
             sampled = torch.multinomial(probs, 1)
             tokens.append(sampled)
-            #import pdb;pdb.set_trace()
+            #print(sampled)
+            #print(torch.max(sampled[0,0]-1,0)[0])
             val = self.linspace[torch.max(sampled[0,0]-1,0)[0]]
             outs.append(val)
 
@@ -629,6 +631,8 @@ class ConditionalDiscretizedModel(nn.Module):
         labels = labels.reshape(labels.shape[0],-1)
         logits = self.transformer(cond.squeeze(-1).permute(2,0,1), labels.permute(1,0)).permute(1,2,0)
         #import pdb;pdb.set_trace()
+        #print(labels.shape)
+        #print(labels)
         loss = F.cross_entropy(logits, labels)
         if not return_accuracy:
             return loss

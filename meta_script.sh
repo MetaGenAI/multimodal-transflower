@@ -31,7 +31,9 @@ module load pytorch-gpu/py3/1.8.0
 #for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss5_single
 #for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss5_single2
 #for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss5_single3
-#for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss5_rel_single2
+for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss5_rel_single2
+#for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss5_rel_single3
+#for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss5_rel_single4
 #for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss4 transflower_expmap_cr4_bs5_og2_futureN_gauss5
 #for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss5
 #for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss6
@@ -41,39 +43,9 @@ module load pytorch-gpu/py3/1.8.0
 #for exp in moglow_expmap1_tf3_single
 #for exp in moglow_expmap1_tf3_rel_single
 #for exp in discrete_model
-for exp in discrete_model2
+#for exp in discrete_model2
 
-#for exp in moglow_expmap1_tf3
-#for exp in mowgli_expmapb
-#for exp in mowgli_expmap_nocond
-#for exp in mowgli_expmap_nocond2
-#for exp in mowgli_expmap_nocond4
-#for exp in mowgli_expmap_nocond5
-#for exp in mowgli_expmap_nocond_output_chunking
-#for exp in mowgli_expmap_nocond_output_chunking2
-#for exp in mowgli_expmap_nocond_output_chunking2_stage2
-#for exp in mowgli_expmap_nocond_output_chunking2b_stage2
-#for exp in mowgli_expmap_nocond_output_chunking3
-#for exp in mowgli_expmap_nocond_output_chunking3_stage2
-#for exp in mowgli_expmap_nocond_output_chunking3_stage2 mowgli_expmap_nocond_output_chunking2_stage2 
-#for exp in mowgli_expmap_nocond_output_chunking4
-#for exp in mowgli_expmap_nocond_output_chunking5
-#for exp in mowgli_expmap_nocond_output_chunking6
-#for exp in mowgli_expmap_nocond_output_chunking6_stage2
-#for exp in mowgli_expmap_nocond_output_chunking3b_stage2
-#for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss_simon
-#for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss_bn
-#for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss_60
-#for exp in transformer_expmap_cr_60
-#for exp in transformer_expmap_cr
-#for exp in transformer_expmap_cr transformer_expmap_cr_N7
-#for exp in transformer_expmap_cr_N7
-#for exp in transformer_expmap_cr_N7
-#for exp in transformer_expmap_simon
-#for exp in transflower_expmap_cr4_label_bs5d
-#for exp in transflower_expmap_cr_label2
-#for exp in transflower_expmap_cr_label3
-#for exp in transflower_expmap_cr_label5
+#for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss5_rel_combined
 
 do
 	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_newdata_filtered_aistpp --num_nodes 1 --max_epochs 300 --data_dir=$SCRATCH/data/dance_combined3 --base_filenames_file base_filenames_train_filtered3.txt --learning_rate 1e-4 --continue_train
@@ -97,12 +69,17 @@ do
 	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_neosraw4 --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/dekaworld_alex_guille_neosdata3 --base_filenames_file base_filenames.txt --gradient_clip_val 10.0 --learning_rate 1e-5
 
 	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_kulzaworld_neosraw_rel --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/kulzaworld_guille_neosdata_npy_relative --base_filenames_file base_filenames.txt --learning_rate 1e-4
-	sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_kulzaworld_neosraw_rel2 --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/kulzaworld_guille_neosdata_npy_relative --base_filenames_file base_filenames.txt
-	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_kulzaworld_neosraw_rel2 --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/kulzaworld_guille_neosdata_npy_relative --base_filenames_file base_filenames.txt --learning_rate 1e-6 --continue_train --load_weights_only --no_load_hparams --load_optimizer_states --lr_policy none 
+	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_kulzaworld_neosraw_rel_smol --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/kulzaworld_guille_neosdata_npy_relative --base_filenames_file base_filenames_train2.txt --continue_train
+	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_kulzaworld_neosraw_rel2 --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/kulzaworld_guille_neosdata_npy_relative --base_filenames_file base_filenames.txt
+	sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_kulzaworld_neosraw_rel2 --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/kulzaworld_guille_neosdata_npy_relative --base_filenames_file base_filenames.txt --continue_train
+	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_kulzaworld_neosraw_rel2 --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/kulzaworld_guille_neosdata_npy_relative --base_filenames_file base_filenames.txt --learning_rate 5e-7 --continue_train --load_weights_only --no_load_hparams --load_optimizer_states --lr_policy none 
 	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_kulzaworld_neosraw_rel --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/kulzaworld_guille_neosdata_npy_relative --base_filenames_file base_filenames.txt --gradient_clip_val 10.0 --learning_rate 1e-5 --continue_train
 	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_kulzaworld_neosraw_rel_nonshuff --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/kulzaworld_guille_neosdata_npy_relative --base_filenames_file base_filenames.txt --gradient_clip_val 20.0 --learning_rate 5e-6 --not_shuffle
 
+	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_dekaworld_neosraw_rel --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/dekaworld_alex_guille_neosdata_npy_relative --base_filenames_file base_filenames.txt
+
 	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_kulzaworld_neosraw_fixed --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/kulzaworld_guille_neosdata_npy2 --base_filenames_file base_filenames.txt --continue_train
+
 
 
 

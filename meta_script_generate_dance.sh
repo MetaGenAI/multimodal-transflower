@@ -46,7 +46,8 @@ base_filenames_file=base_filenames_test2.txt
 #for exp in moglow_expmap1_tf2_newdata_filtered
 #for exp in moglow_expmap1_tf2_newdata_filtered_aistpp
 
-for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss4_newdata_filtered_gc10_lr1
+#for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss4_newdata_filtered_gc10_lr1
+for exp in mowgli_expmap3_chunking_stage2_newdata_filtered_aistpp
 
 #for exp in mowgli_expmap_nocond_output_chunking6_stage2_newdata_filtered_aistpp
 #for exp in transflower_expmap_cr4_bs5_og2_futureN_gauss4_newdata_filtered_gc10_lr1a_aistpp
