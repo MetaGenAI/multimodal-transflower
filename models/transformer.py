@@ -65,8 +65,9 @@ class LearnedPositionalEncoding(nn.Module): # emm this isn't learned lol
     def __init__(self, d_model, input_length, dropout=0.1, device=None):
         super(LearnedPositionalEncoding, self).__init__()
         self.dropout = nn.Dropout(p=dropout)
-        pe = nn.Parameter((torch.zeros(input_length, 1, d_model)))
-        self.register_buffer('pe', pe)
+        pe = nn.Parameter((torch.zeros(input_length, 1, d_model)))#, requires_grad=False)
+        #self.register_buffer('pe', pe)
+        self.register_parameter('pe', pe)
 
     def forward(self, x):
         # print(x.shape)

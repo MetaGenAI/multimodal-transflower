@@ -4,7 +4,7 @@ import torch.nn.functional as F
 import time
 
 #TODO: implement option to include the conditioning bit of input in the output
-def autoregressive_generation_multimodal(features, model, autoreg_mods=[], teacher_forcing=False, ground_truth=False, keep_latents=False, seed_lengths=None, sequence_length=None, use_temperature=False, temperature=1.0):
+def autoregressive_generation_multimodal(features, model, autoreg_mods=[], teacher_forcing=False, ground_truth=False, keep_latents=False, seed_lengths=None, sequence_length=None, use_temperature=False, temperature=1.0, save_jit=False, save_jit_path=None):
     inputs_ = []
     for i,mod in enumerate(model.input_mods):
         input_ = features["in_"+mod]
@@ -52,6 +52,17 @@ def autoregressive_generation_multimodal(features, model, autoreg_mods=[], teach
 
     #TODO: append the initial conditioning bit to the output too
     model.eval()
+    for param in model.parameters():
+        param.requires_grad = False
+    for name,param in model.named_parameters():
+        param.requires_grad = False
+    if hasattr(model,"module_names"):
+        for module in model.module_names:
+            for name,param in getattr(model, "net"+module).named_parameters():
+                if "pe" in name:
+                    print("OOOOOOOOOH")
+                param.requires_grad = False
+
     output_seq = []
     print(sequence_length)
     #import pdb;pdb.set_trace()
@@ -70,13 +81,28 @@ def autoregressive_generation_multimodal(features, model, autoreg_mods=[], teach
                 if keep_latents:
                     if use_temperature:
                         outputs, latents = model.forward(inputs, zss=latents, temp=temperature)
+                        if save_jit and t==0:
+                            with torch.no_grad():
+                                trace = torch.jit.trace(lambda x,y: model(x,zss=y,temp=temperature), ((inputs,latents),))
                     else:
                         outputs, latents = model.forward(inputs, zss=latents)
+                        if save_jit and t==0:
+                            with torch.no_grad():
+                                trace = torch.jit.trace(lambda x,y: model(x,zss=y), ((inputs,latents),))
                 else:
                     if use_temperature:
                         outputs = model.forward(inputs, temp=temperature)
+                        if save_jit and t==0:
+                            with torch.no_grad():
+                                trace = torch.jit.trace(lambda x: model(x,temp=temperature), (inputs,))
                     else:
                         outputs = model.forward(inputs)
+                        if save_jit and t==0:
+                            with torch.no_grad():
+                                trace = torch.jit.trace(model, (inputs,))
+
+                if save_jit and t==0:
+                    torch.jit.save(trace, save_jit_path)
 
             #outputs[0][:,0,-4] = 0.0
             #outputs[0][:,0,-6] = 0.0
@@ -127,8 +153,8 @@ def autoregressive_generation_multimodal(features, model, autoreg_mods=[], teach
                         if not ground_truth:
                             print(torch.mean((inputs_[i][t+output_time_offsets[j]:t+output_time_offsets[j]+1]-outputs[j][:1].detach().clone())**2))
                             print(outputs[j][:1].shape)
-                            print(outputs[j][:1][0,0,9])
-                            print(outputs[j][:1][0,0,16])
+                            #print(outputs[j][:1][0,0,9])
+                            #print(outputs[j][:1][0,0,16])
                     else:
                         if model.input_proc_types[i] == "single":
                             #input_tmp[i] = torch.cat([input_tmp[i][1:],inputs_[i][input_time_offsets[i]+input_lengths[i]+t:input_time_offsets[i]+input_lengths[i]+t+1]],0)

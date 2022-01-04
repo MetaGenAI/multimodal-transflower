@@ -104,8 +104,8 @@ class BaseModel(LightningModule):
             target_ = target_.permute(1,0,2)
             self.targets.append(target_)
 
-    def generate(self,features, teacher_forcing=False, ground_truth=False, sequence_length=None, use_temperature=False, temperature=1.0):
-        output_seq = autoregressive_generation_multimodal(features, self, autoreg_mods=self.output_mods, teacher_forcing=teacher_forcing, ground_truth=ground_truth, sequence_length=sequence_length, use_temperature=use_temperature, temperature=temperature)
+    def generate(self,features, teacher_forcing=False, ground_truth=False, sequence_length=None, use_temperature=False, temperature=1.0, save_jit=False, save_jit_path=None):
+        output_seq = autoregressive_generation_multimodal(features, self, autoreg_mods=self.output_mods, teacher_forcing=teacher_forcing, ground_truth=ground_truth, sequence_length=sequence_length, use_temperature=use_temperature, temperature=temperature, save_jit=save_jit, save_jit_path=save_jit_path)
         return output_seq
 
     # modify parser to add command line options,

@@ -445,13 +445,15 @@ class ConditionalDiscreteVAE(nn.Module):
         tokens = []
         for i in range(self.latent_size):
             # print(i)
-            logits = self.prior_transformer(cond.squeeze(-1).permute(2,0,1), torch.cat(tokens+[dummy], 0)).permute(1,2,0)[:,-1,:]
+            #logits = self.prior_transformer(cond.squeeze(-1).permute(2,0,1), torch.cat(tokens+[dummy], 0)).permute(1,2,0)[:,-1,:]
+            logits = self.prior_transformer(cond.squeeze(-1).permute(2,0,1), torch.cat(tokens+[dummy], 0)).permute(1,0,2)[:,-1,:]
             filtered_logits = top_k(logits, thres = filter_thres)
             probs = F.softmax(filtered_logits / temp, dim = -1)
             sampled = torch.multinomial(probs, 1)
             tokens.append(sampled)
         print(tokens)
         embs = self.codebook(torch.cat(tokens, 0))
+        print(embs.shape)
         # import pdb;pdb.set_trace()
         if self.cond_vae:
             sampled_cond = torch.cat([embs.permute(2,0,1).unsqueeze(0),cond], dim=1)
