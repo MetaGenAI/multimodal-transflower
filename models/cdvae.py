@@ -445,13 +445,15 @@ class ConditionalDiscreteVAE(nn.Module):
         tokens = []
         for i in range(self.latent_size):
             # print(i)
-            logits = self.prior_transformer(cond.squeeze(-1).permute(2,0,1), torch.cat(tokens+[dummy], 0)).permute(1,2,0)[:,-1,:]
+            #logits = self.prior_transformer(cond.squeeze(-1).permute(2,0,1), torch.cat(tokens+[dummy], 0)).permute(1,2,0)[:,-1,:]
+            logits = self.prior_transformer(cond.squeeze(-1).permute(2,0,1), torch.cat(tokens+[dummy], 0)).permute(1,0,2)[:,-1,:]
             filtered_logits = top_k(logits, thres = filter_thres)
             probs = F.softmax(filtered_logits / temp, dim = -1)
             sampled = torch.multinomial(probs, 1)
             tokens.append(sampled)
         print(tokens)
         embs = self.codebook(torch.cat(tokens, 0))
+        print(embs.shape)
         # import pdb;pdb.set_trace()
         if self.cond_vae:
             sampled_cond = torch.cat([embs.permute(2,0,1).unsqueeze(0),cond], dim=1)
@@ -540,5 +542,103 @@ class ContDiscTransformer(nn.Module):
         tgt = tgt[:-1]
         embs = self.embedding(tgt)
         embs = torch.cat([torch.tile(self.first_input, (1,embs.shape[1],1)), embs], 0)
+        #import pdb;pdb.set_trace()
         output = self.transformer(src,embs)
         return output
+
+
+class ConditionalDiscretizedModel(nn.Module):
+    def __init__(
+            self,
+            input_shape = (1,1),
+            output_dim = 32,
+            num_tokens = 512,
+            val_range = (-2,2),
+            cond_len = 128,
+            hidden_dim = 64,
+            cond_dim = 0,
+            smooth_l1_loss = False,
+            temperature = 0.9,
+            nhead = 8,
+            dhid = 512,
+            nlayers = 8,
+            dropout = 0,
+            use_pos_emb = True,
+            use_x_transformers = False,
+            opt = None,
+    ):
+        super().__init__()
+        self.input_shape = input_shape
+        self.num_tokens = num_tokens
+        self.nlayers = nlayers
+        self.temperature = temperature
+        self.cond_dim = cond_dim
+        self.output_dim = output_dim
+        self.val_range = val_range
+        linspace = torch.linspace(*self.val_range, self.num_tokens-1)
+        self.register_buffer('linspace', linspace)
+
+        hdim = hidden_dim
+
+        self.transformer = ContDiscTransformer(cond_dim, num_tokens, cond_dim, nhead, dhid, nlayers, dropout,
+                                                     use_pos_emb=use_pos_emb,
+                                                     src_length=cond_len,
+                                                     tgt_length=output_dim,
+                                                     use_x_transformers=use_x_transformers,
+                                                     opt=opt)
+
+    @torch.no_grad()
+    @eval_decorator
+    def get_codebook_indices(self, inputs, cond=None):
+        logits = self(inputs, cond, return_logits = True)
+        codebook_indices = logits.argmax(dim = 1).flatten(1)
+        return codebook_indices
+
+
+    def generate(self, cond, temp=1.0, filter_thres = 0.5):
+        #if cond is None: raise NotImplementedError("Haven't implemented non-conditional DVAEs")
+        #if len(cond.shape) == 3:
+        #    cond = cond.reshape(cond.shape[0], cond.shape[1],*self.codebook_layer_shape)
+        dummy = torch.zeros(1,1).long().to(cond.device)
+        outs = []
+        tokens = []
+        for i in range(self.output_dim):
+            # print(i)
+            logits = self.transformer(cond.squeeze(-1).permute(2,0,1), torch.cat(tokens+[dummy], 0)).permute(1,0,2)[:,-1,:]
+            #import pdb;pdb.set_trace()
+            filtered_logits = top_k(logits, thres = filter_thres)
+            probs = F.softmax(filtered_logits / temp, dim = -1)
+            sampled = torch.multinomial(probs, 1)
+            tokens.append(sampled)
+            #print(sampled)
+            #print(torch.max(sampled[0,0]-1,0)[0])
+            val = self.linspace[torch.max(sampled[0,0]-1,0)[0]]
+            outs.append(val)
+
+        outs = torch.stack(outs)
+        #print(outs)
+        outs = outs.unsqueeze(0).unsqueeze(-1)
+        return outs
+
+    def forward(
+            self,
+            outputs,
+            cond = None,
+            return_accuracy = False,
+            temp = None
+    ):
+        #if len(cond.shape) == 3:
+        #    cond = cond.reshape(cond.shape[0], cond.shape[1],self.cond_len)
+        labels = torch.bucketize(outputs,self.linspace)
+        labels = labels.reshape(labels.shape[0],-1)
+        logits = self.transformer(cond.squeeze(-1).permute(2,0,1), labels.permute(1,0)).permute(1,2,0)
+        #import pdb;pdb.set_trace()
+        #print(labels.shape)
+        #print(labels)
+        loss = F.cross_entropy(logits, labels)
+        if not return_accuracy:
+            return loss
+        #import pdb;pdb.set_trace()
+        predicted = logits.argmax(dim = 1).flatten(1)
+        accuracy = (predicted == labels).sum()/predicted.nelement()
+        return loss, accuracy

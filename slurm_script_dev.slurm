@@ -2,7 +2,7 @@
 
 ##SBATCH --time=100:00:00
 ##SBATCH --time=20:00:00
-#SBATCH --time=01:00:00
+#SBATCH --time=00:10:00
 ##SBATCH --qos=qos_gpu-t4
 ##SBATCH --qos=qos_gpu-t3
 #SBATCH --qos=qos_gpu-dev
@@ -13,7 +13,7 @@
 ##SBATCH --nodes=1 --ntasks-per-node=4 --cpus-per-task=6 --gres=gpu:4
 ##SBATCH --partition=gpu_p2
 #SBATCH -A imi@gpu
-##SBATCH -C v100-32g
+#SBATCH -C v100-32g
 #SBATCH --exclusive
 
 export MASTER_PORT=1234

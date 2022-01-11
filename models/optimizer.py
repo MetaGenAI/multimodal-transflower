@@ -55,7 +55,7 @@ def get_scheduler(optimizer, opt):
         scheduler = CyclicLR(optimizer, base_lr=opt.learning_rate / 10, max_lr=opt.learning_rate,
                              step_size=opt.nepoch_decay, mode='triangular2')
     elif opt.lr_policy == 'reduceOnPlateau':
-        scheduler = ReduceLROnPlateau(optimizer, 'min', factor=0.2)
+        scheduler = ReduceLROnPlateau(optimizer, 'min', factor=opt.lr_decay_factor)
     elif opt.lr_policy == 'LinearWarmupCosineAnnealing':
         scheduler = LinearWarmupCosineAnnealingLR(optimizer, warmup_epochs=opt.warmup_epochs, max_epochs=opt.max_epochs)
     elif opt.lr_policy == 'none':

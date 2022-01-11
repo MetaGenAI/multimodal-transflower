@@ -77,7 +77,7 @@ class FlowPlusPlus(nn.Module):
             in_channels, in_height, in_width = in_shape
             self.distribution = StudentT(flow_dist_param, in_channels)
 
-    def forward(self, x, cond, reverse=False):
+    def forward(self, x, cond, reverse=False, eps_std=1.0):
         if cond is not None:
             cond = cond.permute(0,2,1).unsqueeze(3)
             
@@ -87,7 +87,7 @@ class FlowPlusPlus(nn.Module):
         else:
             c, h, w = self.flows.z_dim()
             # x = 1.0*torch.randn((cond.size(0), c, h, w), dtype=torch.float32).type_as(cond)
-            eps_std=1.0
+            #eps_std=1.0
             # x = self.distribution.sample((cond.size(0), c, h, w), eps_std, device=cond.device).type_as(cond)
             assert w==1
             x = self.distribution.sample((cond.size(0), c, h), eps_std, device=cond.device).type_as(cond)

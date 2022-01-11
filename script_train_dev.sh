@@ -11,8 +11,8 @@ module load pytorch-gpu/py3/1.8.0
 
 py=python3
 
-#root_dir=$SCRATCH/data
-root_dir=data
+root_dir=$SCRATCH/data
+#root_dir=data
 exp=$1
 
 ####aistpp_60hz
@@ -68,12 +68,13 @@ exp=$1
 #hparams_file=dance_combined/${exp}
 
 #####tianwei
-data_dir=${root_dir}/UR5_processed
-hparams_file=tw/${exp}
+#data_dir=${root_dir}/UR5_processed
+#hparams_file=tw/${exp}
 
 #####neos
-#data_dir=${root_dir}/kulzaworld_guille_neosdata_npy
-#hparams_file=neos/${exp}
+#data_dir=${root_dir}/kulzaworld_guille_neosdata_npy2
+data_dir=${root_dir}/kulzaworld_guille_neosdata_npy_relative
+hparams_file=neos/${exp}
 
 #exp=${exp}_future3_actnorm
 #exp=${exp}_future3
@@ -89,8 +90,8 @@ $py training/train.py --data_dir=${data_dir} --max_epochs=2000\
     --accelerator=ddp \
     --workers=0 \
     --gpus=1 \
+    --batch_size=8 \
     ${@:2} #NOTE: can override experiment_name, and any of the options above
-    #--batch_size=8 \
     #--continue_train \
     #--no_load_hparams \
     #--load_weights_only \

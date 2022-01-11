@@ -23,6 +23,7 @@ echo $slurm_nodes
 export MASTER_ADDRESS=$(echo $slurm_nodes | cut -d' ' -f1)
 echo $MASTER_ADDRESS
 
+module purge
 module load pytorch-gpu/py3/1.8.0
 
 #exp=$1

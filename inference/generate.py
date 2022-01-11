@@ -45,6 +45,11 @@ if __name__ == '__main__':
     parser.add_argument('--generate_video', action='store_true')
     parser.add_argument('--generate_bvh', action='store_true')
     parser.add_argument('--generate_ground_truth', action='store_true')
+    parser.add_argument('--teacher_forcing', action='store_true')
+    parser.add_argument('--use_temperature', action='store_true')
+    parser.add_argument('--temperature', type=float, default=1.0)
+    parser.add_argument('--save_jit', action='store_true')
+    #parser.add_argument('--save_jit_path', type=string, default="")
     #parser.add_argument('--nostrict', action='store_true')
     parser.add_argument('--fps', type=int, default=20)
     args = parser.parse_args()
@@ -138,7 +143,8 @@ if __name__ == '__main__':
     #import pdb;pdb.set_trace()
     #import time
     #start_time = time.time()
-    predicted_mods = model.generate(features, ground_truth=args.generate_ground_truth, sequence_length=sequence_length)
+    save_jit_path = output_folder+"/"+args.experiment_name+"/compiled_jit.pth"
+    predicted_mods = model.generate(features, teacher_forcing=args.teacher_forcing, ground_truth=args.generate_ground_truth, sequence_length=sequence_length, use_temperature=args.use_temperature, temperature=args.temperature, save_jit=args.save_jit, save_jit_path=save_jit_path)
     #print("--- %s seconds ---" % (time.time() - start_time))
     if len(predicted_mods) == 0:
         print("Sequence too short!")

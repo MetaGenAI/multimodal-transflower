@@ -1,19 +1,16 @@
 model: transflower
-dins: 256,125,8
-douts: 8
-input_modalities: "annotation,npz.obs_scaled,npz.acts_scaled"
-output_modalities: npz.acts_scaled
-input_lengths: 11,120,120
-output_lengths: 1
+dins: 3,29
+douts: 29
+input_modalities: "root_pos_scaled,rel_feats_scaled"
+output_modalities: rel_feats_scaled
+input_lengths: 120,120
+output_lengths: 3
 output_time_offsets: 120
-input_proc_types: single,none,none
-input_types: d,c,c
-output_proc_types: ne
-#output_types: c
-input_num_tokens: 67,0,0
+input_types: c,c
+input_num_tokens: 0,0
 nlayers: 12
 nhead: 10
-scales: "[[16,0]]"
+scales: "[[24,0]]"
 num_glow_coupling_blocks: 2
 glow_use_attn: True
 use_transformer_nn: True
@@ -26,17 +23,19 @@ dhid_flow: 800
 num_heads_flow: 10
 cond_concat_dims: True
 #conditioning_seq_lens: 100
-#glow_norm_layer: batchnorm
-glow_norm_layer: actnorm
+glow_norm_layer: batchnorm
+#glow_norm_layer: actnorm
 glow_bn_momentum: 0.1
 dropout: 0
 #lr_policy: cosine
 lr_policy: multistep
-lr_decay_milestones: [1,2,4,8,16,32,64]
+#lr_decay_milestones: [1,2,4,8,16,32,64]
+lr_decay_milestones: [100,200,400,800,1600,3200,6400]
 lr_decay_factor: 0.5
 learning_rate: 1e-5
 gradient_clip_val: 10
-batch_size: 64
+batch_size: 48
+#batch_size: 28
 
 
 

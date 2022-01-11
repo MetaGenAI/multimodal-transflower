@@ -28,11 +28,13 @@ mkdir inference/generated/
 mkdir inference/generated/${exp}
 mkdir inference/generated/${exp}/predicted_mods
 mkdir inference/generated/${exp}/videos
-fps=20
+#fps=20
 #fps=60
+root_dir=$SCRATCH/data
 #data_dir=data/aistpp_20hz
 #data_dir=data/dance_combined3
-data_dir=data/kulzaworld_guille_neosdata_npy
+#data_dir=data/kulzaworld_guille_neosdata_npy
+data_dir=${root_dir}/kulzaworld_guille_neosdata_npy_relative
 
 #data_dir=$SCRATCH/data/dance_combined3
 #data_dir=data/aistpp_60hz

@@ -36,7 +36,7 @@ class TransflowerModel(BaseModel):
                                         use_x_transformers=opt.use_x_transformers,
                                         opt=opt,
                                         discrete_inputs=self.input_types[i] == 'd')
-            name = "_input_"+mod
+            name = "_input_"+mod.replace(".","_")
             setattr(self,"net"+name, net)
             self.input_mod_nets.append(net)
             self.module_names.append(name)
@@ -51,7 +51,7 @@ class TransflowerModel(BaseModel):
                                         opt=opt)
             # else:
             #     net = BasicTransformerModel(douts[i]//2, opt.dhid, opt.nhead, opt.dhid, opt.nlayers, opt.dropout, self.device, use_pos_emb=opt.use_pos_emb_output, input_length=sum(input_lengths), use_x_transformers=opt.use_x_transformers, opt=opt)
-            name = "_output_"+mod
+            name = "_output_"+mod.replace(".","_")
             setattr(self, "net"+name, net)
             self.output_mod_nets.append(net)
             self.module_names.append(name)
@@ -85,9 +85,10 @@ class TransflowerModel(BaseModel):
                                      flow_dist_param=opt.flow_dist_param,
                                      cond_seq_len=self.conditioning_seq_lens[i],
                                 )
-            name = "_output_glow_"+mod
+            name = "_output_glow_"+mod.replace(".","_")
             setattr(self, "net"+name, glow)
             self.output_mod_glows.append(glow)
+            self.module_names.append(name)
 
         self.mean_loss = nn.MSELoss()
         #This is feature creep. Will remove soon
@@ -146,25 +147,25 @@ class TransflowerModel(BaseModel):
     #         self.register_buffer('out_mask_'+str(i), mask)
     #         self.output_masks.append(mask)
 
-    def forward(self, data):
+    def forward(self, data, temp=1.0):
         # in lightning, forward defines the prediction/inference actions
         latents = []
         for i, mod in enumerate(self.input_mods):
-            latents.append(self.input_mod_nets[i].forward(data[i]))
+            latents.append(self.input_mod_nets[i](data[i]))
         latent = torch.cat(latents)
         outputs = []
         if self.opt.residual:
             for i, mod in enumerate(self.output_mods):
-                trans_output = self.output_mod_nets[i].forward(latent)[:self.conditioning_seq_lens[i]]
-                trans_predicted_mean_latents = self.output_mod_nets[i].forward(latent)[self.conditioning_seq_lens[i]:self.conditioning_seq_lens[i]+self.output_lengths[i]]
+                trans_output = self.output_mod_nets[i](latent)[:self.conditioning_seq_lens[i]]
+                trans_predicted_mean_latents = self.output_mod_nets[i](latent)[self.conditioning_seq_lens[i]:self.conditioning_seq_lens[i]+self.output_lengths[i]]
                 predicted_mean = self.output_mod_mean_nets[i](trans_predicted_mean_latents)
-                residual, _ = self.output_mod_glows[i](x=None, cond=trans_output.permute(1,0,2), reverse=True)
+                residual, _ = self.output_mod_glows[i](x=None, cond=trans_output.permute(1,0,2), reverse=True, eps_std=temp)
                 output = predicted_mean + residual.permute(1,0,2)
                 outputs.append(output)
         else:
             for i, mod in enumerate(self.output_mods):
-                trans_output = self.output_mod_nets[i].forward(latent)[:self.conditioning_seq_lens[i]]
-                output, _ = self.output_mod_glows[i](x=None, cond=trans_output.permute(1,0,2), reverse=True)
+                trans_output = self.output_mod_nets[i](latent)[:self.conditioning_seq_lens[i]]
+                output, _ = self.output_mod_glows[i](x=None, cond=trans_output.permute(1,0,2), reverse=True, eps_std=temp)
                 outputs.append(output.permute(1,0,2))
 
         return outputs
