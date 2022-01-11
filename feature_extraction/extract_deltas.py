@@ -40,8 +40,6 @@ rank = comm.Get_rank()
 size = comm.Get_size()
 print(rank)
 
-assert size == 1 # this should be done with one process
-
 candidate_files = sorted(data_path.glob('**/*'+feature_name+'.npy'), key=lambda path: path.parent.__str__())
 tasks = distribute_tasks(candidate_files,rank,size)
 

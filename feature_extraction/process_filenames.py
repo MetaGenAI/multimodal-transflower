@@ -53,9 +53,9 @@ unique_labels = np.unique(sum(anns,[]))
 print(unique_labels)
 label_index = {c:i for i,c in enumerate(unique_labels)}
 label_index_reverse = {i:c for i,c in enumerate(unique_labels)}
-with open(str(data_path) + "/" + files_extension+"."+name_processing_function+'class_index.json', 'w') as f:
+with open(str(data_path) + "/" + files_extension+"."+name_processing_function+'.class_index.json', 'w') as f:
     json.dump(label_index, f)
-with open(str(data_path) + "/" + files_extension+"."+name_processing_function+'class_index_reverse.json', 'w') as f:
+with open(str(data_path) + "/" + files_extension+"."+name_processing_function+'.class_index_reverse.json', 'w') as f:
     json.dump(label_index_reverse, f)
 
 for file,ann in zip(files,anns):
