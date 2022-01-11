@@ -49,7 +49,10 @@ do
 	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_neosraw4 --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/dekaworld_alex_guille_neosdata3 --base_filenames_file base_filenames.txt --learning_rate 5e-4
 
 
-	sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_tw --hparams_file=training/hparams/tw/${exp}.yaml --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/UR5_processed --base_filenames_file base_filenames.txt --gradient_clip_val 10.0 --learning_rate 1e-5 --continue_train
+	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_tw --hparams_file=training/hparams/tw/${exp}.yaml --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/UR5_processed --base_filenames_file base_filenames.txt --gradient_clip_val 10.0 --learning_rate 1e-5 --continue_train
+	#sbatch slurm_script2s.slurm $exp --experiment_name ${exp}_tw2 --hparams_file=training/hparams/tw/${exp}.yaml --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/UR5_processed --base_filenames_file base_filenames.txt --continue_train
+	sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_tw3 --hparams_file=training/hparams/tw/${exp}.yaml --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/UR5_processed --base_filenames_file base_filenames.txt --continue_train
+	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_tw4 --hparams_file=training/hparams/tw/${exp}.yaml --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/UR5_processed --base_filenames_file base_filenames.txt --glow_norm_layer batchnorm --continue_train
 	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_neosraw3 --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/dekaworld_alex_guille_neosdata2 --base_filenames_file base_filenames.txt --gradient_clip_val 10.0 --learning_rate 1e-5 --continue_train
 	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_kulzaworld_neosraw --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/kulzaworld_guille_neosdata_npy --base_filenames_file base_filenames.txt --gradient_clip_val 10.0 --learning_rate 1e-5
 	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_neosraw --num_nodes 1 --max_epochs 2000 --data_dir=$SCRATCH/data/dekaworld_alex_guille_neosdata --base_filenames_file base_filenames.txt --gradient_clip_val 10.0 --learning_rate 1e-5 --continue_train

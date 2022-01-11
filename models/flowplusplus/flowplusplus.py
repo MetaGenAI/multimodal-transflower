@@ -77,7 +77,7 @@ class FlowPlusPlus(nn.Module):
             in_channels, in_height, in_width = in_shape
             self.distribution = StudentT(flow_dist_param, in_channels)
 
-    def forward(self, x, cond, reverse=False, eps_std=1.0):
+    def forward(self, x, cond, reverse=False, eps_std=1.0, noise=None):
         if cond is not None:
             cond = cond.permute(0,2,1).unsqueeze(3)
             
@@ -90,7 +90,11 @@ class FlowPlusPlus(nn.Module):
             #eps_std=1.0
             # x = self.distribution.sample((cond.size(0), c, h, w), eps_std, device=cond.device).type_as(cond)
             assert w==1
-            x = self.distribution.sample((cond.size(0), c, h), eps_std, device=cond.device).type_as(cond)
+            if noise is None:
+                x = self.distribution.sample((cond.size(0), c, h), eps_std, device=cond.device).type_as(cond)
+                #print((cond.size(0), c, h))
+            else:
+                x = noise
             x = x.unsqueeze(-1)
             # import pdb;pdb.set_trace()
 

@@ -94,7 +94,18 @@ def autoregressive_generation_multimodal(features, model, autoreg_mods=[], teach
                         outputs = model.forward(inputs, temp=temperature)
                         if save_jit and t==0:
                             with torch.no_grad():
-                                trace = torch.jit.trace(lambda x: model(x,temp=temperature), (inputs,))
+                                eps_std=1.0
+                                z_shape = (1, 8, 1)
+                                noise = torch.normal(mean=torch.zeros(z_shape), std=torch.ones(z_shape)*eps_std).cuda()
+                                noises = [noise]
+                                #with torch.jit.optimized_execution(True):
+                                #    trace = torch.jit.trace(lambda x,y: model(x, temp=temperature, noises=y)[0], (inputs,noises))
+                                #trace = torch.jit.trace(lambda x: model(x,temp=temperature), (inputs,))
+                                #trace = torch.jit.trace(lambda x: model.get_latent(x,temp=temperature), (inputs,))
+                                latent = model.get_latent(inputs,temp=temperature)
+                                print(latent.shape)
+                                trace = torch.jit.trace(lambda x: model.run_norm_flow(x,temp=temperature), (latent,))
+                                #trace = torch.jit.script(model.forward, example_inputs=(inputs,1.0))
                     else:
                         outputs = model.forward(inputs)
                         if save_jit and t==0:

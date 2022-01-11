@@ -429,7 +429,17 @@ class ConditionalDiscreteVAE(nn.Module):
         if detach_cond:
             cond = cond.detach()
         logits = self.prior_transformer(cond.squeeze(-1).permute(2,0,1), labels.permute(1,0)).permute(1,2,0)
+        #labels = labels.permute(0,2,1)
+        #print(logits.shape)
+        #print(labels.shape)
         loss = F.cross_entropy(logits, labels)
+        #embs = self.codebook(labels)
+        #print(embs.shape)
+        ##sampled_cond = embs.permute(0,2,1).unsqueeze(3)
+        #sampled_cond = torch.cat([embs.permute(0,2,1).unsqueeze(3),cond], dim=1)
+        #out = self.decoder(sampled_cond)
+        #recon_loss = self.loss_fn(inputs, out)
+        #print(recon_loss)
         if not return_accuracy:
             return loss
         # import pdb;pdb.set_trace()
@@ -450,6 +460,8 @@ class ConditionalDiscreteVAE(nn.Module):
             filtered_logits = top_k(logits, thres = filter_thres)
             probs = F.softmax(filtered_logits / temp, dim = -1)
             sampled = torch.multinomial(probs, 1)
+            #sampled = logits.argmax(dim = 1, keepdim=True)
+            #print(predicted.shape)
             tokens.append(sampled)
         print(tokens)
         embs = self.codebook(torch.cat(tokens, 0))
@@ -457,8 +469,10 @@ class ConditionalDiscreteVAE(nn.Module):
         # import pdb;pdb.set_trace()
         if self.cond_vae:
             sampled_cond = torch.cat([embs.permute(2,0,1).unsqueeze(0),cond], dim=1)
+            #sampled_cond = torch.cat([embs.permute(0,2,1).unsqueeze(3),cond], dim=1)
         else:
-            sampled_cond = embs.permute(2,0,1).unsqueeze(0)
+            #sampled_cond = embs.permute(2,0,1).unsqueeze(0)
+            sampled_cond = embs.permute(1,2,0).unsqueeze(3)
         out = self.decoder(sampled_cond)
         return out
 

@@ -147,7 +147,23 @@ class TransflowerModel(BaseModel):
     #         self.register_buffer('out_mask_'+str(i), mask)
     #         self.output_masks.append(mask)
 
-    def forward(self, data, temp=1.0):
+    def get_latent(self, data, temp=1.0, noises=None):
+        latents = []
+        for i, mod in enumerate(self.input_mods):
+            latents.append(self.input_mod_nets[i](data[i]))
+        latent = torch.cat(latents)
+        return latent
+
+    def run_norm_flow(self,latent,temp=1.0, noises=None):
+        outputs = []
+        for i, mod in enumerate(self.output_mods):
+            trans_output = self.output_mod_nets[i](latent)[:self.conditioning_seq_lens[i]]
+            noise = noises[i] if noises is not None else None
+            output, _ = self.output_mod_glows[i](x=None, cond=trans_output.permute(1,0,2), reverse=True, eps_std=temp, noise=noise)
+            outputs.append(output.permute(1,0,2))
+        return outputs
+
+    def forward(self, data, temp=1.0, noises=None):
         # in lightning, forward defines the prediction/inference actions
         latents = []
         for i, mod in enumerate(self.input_mods):
@@ -159,13 +175,15 @@ class TransflowerModel(BaseModel):
                 trans_output = self.output_mod_nets[i](latent)[:self.conditioning_seq_lens[i]]
                 trans_predicted_mean_latents = self.output_mod_nets[i](latent)[self.conditioning_seq_lens[i]:self.conditioning_seq_lens[i]+self.output_lengths[i]]
                 predicted_mean = self.output_mod_mean_nets[i](trans_predicted_mean_latents)
-                residual, _ = self.output_mod_glows[i](x=None, cond=trans_output.permute(1,0,2), reverse=True, eps_std=temp)
+                noise = noises[i] if noises is not None else None
+                residual, _ = self.output_mod_glows[i](x=None, cond=trans_output.permute(1,0,2), reverse=True, eps_std=temp, noise=noise)
                 output = predicted_mean + residual.permute(1,0,2)
                 outputs.append(output)
         else:
             for i, mod in enumerate(self.output_mods):
                 trans_output = self.output_mod_nets[i](latent)[:self.conditioning_seq_lens[i]]
-                output, _ = self.output_mod_glows[i](x=None, cond=trans_output.permute(1,0,2), reverse=True, eps_std=temp)
+                noise = noises[i] if noises is not None else None
+                output, _ = self.output_mod_glows[i](x=None, cond=trans_output.permute(1,0,2), reverse=True, eps_std=temp, noise=noise)
                 outputs.append(output.permute(1,0,2))
 
         return outputs
