@@ -28,63 +28,7 @@ from analysis.visualization.generate_video_from_moglow_pos import generate_video
 
 from training.utils import get_latest_checkpoint
 
-if __name__ == '__main__':
-    print("Hi")
-    parser = argparse.ArgumentParser(description='Generate with model')
-    parser.add_argument('--data_dir', type=str)
-    parser.add_argument('--seeds', type=str, help='sequences to use as seeds for each modality. in the format: mod,seq_id;mod,seq_id')
-    parser.add_argument('--zero_seeds', type=str, help='modalities to seed with zeros, in the format: mod,mod')
-    parser.add_argument('--seeds_file', type=str, help='file from which to choose a random seed')
-    parser.add_argument('--output_folder', type=str)
-    parser.add_argument('--audio_format', type=str, default="wav")
-    parser.add_argument('--sequence_length', type=int, default=-1)
-    parser.add_argument('--experiment_name', type=str)
-    parser.add_argument('--seq_id', type=str)
-    parser.add_argument('--max_length', type=int, default=-1)
-    parser.add_argument('--no-use_scalers', dest='use_scalers', action='store_false')
-    parser.add_argument('--generate_video', action='store_true')
-    parser.add_argument('--generate_bvh', action='store_true')
-    parser.add_argument('--generate_ground_truth', action='store_true')
-    parser.add_argument('--teacher_forcing', action='store_true')
-    parser.add_argument('--use_temperature', action='store_true')
-    parser.add_argument('--temperature', type=float, default=1.0)
-    parser.add_argument('--save_jit', action='store_true')
-    #parser.add_argument('--save_jit_path', type=string, default="")
-    #parser.add_argument('--nostrict', action='store_true')
-    parser.add_argument('--fps', type=int, default=20)
-    args = parser.parse_args()
-    data_dir = args.data_dir
-    audio_format = args.audio_format
-    fps = args.fps
-    output_folder = args.output_folder
-    seq_id = args.seq_id
-    if args.seeds is not None:
-        seeds = {mod:seq for mod,seq in [tuple(x.split(",")) for x in args.seeds.split(";")]}
-    else:
-        seeds = {}
-
-    if args.zero_seeds is not None:
-        zero_seeds = args.zero_seeds.split(",")
-    else:
-        zero_seeds = []
-
-    if seq_id is None:
-        temp_base_filenames = [x[:-1] for x in open(data_dir + "/base_filenames_test.txt", "r").readlines()]
-        seq_id = np.random.choice(temp_base_filenames)
-    if args.seeds_file is not None:
-        print("choosing random seed from "+args.seeds_file)
-        temp_base_filenames = [x[:-1] for x in open(args.seeds_file, "r").readlines()]
-        seq_id = np.random.choice(temp_base_filenames)
-
-    sequence_length=args.sequence_length
-    if sequence_length==-1: sequence_length=None
-
-
-    print(seq_id)
-
-    #load hparams file
-    default_save_path = "training/experiments/"+args.experiment_name
-    logs_path = default_save_path
+def load_model_from_logs_path(logs_path):
     latest_checkpoint = get_latest_checkpoint(logs_path)
     print(latest_checkpoint)
     checkpoint_dir = Path(latest_checkpoint).parent.parent.absolute()
@@ -119,6 +63,82 @@ if __name__ == '__main__':
     #model = model.load_from_checkpoint(latest_checkpoint, opt=opt)
     #model = model.load_from_checkpoint(latest_checkpoint, opt=opt, strict=False)
     model = model.load_from_checkpoint(latest_checkpoint, opt=opt)
+    return model, opt
+
+if __name__ == '__main__':
+    print("Hi")
+    parser = argparse.ArgumentParser(description='Generate with model')
+    parser.add_argument('--data_dir', type=str)
+    parser.add_argument('--seeds', type=str, help='sequences to use as seeds for each modality. in the format: mod,seq_id;mod,seq_id')
+    parser.add_argument('--zero_seeds', type=str, help='modalities to seed with zeros, in the format: mod,mod')
+    parser.add_argument('--zero_pads', type=str, help='modalities whose seeds to pad with zeros, in the format: mod,mod')
+    parser.add_argument('--seeds_file', type=str, help='file from which to choose a random seed')
+    parser.add_argument('--output_folder', type=str)
+    parser.add_argument('--audio_format', type=str, default="wav")
+    parser.add_argument('--sequence_length', type=int, default=-1)
+    parser.add_argument('--experiment_name', type=str)
+    parser.add_argument('--seq_id', type=str)
+    parser.add_argument('--max_length', type=int, default=-1)
+    parser.add_argument('--no-use_scalers', dest='use_scalers', action='store_false')
+    parser.add_argument('--generate_video', action='store_true')
+    parser.add_argument('--generate_bvh', action='store_true')
+    parser.add_argument('--generate_ground_truth', action='store_true')
+    parser.add_argument('--teacher_forcing', action='store_true')
+    parser.add_argument('--use_temperature', action='store_true')
+    parser.add_argument('--temperature', type=float, default=1.0)
+    parser.add_argument('--save_jit', action='store_true')
+    #parser.add_argument('--save_jit_path', type=string, default="")
+    #parser.add_argument('--nostrict', action='store_true')
+    parser.add_argument('--fps', type=int, default=20)
+    args = parser.parse_args()
+    data_dir = args.data_dir
+    audio_format = args.audio_format
+    fps = args.fps
+    output_folder = args.output_folder
+    seq_id = args.seq_id
+    if args.seeds is not None:
+        seeds = {mod:seq for mod,seq in [tuple(x.split(",")) for x in args.seeds.split(";")]}
+    else:
+        seeds = {}
+
+    if args.zero_seeds is not None:
+        zero_seeds = args.zero_seeds.split(",")
+    else:
+        zero_seeds = []
+
+    if args.zero_pads is not None:
+        zero_pads = args.zero_pads.split(",")
+    else:
+        zero_pads = []
+
+    if seq_id is None:
+        temp_base_filenames = [x[:-1] for x in open(data_dir + "/base_filenames_test.txt", "r").readlines()]
+        seq_id = np.random.choice(temp_base_filenames)
+    if args.seeds_file is not None:
+        print("choosing random seed from "+args.seeds_file)
+        temp_base_filenames = [x[:-1] for x in open(args.seeds_file, "r").readlines()]
+        seq_id = np.random.choice(temp_base_filenames)
+
+    sequence_length=args.sequence_length
+    if sequence_length==-1: sequence_length=None
+
+
+    print(seq_id)
+
+    #load hparams file
+    default_save_path = "training/experiments/"+args.experiment_name
+    logs_path = default_save_path
+    model, opt = load_model_from_logs_path(logs_path)
+
+    input_mods = opt.input_modalities.split(",")
+    output_mods = opt.output_modalities.split(",")
+    output_time_offsets = [int(x) for x in str(opt.output_time_offsets).split(",")]
+    if args.use_scalers:
+        print("USING SCALERS")
+        scalers = [x+"_scaler.pkl" for x in output_mods]
+    else:
+        print("NOT USING SCALERS")
+        scalers = []
 
     # Load input features (sequences must have been processed previously into features)
     features = {}
@@ -130,6 +150,8 @@ if __name__ == '__main__':
             feature = np.zeros((model.input_lengths[i],model.dins[i]))
         else:
             feature = np.load(data_dir+"/"+seq_id+"."+mod+".npy")
+        if mod in zero_pads:
+            feature = np.concatenate([np.zeros((model.input_lengths[i],model.dins[i])), feature], axis=0)
         if args.max_length != -1:
             feature = feature[:args.max_length]
         if model.input_proc_types[i] == "single":

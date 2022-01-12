@@ -12,6 +12,8 @@ import numpy as np
 
 from functools import partial
 
+from typing import Optional
+
 from torch.nn import TransformerEncoder, TransformerEncoderLayer, Transformer
 #from models.x_transformers import ContinuousTransformerWrapper, Decoder, Encoder, AutoregressiveWrapper
 from x_transformers import ContinuousTransformerWrapper, Decoder, Encoder, AutoregressiveWrapper
@@ -61,7 +63,7 @@ class PositionalEncoding(nn.Module):
        return self.dropout(x)
 
 
-class LearnedPositionalEncoding(nn.Module): # emm this isn't learned lol
+class LearnedPositionalEncoding(nn.Module):
     def __init__(self, d_model, input_length, dropout=0.1, device=None):
         super(LearnedPositionalEncoding, self).__init__()
         self.dropout = nn.Dropout(p=dropout)
@@ -76,6 +78,7 @@ class LearnedPositionalEncoding(nn.Module): # emm this isn't learned lol
 
 
 class BasicTransformerModel(nn.Module):
+    pos_encoder : Optional[LearnedPositionalEncoding]
     def __init__(self, dout, dinp, nhead, dhid, nlayers, dropout=0, ntokens=0, device=None, use_pos_emb=False, use_rel_pos_emb=False, input_length=0,use_x_transformers=False, opt=None, discrete_inputs=False, dmodel=None):
         super(BasicTransformerModel, self).__init__()
         self.device = device

@@ -10,7 +10,8 @@
 #export PYTHONPATH=$SCRATCH/:${PYTHONPATH}
 
 module purge
-module load pytorch-gpu/py3/1.8.0
+#module load pytorch-gpu/py3/1.8.0
+module load pytorch-gpu/py3/1.10.0
 
 #exp=$1
 #seq_id=$2

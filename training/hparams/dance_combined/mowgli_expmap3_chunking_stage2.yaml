@@ -1,4 +1,5 @@
 model: mowgli
+stage2: true
 dins: 63,85
 douts: 63
 input_modalities: "expmap_scaled_20,audio_feats_scaled_20"
