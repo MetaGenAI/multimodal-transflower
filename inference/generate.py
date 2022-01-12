@@ -48,16 +48,6 @@ def load_model_from_logs_path(logs_path):
     print(opt)
     opt = Struct(**opt)
 
-    input_mods = opt.input_modalities.split(",")
-    output_mods = opt.output_modalities.split(",")
-    output_time_offsets = [int(x) for x in str(opt.output_time_offsets).split(",")]
-    if args.use_scalers:
-        print("USING SCALERS")
-        scalers = [x+"_scaler.pkl" for x in output_mods]
-    else:
-        print("NOT USING SCALERS")
-        scalers = []
-
     # Load latest trained checkpoint from experiment
     model = create_model(opt)
     #model = model.load_from_checkpoint(latest_checkpoint, opt=opt)
