@@ -1,3 +1,7 @@
+'''
+THIS WAS USED FOR DEBUGGING A JIT BUG
+SEE https://github.com/pytorch/pytorch/issues/71165
+'''
 import math
 import torch
 import torch.nn as nn
@@ -12,7 +16,7 @@ from models.util import channelwise, checkerboard, Flip, safe_log, squeeze, unsq
 
 from models.moglow.modules import GaussianDiag, StudentT
 
-class FlowPlusPlus(nn.Module):
+class FlowPlusPlus2(nn.Module):
     """Flow++ Model
 
     Based on the paper:
@@ -51,10 +55,10 @@ class FlowPlusPlus(nn.Module):
                  flow_dist="normal",
                  flow_dist_param=50,
                  bn_momentum=0.1):
-        super(FlowPlusPlus, self).__init__()
+        super(FlowPlusPlus2, self).__init__()
         # Register bounds to pre-process images, not learnable
         self.register_buffer('bounds', torch.tensor([0.9], dtype=torch.float32))
-        self.flows = _FlowStep(scales=scales,
+        self.flows = _FlowStep2(scales=scales,
                                in_shape=in_shape,
                                cond_dim=cond_dim,
                                mid_channels=mid_channels,
@@ -77,33 +81,30 @@ class FlowPlusPlus(nn.Module):
             in_channels, in_height, in_width = in_shape
             self.distribution = StudentT(flow_dist_param, in_channels)
 
-    def forward(self, x, cond, reverse=False, eps_std=1.0, noise=None):
-        if cond is not None:
-            cond = cond.permute(0,2,1).unsqueeze(3)
+    def forward(self, x, cond):
+        eps_std=1.0
+        noise=None
+        #if cond is not None:
+        cond = cond.permute(0,2,1).unsqueeze(3)
             
-        if not reverse:        
-            if x is not None:
-                x = x.permute(0,2,1).unsqueeze(3)
-        else:
-            c, h, w = self.flows.z_dim()
-            # x = 1.0*torch.randn((cond.size(0), c, h, w), dtype=torch.float32).type_as(cond)
-            #eps_std=1.0
-            # x = self.distribution.sample((cond.size(0), c, h, w), eps_std, device=cond.device).type_as(cond)
-            assert w==1
-            if noise is None:
-                x = self.distribution.sample((cond.size(0), c, h), eps_std, device=cond.device).type_as(cond)
-                #print((cond.size(0), c, h))
-            else:
-                x = noise
-            x = x.unsqueeze(-1)
-            # import pdb;pdb.set_trace()
+        c, h, w = self.flows.z_dim()
+        # x = 1.0*torch.randn((cond.size(0), c, h, w), dtype=torch.float32).type_as(cond)
+        #eps_std=1.0
+        # x = self.distribution.sample((cond.size(0), c, h, w), eps_std, device=cond.device).type_as(cond)
+        assert w==1
+        #if noise is None:
+        x = self.distribution.sample((cond.size(0), c, h), eps_std, device=cond.device).type_as(cond)
+        #print((cond.size(0), c, h))
+        #else:
+        #    x = noise
+        x = x.unsqueeze(-1)
+        # import pdb;pdb.set_trace()
 
         sldj = torch.zeros(x.size(0), device=x.device)
-        x, sldj = self.flows(x, cond, sldj, reverse)
+        x, sldj = self.flows(x, cond, sldj)
         
-        if reverse:
-            if x is not None:
-                x = x.squeeze(3).permute(0,2,1)
+        #if x is not None:
+        x = x.squeeze(3).permute(0,2,1)
 
         return x, sldj
 
@@ -132,7 +133,7 @@ class FlowPlusPlus(nn.Module):
 
         return nll
         
-class _FlowStep(nn.Module):
+class _FlowStep2(nn.Module):
     """Recursive builder for a Flow++ model.
 
     Each `_FlowStep` corresponds to a single scale in Flow++.
@@ -150,7 +151,7 @@ class _FlowStep(nn.Module):
         drop_prob (float): Dropout probability.
     """
     def __init__(self, scales, in_shape, cond_dim, mid_channels, num_blocks, num_components, use_attn, use_logmix, use_transformer_nn, use_pos_emb, use_rel_pos_emb, num_heads, drop_prob, norm_layer, bn_momentum, cond_concat_dims, cond_seq_len):
-        super(_FlowStep, self).__init__()
+        super(_FlowStep2, self).__init__()
         in_channels, in_height, in_width = in_shape
         num_channelwise, num_checkerboard = scales[0]
         #import pdb;pdb.set_trace()
@@ -224,7 +225,7 @@ class _FlowStep(nn.Module):
             self.next = None
         else:
             next_shape = (in_channels, in_height // 2, in_width)
-            self.next = _FlowStep(scales=scales[1:],
+            self.next = _FlowStep2(scales=scales[1:],
                                   in_shape=next_shape,
                                   cond_dim=2*cond_dim,
                                   mid_channels=mid_channels,
@@ -247,57 +248,21 @@ class _FlowStep(nn.Module):
     def z_dim(self):
         return self.z_shape
 
-    def forward(self, x, cond, sldj, reverse=False):
+    def forward(self, x, cond, sldj):
         
-        if reverse:
-            #import pdb;pdb.set_trace()
-            if self.next is not None:
-                x = squeeze(x)
-                cond = squeeze(cond)
-                x, x_split = x.chunk(2, dim=1)
-                x, sldj = self.next(x, cond, sldj, reverse)
-                x = torch.cat((x, x_split), dim=1)
-                x = unsqueeze(x)
-                cond = unsqueeze(cond)
+        if self.next is not None:
+            x = squeeze(x)
+            cond = squeeze(cond)
+            x, x_split = x.chunk(2, dim=1)
+            x, sldj = self.next(x, cond, sldj)
+            x = torch.cat((x, x_split), dim=1)
+            x = unsqueeze(x)
+            cond = unsqueeze(cond)
 
-            if self.checkers:
-                x = checkerboard(x)
-                for flow in reversed(self.checkers):
-                    x, sldj = flow(x, cond, sldj, reverse)
-                x = checkerboard(x, reverse=True)
-
-            if self.channels:
-                x = channelwise(x)
-                for flow in reversed(self.channels):
-                    x, sldj = flow(x, cond, sldj, reverse)
-                x = channelwise(x, reverse=True)
-        else:
-            # import pdb;pdb.set_trace()
-            if self.channels:
-                x = channelwise(x)
-                for flow in self.channels:
-                    # import pdb;pdb.set_trace()
-                    x, sldj = flow(x, cond, sldj, reverse)
-                    # print(type(flow).__name__)
-                    # print(x[0].std())
-                x = channelwise(x, reverse=True)
-
-            if self.checkers:
-                x = checkerboard(x)
-                for flow in self.checkers:
-                    x, sldj = flow(x, cond, sldj, reverse)
-                x = checkerboard(x, reverse=True)
-
-            if self.next is not None:
-                # import pdb;pdb.set_trace()
-                # here we apply the flow steps but only to dimensions sampled at a lower scale. Hmm feels a bit weird
-                x = squeeze(x)
-                cond = squeeze(cond)
-                x, x_split = x.chunk(2, dim=1)
-                x, sldj = self.next(x, cond, sldj, reverse)
-                x = torch.cat((x, x_split), dim=1)
-                x = unsqueeze(x)
-
-        # print(x.std())
+        if self.channels:
+            x = channelwise(x)
+            for flow in reversed(self.channels):
+                x, sldj = flow(x, cond, sldj)
+            x = channelwise(x, reverse=True)
         return x, sldj
         

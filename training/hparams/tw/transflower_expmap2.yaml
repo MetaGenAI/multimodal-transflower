@@ -3,9 +3,9 @@ dins: 256,125,8
 douts: 8
 input_modalities: "annotation,npz.obs_scaled,npz.acts_scaled"
 output_modalities: npz.acts_scaled
-input_lengths: 11,120,120
+input_lengths: 11,60,60
 output_lengths: 1
-output_time_offsets: 120
+output_time_offsets: 60
 input_proc_types: single,none,none
 input_types: d,c,c
 output_proc_types: none

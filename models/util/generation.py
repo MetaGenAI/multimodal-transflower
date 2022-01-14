@@ -13,7 +13,7 @@ def autoregressive_generation_multimodal(features, model, autoreg_mods=[], teach
         else:
             input_ = torch.from_numpy(input_).long().to(model.device)
         if model.input_types[i] == "d" and model.opt.use_one_hot:
-            input_ = F.one_hot(input_,num_classes=model.input_num_tokens[i])
+            input_ = F.one_hot(input_,num_classes=model.input_num_tokens[i]).squeeze(2)
         inputs_.append(input_)
     #NOTE: we are currently assuming the last modality is the one determining the sequence length
     if sequence_length is None:
@@ -92,25 +92,43 @@ def autoregressive_generation_multimodal(features, model, autoreg_mods=[], teach
                 else:
                     if use_temperature:
                         outputs = model.forward(inputs, temp=temperature)
+                        if type(outputs) is tuple:
+                            outputs=[0]
+                        #outputs = model.forward(inputs)#, temp=temperature)
+                        #outputs = model.forward(inputs)[0]#, temp=temperature)
                         if save_jit and t==0:
                             with torch.no_grad():
-                                eps_std=1.0
-                                z_shape = (1, 8, 1)
-                                noise = torch.normal(mean=torch.zeros(z_shape), std=torch.ones(z_shape)*eps_std).cuda()
-                                noises = [noise]
+                                #eps_std=1.0
+                                #z_shape = (1, 8, 1)
+                                #noise = torch.normal(mean=torch.zeros(z_shape), std=torch.ones(z_shape)*eps_std).cuda()
+                                #noise = noise.unsqueeze(-1)
+                                #noises = [noise]
                                 #with torch.jit.optimized_execution(True):
                                 #    trace = torch.jit.trace(lambda x,y: model(x, temp=temperature, noises=y)[0], (inputs,noises))
                                 #trace = torch.jit.trace(lambda x: model(x,temp=temperature), (inputs,))
+                                trace = torch.jit.trace(model, (inputs,), check_trace=False)
+                                #trace = torch.jit.trace(lambda x: model.forward_internal(x), (inputs,), check_trace=False)
+                                #trace = torch.jit.trace_module(model, {"forward_internal":inputs}, check_trace=False)
+                                #trace = torch.jit.trace(model, (inputs,noise))
                                 #trace = torch.jit.trace(lambda x: model.get_latent(x,temp=temperature), (inputs,))
-                                latent = model.get_latent(inputs,temp=temperature)
-                                print(latent.shape)
-                                trace = torch.jit.trace(lambda x: model.run_norm_flow(x,temp=temperature), (latent,))
+                                #latent = model.get_latent(inputs,temp=temperature)
+                                #print(latent.shape)
+                                #trace = torch.jit.trace(lambda x: model.run_norm_flow(x,temp=temperature), (latent,))
+                                #l_shape = (1,1,800)
+                                #l_shape = (1,800,1,1)
+                                #latent = torch.normal(mean=torch.zeros(l_shape), std=torch.ones(l_shape)*eps_std).cuda()
+                                #sldj = torch.zeros(noise.size(0), device=noise.device)
+                                #trace = torch.jit.trace(model.output_mod_glows[0].flows, (noise,latent,sldj))
+                                #trace = torch.jit.trace(lambda x,y: model.run_norm_flow(x,y), (noise,latent))
+                                #trace = torch.jit.trace(model.output_mod_glows[0], (noise,latent))
+                                #trace = torch.jit.trace(lambda x,y: model.output_mod_glows[0](x,y), (noise,latent))
+                                #trace = torch.jit.trace(lambda x,y: model.output_mod_glows[0](x,y), (noise,latent), check_trace=False)
                                 #trace = torch.jit.script(model.forward, example_inputs=(inputs,1.0))
                     else:
                         outputs = model.forward(inputs)
                         if save_jit and t==0:
                             with torch.no_grad():
-                                trace = torch.jit.trace(model, (inputs,))
+                                trace = torch.jit.trace(model, (inputs,), check_trace=False)
 
                 if save_jit and t==0:
                     torch.jit.save(trace, save_jit_path)

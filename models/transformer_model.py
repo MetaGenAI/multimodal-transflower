@@ -22,14 +22,16 @@ class TransformerModel(BaseModel):
                     dins[i], 
                     opt.nhead, 
                     opt.dhid, 
-                    2, 
+                    opt.nlayers_input, 
                     opt.dropout, 
-                    self.device, 
-                    use_pos_emb=True, 
+                    ntokens=self.input_num_tokens[i],
+                    use_pos_emb=opt.use_pos_emb_inputs,
+                    use_rel_pos_emb=opt.use_rel_pos_emb_inputs,
                     input_length=input_lengths[i], 
                     use_x_transformers=opt.use_x_transformers, 
-                    opt=opt)
-            name = "_input_"+mod
+                    opt=opt,
+                    discrete_inputs=self.input_types[i] == 'd')
+            name = "_input_"+mod.replace(".","_")
             setattr(self,"net"+name, net)
             self.input_mod_nets.append(net)
             self.module_names.append(name)
@@ -46,7 +48,7 @@ class TransformerModel(BaseModel):
                     use_x_transformers=opt.use_x_transformers, 
                     opt=opt)
             # net = BasicTransformerModel(douts[i], opt.dhid, opt.nhead, opt.dhid, opt.nlayers, opt.dropout, self.device, use_pos_emb=True, input_length=sum(input_lengths))
-            name = "_output_"+mod
+            name = "_output_"+mod.replace(".","_")
             setattr(self,"net"+name, net)
             self.output_mod_nets.append(net)
             self.module_names.append(name)
@@ -65,8 +67,11 @@ class TransformerModel(BaseModel):
     def modify_commandline_options(parser, opt):
         parser.add_argument('--dhid', type=int, default=512)
         parser.add_argument('--nlayers', type=int, default=6)
+        parser.add_argument('--nlayers_input', type=int, default=2)
         parser.add_argument('--nhead', type=int, default=8)
         parser.add_argument('--dropout', type=float, default=0.1)
+        parser.add_argument('--use_rel_pos_emb_inputs', action='store_true', help="whether to use T5 relative positional embeddings for input modality transformers")
+        parser.add_argument('--use_pos_emb_inputs', action='store_true', help="whether to use positional embeddings for input modality transformers")
         parser.add_argument('--use_pos_emb_output', action='store_true', help="whether to use positional embeddings for output modality transformers")
         parser.add_argument('--use_rotary_pos_emb', action='store_true', help="whether to use rotary position embeddings")
         parser.add_argument('--use_x_transformers', action='store_true', help="whether to use rotary position embeddings")

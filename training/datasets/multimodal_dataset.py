@@ -44,6 +44,7 @@ class MultimodalDataset(BaseDataset):
         self.output_lengths = output_lengths = [int(x) for x in str(self.opt.output_lengths).split(",")]
         self.output_time_offsets = output_time_offsets = [int(x) for x in str(self.opt.output_time_offsets).split(",")]
         self.input_time_offsets = input_time_offsets = [int(x) for x in str(self.opt.input_time_offsets).split(",")]
+        self.input_dropouts = input_dropouts = [float(x) for x in str(self.opt.input_dropouts).split(",")]
 
         if self.opt.input_types is None:
             input_types = ["c" for inp in input_mods]
@@ -92,10 +93,17 @@ class MultimodalDataset(BaseDataset):
             else:
                 raise Exception("number of input_time_offsets doesnt match number of input_mods")
 
+        if len(input_dropouts) < len(input_mods):
+            if len(input_dropouts) == 1:
+                self.input_dropouts = input_dropouts = input_dropouts*len(input_mods)
+            else:
+                raise Exception("number of input_dropouts doesnt match number of input_mods")
+
         self.input_features = {input_mod:{} for input_mod in input_mods}
         self.output_features = {output_mod:{} for output_mod in output_mods}
 
-        min_length = max(max(np.array(input_lengths) + np.array(input_time_offsets)), max(np.array(output_time_offsets) + np.array(output_lengths)) ) - min(0,min(output_time_offsets))
+        min_length = max(max(np.array(input_lengths) + np.array(input_time_offsets)), max(np.array(output_time_offsets) + np.array(output_lengths)) ) - min(0,min(min(output_time_offsets),min(input_time_offsets)))
+        padding_length = max(np.array(input_lengths) + np.array(input_time_offsets))
         print(min_length)
 
         self.total_frames = 0
@@ -113,6 +121,8 @@ class MultimodalDataset(BaseDataset):
                 try:
                     features = np.load(feature_file)
                     length = features.shape[0]
+                    if opt.zero_padding:
+                        length += padding_length
                     if first_length:
                         length_0 = length
                         first_length=False
@@ -127,45 +137,41 @@ class MultimodalDataset(BaseDataset):
 
             if file_too_short: continue
 
-            for i, mod in enumerate(input_mods):
-                feature_file = data_path.joinpath(base_filename+"."+mod+".npy")
-                features = np.load(feature_file)
-                features = self.preprocess_inputs(i,features,tile_length=length_0) #assumes the sequence length of things to be tiled is 1
-                self.input_features[mod][base_filename] = features
-
-            length_0 = 1
-            first_length=True
+            #length_0 = 1
+            #first_length=True
             for i, mod in enumerate(output_mods):
                 feature_file = data_path.joinpath(base_filename+"."+mod+".npy")
                 if self.output_proc_types[i] != "none": continue
                 try:
                     features = np.load(feature_file)
                     length = features.shape[0]
-                    if first_length:
-                        length_0 = length
-                        first_length=False
-                    else:
-                        assert length == length_0
-                    if length < min_length:
-                        # print("Smol sequence "+base_filename+"."+mod+"; ignoring..")
-                        file_too_short = True
-                        break
+                    if opt.zero_padding:
+                        length += padding_length
+                    #if first_length:
+                    #    length_0 = length
+                    #    first_length=False
+                    #else:
+                    assert length == length_0
+                    #if length < min_length:
+                    #    # print("Smol sequence "+base_filename+"."+mod+"; ignoring..")
+                    #    file_too_short = True
+                    #    break
                 except FileNotFoundError:
                     raise Exception("An unprocessed output feature found "+base_filename+"."+mod+"; need to run preprocessing script before starting to train with them")
 
             if file_too_short: continue
 
+            for i, mod in enumerate(input_mods):
+                feature_file = data_path.joinpath(base_filename+"."+mod+".npy")
+                features = np.load(feature_file)
+                features = self.preprocess_inputs(i,features,tile_length=length_0,padding_length=padding_length) #assumes the sequence length of things to be tiled is 1
+                self.input_features[mod][base_filename] = features
+
             for i, mod in enumerate(output_mods):
                 feature_file = data_path.joinpath(base_filename+"."+mod+".npy")
                 features = np.load(feature_file)
-                features = self.preprocess_outputs(i,features,tile_length=length_0) #assumes the sequence length of things to be tiled is 1
+                features = self.preprocess_outputs(i,features,tile_length=length_0,padding_length=padding_length) #assumes the sequence length of things to be tiled is 1
                 self.output_features[mod][base_filename] = features
-
-            #TODO: implement this!
-            ## we pad the song features with zeros to imitate during training what happens during generation
-            #x = [np.concatenate((np.zeros(( xx.shape[0],max(0,max(output_time_offsets)) )),xx),0) for xx in x]
-            ## we also pad at the end to allow generation to be of the same length of sequence, by padding an amount corresponding to time_offset
-            #x = [np.concatenate((xx,np.zeros(( xx.shape[0],max(0,max(input_lengths)+max(input_time_offsets)-(min(output_time_offsets)+min(output_lengths)-1)) ))),0) for xx in x]
 
             found_full_seq = False
             for i,mod in enumerate(input_mods):
@@ -212,29 +218,36 @@ class MultimodalDataset(BaseDataset):
         parser.add_argument('--output_lengths', help='output sequence length')
         parser.add_argument('--output_time_offsets', default="1", help='time shift between the last read input, and the output predicted. The default value of 1 corresponds to predicting the next output')
         parser.add_argument('--input_time_offsets', default="0", help='time shift between the beginning of each modality and the first modality')
+        parser.add_argument('--input_dropouts', default="0", help='dropout applied to the different input modalities')
         parser.add_argument('--max_token_seq_len', type=int, default=1024)
         parser.add_argument('--use_one_hot', action='store_true', help='whether to use one hot representation for discrete inputs')
         parser.add_argument('--not_shuffle', action='store_true', help='whether to not shuffle the dataset')
         parser.add_argument('--num_train_samples', type=int, default=0, help='if 0 then use all of them')
+        parser.add_argument('--zero_padding', action='store_true', help='whether to not to left pad the examples with zeros')
 
         return parser
 
     def name(self):
         return "MultiModalDataset"
     
-    def preprocess_inputs(self,i,features, tile_length = 1):
+    def preprocess_inputs(self,i,features, tile_length = 1, padding_length = 0):
         if self.input_types[i] == "d" and self.opt.use_one_hot:
-            features = F.one_hot(torch.tensor(features),num_classes=self.input_num_tokens[i]).numpy()
+            features = F.one_hot(torch.tensor(features).long(),num_classes=self.input_num_tokens[i]).numpy()
         if self.input_proc_types[i] == "tile":
             assert features.shape[0] == 1 # havent implemented other cases..
             reps = np.ones(len(features.shape)).astype(np.int32)
             reps[0] = tile_length
             features = np.tile(features,reps)
             # import pdb;pdb.set_trace()
+        elif self.input_proc_types[i] == "none":
+            if self.opt.zero_padding:
+                ## we pad the song features with zeros to imitate during training what happens during generation
+                features = np.concatenate([np.zeros((padding_length, features.shape[1])), features])
         return features
 
-    def preprocess_outputs(self,i,features, tile_length = 1):
+    def preprocess_outputs(self,i,features, tile_length = 1, padding_length = 0):
         #not implemented yet:
+        #TODO: implement
         # if self.output_types[i] == "d" and self.opt.use_one_hot:
         #     features = F.one_hot(torch.tensor(features),num_classes=self.output_num_tokens[i]).numpy()
         if self.output_proc_types[i] == "tile":
@@ -242,15 +255,29 @@ class MultimodalDataset(BaseDataset):
             reps = np.ones(len(features.shape)).astype(np.int32)
             reps[0] = tile_length
             features = np.tile(features,reps)
+        elif self.output_proc_types[i] == "none":
+            if self.opt.zero_padding:
+                ## we pad the song features with zeros to imitate during training what happens during generation
+                features = np.concatenate([np.zeros((padding_length, features.shape[1])), features])
         return features
 
     def process_input(self,j,xx,index):
         input_lengths = self.input_lengths
         input_time_offsets = self.input_time_offsets
         if self.input_proc_types[j]!= "single":
-            return torch.tensor(xx[index+input_time_offsets[j]:index+input_time_offsets[j]+input_lengths[j]]).float()
+            return_tensor = torch.tensor(xx[index+input_time_offsets[j]:index+input_time_offsets[j]+input_lengths[j]]).float()
         else:
-            return torch.tensor(xx).long().unsqueeze(1)
+            if self.opt.use_one_hot:
+                return_tensor = torch.tensor(xx)
+            else:
+                return_tensor = torch.tensor(xx).long().unsqueeze(1)
+
+        if self.input_dropouts[j]>0:
+            mask = torch.rand(return_tensor.shape[0])<(1-self.input_dropouts[j])
+            mask = mask.unsqueeze(1)
+            return_tensor = return_tensor*mask
+
+        return return_tensor
 
     def process_output(self,j,yy,index):
         output_lengths = self.output_lengths
@@ -258,7 +285,10 @@ class MultimodalDataset(BaseDataset):
         if self.output_proc_types[j]!="single":
             return torch.tensor(yy[index+output_time_offsets[j]:index+output_time_offsets[j]+output_lengths[j]]).float()
         else:
-            return torch.tensor(yy).long().unsqueeze(1)
+            if self.opt.use_one_hot:
+                return torch.tensor(xx)
+            else:
+                return torch.tensor(xx).long().unsqueeze(1)
 
     def __getitem__(self, item):
         idx = find_example_idx(item, self.frame_cum_sums)

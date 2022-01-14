@@ -52,6 +52,8 @@ def load_model_from_logs_path(logs_path):
     model = create_model(opt)
     #model = model.load_from_checkpoint(latest_checkpoint, opt=opt)
     #model = model.load_from_checkpoint(latest_checkpoint, opt=opt, strict=False)
+    #for name,param in model.named_parameters():
+    #    print(name)
     model = model.load_from_checkpoint(latest_checkpoint, opt=opt)
     return model, opt
 

@@ -15,17 +15,20 @@ class MoglowModel(BaseModel):
 
         # import pdb;pdb.set_trace()
         cond_dim = sum(map(lambda x: x[0]*x[1],zip(dins,input_seq_lens)))
-        # assert len(douts) == 1 #TODO: generalize
         self.output_mod_glows = []
         for i, mod in enumerate(self.output_mods):
+            if i == 0:
+                length = self.output_lengths[i]
+            else:
+                assert self.output_lenghts[i] == length
             output_dim = douts[i]
             self.network_model = self.opt.network_model
             if self.opt.use_projection:
                 projection = nn.Linear(cond_dim,self.opt.cond_dim)
                 cond_dim = self.opt.cond_dim
                 setattr(self, "net"+"_projection", projection)
-            glow = Glow(output_dim, cond_dim, self.opt)
-            name = "_output_glow_"+mod
+            glow = Glow(output_dim, cond_dim, self.opt, self.output_lengths[i])
+            name = "_output_glow_"+mod.replace(".","_")
             setattr(self, "net"+name, glow)
             self.output_mod_glows.append(glow)
 
@@ -39,11 +42,11 @@ class MoglowModel(BaseModel):
         self.input_seq_lens = [int(x) for x in str(self.opt.input_seq_lens).split(",")]
         self.output_seq_lens = [int(x) for x in str(self.opt.output_seq_lens).split(",")]
         if self.opt.phase == "inference" and self.opt.network_model == "LSTM":
-            self.input_lengths = [int(x) for x in self.opt.input_seq_lens.split(",")]
-            self.output_lengths = [int(x) for x in self.opt.output_seq_lens.split(",")]
-        else:
-            self.input_lengths = [int(x) for x in self.opt.input_lengths.split(",")]
-            self.output_lengths = [int(x) for x in self.opt.output_lengths.split(",")]
+            self.input_lengths = self.input_seq_lens
+            self.output_lengths = self.output_seq_lens
+        #else:
+        #    self.input_lengths = [int(x) for x in self.input_lengths.split(",")]
+        #    self.output_lengths = [int(x) for x in self.output_lengths.split(",")]
 
         if len(self.output_time_offsets) < len(self.output_mods):
             if len(self.output_time_offsets) == 1:
@@ -81,14 +84,22 @@ class MoglowModel(BaseModel):
         parser.add_argument('--LU_decomposed', action='store_true')
         return parser
 
-    def forward(self, data, eps_std=1.0, zss=None):
+    def forward(self, data, temp=1.0, zss=None):
+        eps_std = temp
         # import pdb;pdb.set_trace()
         data2 = []
         for i,mod in enumerate(self.input_mods):
             input_ = data[i]
-            input_ = input_.permute(1,0,2)
+            print(input_.shape)
+            if len(input_.shape) == 3:
+                input_ = input_.permute(1,0,2)
+            elif len(input_.shape) == 2:
+                input_ = input_.permute(1,0)
             if self.input_seq_lens[i] > 1:
-                input_ = self.concat_sequence(self.input_seq_lens[i], input_)
+                if self.input_proc_types[i]=="single":
+                    input_ = self.concat_sequence(self.input_seq_lens[i], input_, repeat_num=self.output_lengths[0])
+                else:
+                    input_ = self.concat_sequence(self.input_seq_lens[i], input_)
                 input_ = input_.permute(0,2,1)
             else:
                 input_ = input_.permute(0,2,1)
@@ -141,36 +152,41 @@ class MoglowModel(BaseModel):
                 outputs.append(output.permute(0,2,1))
             return outputs
 
-    def generate(self,features, teacher_forcing=False, ground_truth=False, sequence_length=None):
+    def generate(self,features, teacher_forcing=False, ground_truth=False, sequence_length=None, use_temperature=False, temperature=1.0, save_jit=False, save_jit_path=""):
         if self.network_model=="LSTM":
-            self.net_glow.init_lstm_hidden()
+            for glow in self.output_mod_glows:
+                glow.init_lstm_hidden()
             keep_latents = False
         else:
             keep_latents = True
         if self.opt.network_model=="transformer":
-            output_seq = autoregressive_generation_multimodal(features, self, autoreg_mods=self.output_mods, teacher_forcing=teacher_forcing, ground_truth=ground_truth, keep_latents=keep_latents,seed_lengths=self.input_seq_lens, sequence_length=sequence_length)
+            output_seq = autoregressive_generation_multimodal(features, self, autoreg_mods=self.output_mods, teacher_forcing=teacher_forcing, ground_truth=ground_truth, keep_latents=keep_latents,seed_lengths=self.input_seq_lens, sequence_length=sequence_length, use_temperature=use_temperature, temperature=temperature, save_jit=save_jit, save_jit_path=save_jit_path)
         else:
-            output_seq = autoregressive_generation_multimodal(features, self, autoreg_mods=self.output_mods, teacher_forcing=teacher_forcing, ground_truth=ground_truth, keep_latents=keep_latents, sequence_length=sequence_length)
+            output_seq = autoregressive_generation_multimodal(features, self, autoreg_mods=self.output_mods, teacher_forcing=teacher_forcing, ground_truth=ground_truth, keep_latents=keep_latents, sequence_length=sequence_length, use_temperature=use_temperature, temperature=temperature, save_jit=save_jit, save_jit_path=save_jit_path)
         return output_seq
 
     def on_test_start(self):
         if self.network_model=="LSTM":
-            self.net_glow.init_lstm_hidden()
+            for glow in self.output_mod_glows:
+                glow.init_lstm_hidden()
 
     def on_train_start(self):
         if self.network_model=="LSTM":
-            self.net_glow.init_lstm_hidden()
+            for glow in self.output_mod_glows:
+                glow.init_lstm_hidden()
 
     def on_test_batch_start(self, batch, batch_idx, dataloader_idx):
         if self.network_model=="LSTM":
-            self.net_glow.init_lstm_hidden()
+            for glow in self.output_mod_glows:
+                glow.init_lstm_hidden()
 
     def on_train_batch_start(self, batch, batch_idx, dataloader_idx):
         if self.network_model=="LSTM":
             # self.zero_grad()
-            self.net_glow.init_lstm_hidden()
+            for glow in self.output_mod_glows:
+                glow.init_lstm_hidden()
 
-    def concat_sequence(self, seqlen, data):
+    def concat_sequence(self, seqlen, data, repeat_num=1):
         #NOTE: this could be done as preprocessing on the dataset to make it a bit more efficient, but we are only going to
         # use this for baseline moglow, so I thought it wasn't worth it to put it there.
         """
@@ -195,6 +211,7 @@ class MoglowModel(BaseModel):
 
         #reshape all timesteps and features into one dimention per sample
         dd = cc.reshape((nn, L, seqlen*n_feats))
+        dd = torch.tile(dd, (1,repeat_num,1))
         #print ("dd: " + str(dd.shape))
         return dd
 
@@ -205,9 +222,13 @@ class MoglowModel(BaseModel):
             input_ = data["in_"+mod]
             if self.input_seq_lens[i] > 1:
                 # input_ = input_.permute(0,2,1)
-                input_ = self.concat_sequence(self.input_seq_lens[i], input_)
+                if self.input_proc_types[i]=="single":
+                    input_ = self.concat_sequence(self.input_seq_lens[i], input_, repeat_num=self.output_lengths[0])
+                else:
+                    input_ = self.concat_sequence(self.input_seq_lens[i], input_)
                 input_ = input_.permute(0,2,1)
             else:
+                #print(input_.shape)
                 input_ = input_.permute(0,2,1)
             self.inputs.append(input_)
         for i, mod in enumerate(self.output_mods):
@@ -224,6 +245,8 @@ class MoglowModel(BaseModel):
     def training_step(self, batch, batch_idx):
         self.set_inputs(batch)
         # import pdb;pdb.set_trace()
+        #for inp in self.inputs:
+        #    print(inp.shape)
         cond = torch.cat(self.inputs, dim=1)
         if self.opt.use_projection:
             cond = self.net_projection(cond.permute(0,2,1)).permute(0,2,1)
