@@ -209,7 +209,7 @@ class FlowNet(nn.Module):
 
 class Glow(nn.Module):
 
-    def __init__(self, x_channels, cond_channels, opt):
+    def __init__(self, x_channels, cond_channels, opt, input_length):
         super().__init__()
         self.flow = FlowNet(x_channels=x_channels,
                             hidden_channels=opt.dhid,
@@ -222,7 +222,7 @@ class Glow(nn.Module):
                             network_model=opt.network_model,
                             num_layers=opt.num_layers,
                             nheads=opt.flow_coupling_nheads,
-                            input_length=int(opt.output_lengths.split(",")[0]),
+                            input_length=input_length,
                             LU_decomposed=opt.LU_decomposed)
         self.opt = opt
         

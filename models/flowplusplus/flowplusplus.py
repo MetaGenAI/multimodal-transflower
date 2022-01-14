@@ -248,7 +248,7 @@ class _FlowStep(nn.Module):
         return self.z_shape
 
     def forward(self, x, cond, sldj, reverse=False):
-            
+        
         if reverse:
             #import pdb;pdb.set_trace()
             if self.next is not None:

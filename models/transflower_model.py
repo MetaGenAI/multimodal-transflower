@@ -2,6 +2,7 @@ import torch
 from .transformer import BasicTransformerModel
 from models import BaseModel
 from models.flowplusplus import FlowPlusPlus
+#from models.flowplusplus import FlowPlusPlus2 as FlowPlusPlus
 import ast
 from torch import nn
 import torch.nn.functional as F
@@ -154,17 +155,43 @@ class TransflowerModel(BaseModel):
         latent = torch.cat(latents)
         return latent
 
-    def run_norm_flow(self,latent,temp=1.0, noises=None):
+    def run_norm_flow(self,x,cond):#,temp=1.0, noises=None):
+        #outputs = []
+        #for i, mod in enumerate(self.output_mods):
+        #trans_output = self.output_mod_nets[i](latent)[:self.conditioning_seq_lens[i]]
+        #noise = noises[i] if noises is not None else None
+        #output, _ = self.output_mod_glows[i](x=None, cond=trans_output.permute(1,0,2), reverse=True, eps_std=temp, noise=noise)
+        #output, _ = self.output_mod_glows[i](x=None, cond=trans_output.permute(1,0,2))
+        #outputs.append(output.permute(1,0,2))
+        output, sldj = self.output_mod_glows[0](x=x, cond=cond)
+        #outputs = [output.permute(1,0,2)]
+        return output
+
+    def run_flow_step(self,x,cond):
+        #outputs = []
+        #for i, mod in enumerate(self.output_mods):
+        #trans_output = self.output_mod_nets[i](latent)[:self.conditioning_seq_lens[i]]
+        #noise = noises[i] if noises is not None else None
+        #output, _ = self.output_mod_glows[i](x=None, cond=trans_output.permute(1,0,2), reverse=True, eps_std=temp, noise=noise)
+        #output, _ = self.output_mod_glows[i](x=None, cond=trans_output.permute(1,0,2))
+        #outputs.append(output.permute(1,0,2))
         outputs = []
-        for i, mod in enumerate(self.output_mods):
-            trans_output = self.output_mod_nets[i](latent)[:self.conditioning_seq_lens[i]]
-            noise = noises[i] if noises is not None else None
-            output, _ = self.output_mod_glows[i](x=None, cond=trans_output.permute(1,0,2), reverse=True, eps_std=temp, noise=noise)
-            outputs.append(output.permute(1,0,2))
+        sldj = torch.zeros(x.size(0), device=x.device)
+        output, _ = self.output_mod_glows[0].flows(x,cond,sldj)
+        outputs.append(output)
         return outputs
 
+    #def forward(self, data, temp=1.0, noises=None):
+    #    #return self.forward_internal(data, temp, noises)[0]
+    #    return self.forward_internal(data)[0]
+
+    #def forward_internal(self, data):
+    #def forward_internal(self, data, temp=1.0, noises=None):
     def forward(self, data, temp=1.0, noises=None):
+    #def forward(self, data):
         # in lightning, forward defines the prediction/inference actions
+        #noises = None
+        #temp=1.0
         latents = []
         for i, mod in enumerate(self.input_mods):
             latents.append(self.input_mod_nets[i](data[i]))
@@ -183,10 +210,10 @@ class TransflowerModel(BaseModel):
             for i, mod in enumerate(self.output_mods):
                 trans_output = self.output_mod_nets[i](latent)[:self.conditioning_seq_lens[i]]
                 noise = noises[i] if noises is not None else None
-                output, _ = self.output_mod_glows[i](x=None, cond=trans_output.permute(1,0,2), reverse=True, eps_std=temp, noise=noise)
+                output, sldj = self.output_mod_glows[i](x=None, cond=trans_output.permute(1,0,2), reverse=True, eps_std=temp, noise=noise)
                 outputs.append(output.permute(1,0,2))
 
-        return outputs
+        return outputs, sldj
 
     # def on_train_epoch_start(self):
     #     if self.opt.residual:
