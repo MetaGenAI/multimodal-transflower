@@ -51,17 +51,6 @@ def autoregressive_generation_multimodal(features, model, autoreg_mods=[], teach
         latents = None
 
     #TODO: append the initial conditioning bit to the output too
-    model.eval()
-    for param in model.parameters():
-        param.requires_grad = False
-    for name,param in model.named_parameters():
-        param.requires_grad = False
-    if hasattr(model,"module_names"):
-        for module in model.module_names:
-            for name,param in getattr(model, "net"+module).named_parameters():
-                if "pe" in name:
-                    print("OOOOOOOOOH")
-                param.requires_grad = False
 
     output_seq = []
     print(sequence_length)

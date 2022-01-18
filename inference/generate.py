@@ -28,7 +28,7 @@ from analysis.visualization.generate_video_from_moglow_pos import generate_video
 
 from training.utils import get_latest_checkpoint
 
-def load_model_from_logs_path(logs_path):
+def load_model_from_logs_path(logs_path, no_grad=True):
     latest_checkpoint = get_latest_checkpoint(logs_path)
     print(latest_checkpoint)
     checkpoint_dir = Path(latest_checkpoint).parent.parent.absolute()
@@ -55,6 +55,18 @@ def load_model_from_logs_path(logs_path):
     #for name,param in model.named_parameters():
     #    print(name)
     model = model.load_from_checkpoint(latest_checkpoint, opt=opt)
+    if torch.cuda.is_available():
+        model.cuda()
+    if no_grad:
+        model.eval()
+        for param in model.parameters():
+            param.requires_grad = False
+        for name,param in model.named_parameters():
+            param.requires_grad = False
+        if hasattr(model,"module_names"):
+            for module in model.module_names:
+                for name,param in getattr(model, "net"+module).named_parameters():
+                    param.requires_grad = False
     return model, opt
 
 if __name__ == '__main__':
@@ -152,8 +164,6 @@ if __name__ == '__main__':
             features["in_"+mod] = np.expand_dims(feature,1)
 
     # Generate prediction
-    if torch.cuda.is_available():
-        model.cuda()
     #import pdb;pdb.set_trace()
     #import time
     #start_time = time.time()

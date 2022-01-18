@@ -26,6 +26,9 @@ class InvertibleConv1x1(nn.Module):
             self.l = nn.Parameter(torch.Tensor(np_l.astype(np.float32)))
             self.log_s = nn.Parameter(torch.Tensor(np_log_s.astype(np.float32)))
             self.u = nn.Parameter(torch.Tensor(np_u.astype(np.float32)))
+            #self.register_parameter("l",self.l)
+            #self.register_parameter("log_s",self.log_s)
+            #self.register_parameter("u",self.u)
             self.l_mask = torch.Tensor(l_mask)
             self.eye = torch.Tensor(eye)
         self.w_shape = w_shape
