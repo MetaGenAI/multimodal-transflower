@@ -93,7 +93,7 @@ def autoregressive_generation_multimodal(features, model, autoreg_mods=[], teach
                     if use_temperature:
                         outputs = model.forward(inputs, temp=temperature)
                         if type(outputs) is tuple:
-                            outputs=[0]
+                            outputs=outputs[0]
                         #outputs = model.forward(inputs)#, temp=temperature)
                         #outputs = model.forward(inputs)[0]#, temp=temperature)
                         if save_jit and t==0:

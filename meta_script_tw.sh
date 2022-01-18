@@ -7,8 +7,9 @@ module load pytorch-gpu/py3/1.8.0
 #for exp in moglow_expmap1_tf2
 #for exp in moglow_expmap1
 #for exp in transflower_expmap2 transflower_expmap3 transflower_expmap3
-for exp in transflower_expmap3
+#for exp in transflower_expmap3
 #for exp in transflower_zp_inpdrop
+for exp in transflower_zp_inpdrop2
 #for exp in transformer_expmap
 
 #for exp in moglow_expmap1_tf3
@@ -54,10 +55,10 @@ do
 	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_neosraw4 --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/dekaworld_alex_guille_neosdata3 --base_filenames_file base_filenames.txt --learning_rate 5e-4
 
 
-	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_tw --hparams_file=training/hparams/tw/${exp}.yaml --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/UR5_processed --base_filenames_file base_filenames.txt
+	sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_tw --hparams_file=training/hparams/tw/${exp}.yaml --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/UR5_processed --base_filenames_file base_filenames.txt
 	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_tw --hparams_file=training/hparams/tw/${exp}.yaml --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/UR5_processed --base_filenames_file base_filenames.txt --continue_train
 	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_tw_zp --hparams_file=training/hparams/tw/${exp}.yaml --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/UR5_processed --base_filenames_file base_filenames.txt --zero_padding
-	sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_tw_zp --hparams_file=training/hparams/tw/${exp}.yaml --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/UR5_processed --base_filenames_file base_filenames.txt --zero_padding --continue_train
+	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_tw_zp --hparams_file=training/hparams/tw/${exp}.yaml --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/UR5_processed --base_filenames_file base_filenames.txt --zero_padding --continue_train
 	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_tw3 --hparams_file=training/hparams/tw/${exp}.yaml --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/UR5_processed --base_filenames_file base_filenames.txt --continue_train
 	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_tw4 --hparams_file=training/hparams/tw/${exp}.yaml --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/UR5_processed --base_filenames_file base_filenames.txt --glow_norm_layer batchnorm --continue_train
 	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_neosraw3 --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/dekaworld_alex_guille_neosdata2 --base_filenames_file base_filenames.txt --gradient_clip_val 10.0 --learning_rate 1e-5 --continue_train
