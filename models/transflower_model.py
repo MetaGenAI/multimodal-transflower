@@ -192,7 +192,7 @@ class TransflowerModel(BaseModel):
         # in lightning, forward defines the prediction/inference actions
         #noises = None
         #temp=1.0
-        temp=0.1
+        #temp=0.1
         latents = []
         for i, mod in enumerate(self.input_mods):
             latents.append(self.input_mod_nets[i](data[i]))
