@@ -11,18 +11,8 @@ module load pytorch-gpu/py3/1.8.0
 #for exp in transflower_zp_inpdrop
 #for exp in transflower_zp_inpdrop2
 #for exp in transflower_zp_inpdrop3
-#for exp in transflower_zp5
-#for exp in transflower_zp5_short
-#for exp in transflower_zp5_short2
-#for exp in transflower_zp5_short3
-#for exp in transflower_zp5_short4
+for exp in transflower_zp_inpdrop3c
 #for exp in transformer_expmap
-#for exp in transflower_zp5_short_single_obj
-#for exp in transflower_zp5_single_obj
-#for exp in transflower_zp5_short_single_obj_nocol transflower_zp5_short_single_obj transflower_zp5_single_obj
-#for exp in transflower_zp5_short_single_obj_nocol_dp
-#for exp in transflower_zp5_short_single_obj_nocol_nodp
-for exp in transflower_zp5_single_obj_nocol_trim
 
 #for exp in moglow_expmap1_tf3
 #for exp in mowgli_expmapb
@@ -67,22 +57,14 @@ do
 	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_neosraw4 --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/dekaworld_alex_guille_neosdata3 --base_filenames_file base_filenames.txt --learning_rate 5e-4
 
 
-	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_tw_single --hparams_file=training/hparams/tw/${exp}.yaml --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/UR5_processed --base_filenames_file base_filenames_single_objs.txt
-	sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_tw_single_filtered --hparams_file=training/hparams/tw/${exp}.yaml --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/UR5_processed --base_filenames_file base_filenames_single_objs_filtered.txt
-	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_tw_single --hparams_file=training/hparams/tw/${exp}.yaml --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/UR5_processed --base_filenames_file base_filenames_single_objs.txt --continue_train
-	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_tw_single_smol4 --hparams_file=training/hparams/tw/${exp}.yaml --num_nodes 1 --max_epochs 24000 --data_dir=$SCRATCH/data/UR5_processed --base_filenames_file base_filenames_train4.txt --batch_size 32 --continue_train
 	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_tw_smol --hparams_file=training/hparams/tw/${exp}.yaml --num_nodes 1 --max_epochs 24000 --data_dir=$SCRATCH/data/UR5_processed --base_filenames_file base_filenames_train2.txt --continue_train --learning_rate 7e-6 --load_weights_only --no_load_hparams --load_optimizer_states --batch_size 32
 	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_tw_smol --hparams_file=training/hparams/tw/${exp}.yaml --num_nodes 1 --max_epochs 24000 --data_dir=$SCRATCH/data/UR5_processed --base_filenames_file base_filenames_train2.txt --continue_train
 	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_tw_smol2 --hparams_file=training/hparams/tw/${exp}.yaml --num_nodes 1 --max_epochs 24000 --data_dir=$SCRATCH/data/UR5_processed --base_filenames_file base_filenames_train3.txt --batch_size 32 --zero_padding
-	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_tw_smol4 --hparams_file=training/hparams/tw/${exp}.yaml --num_nodes 1 --max_epochs 48000 --data_dir=$SCRATCH/data/UR5_processed --base_filenames_file base_filenames_train4.txt --batch_size 32 --continue_train
-	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_tw_smol4 --hparams_file=training/hparams/tw/${exp}.yaml --num_nodes 1 --max_epochs 48000 --data_dir=$SCRATCH/data/UR5_processed --base_filenames_file base_filenames_train4.txt --continue_train --learning_rate 7e-6 --load_weights_only --no_load_hparams --load_optimizer_states --batch_size 32
-	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_tw_smol4 --hparams_file=training/hparams/tw/${exp}.yaml --num_nodes 1 --max_epochs 24000 --data_dir=$SCRATCH/data/UR5_processed --base_filenames_file base_filenames_train4.txt --batch_size 32
-	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_tw_paint --hparams_file=training/hparams/tw/${exp}.yaml --num_nodes 1 --max_epochs 24000 --data_dir=$SCRATCH/data/UR5_processed --base_filenames_file base_filenames_paint.txt --batch_size 32
-	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_tw_paint --hparams_file=training/hparams/tw/${exp}.yaml --num_nodes 1 --max_epochs 24000 --data_dir=$SCRATCH/data/UR5_processed --base_filenames_file base_filenames_paint.txt --batch_size 32
-	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_tw --hparams_file=training/hparams/tw/${exp}.yaml --num_nodes 1 --max_epochs 24000 --data_dir=$SCRATCH/data/UR5_processed --base_filenames_file base_filenames_train4.txt --continue_train --learning_rate 7e-6 --load_weights_only --no_load_hparams --load_optimizer_states
+	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_tw_smol4 --hparams_file=training/hparams/tw/${exp}.yaml --num_nodes 1 --max_epochs 24000 --data_dir=$SCRATCH/data/UR5_processed --base_filenames_file base_filenames_train4.txt --batch_size 32 --zero_padding --continue_train
+	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_tw_smol3 --hparams_file=training/hparams/tw/${exp}.yaml --num_nodes 1 --max_epochs 24000 --data_dir=$SCRATCH/data/UR5_processed --base_filenames_file base_filenames_train4.txt --batch_size 32 --zero_padding --continue_train --learning_rate 7e-6 --load_weights_only --no_load_hparams --load_optimizer_states
+	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_ibc --hparams_file=training/hparams/ibc/${exp}.yaml --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/ibc_block_push --base_filenames_file base_filenames.txt
+	sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_ibc_scaling --hparams_file=training/hparams/ibc/${exp}.yaml --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/ibc_block_push_scaled --base_filenames_file base_filenames.txt
 	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_tw --hparams_file=training/hparams/tw/${exp}.yaml --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/UR5_processed --base_filenames_file base_filenames.txt --continue_train
-	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_tw --hparams_file=training/hparams/tw/${exp}.yaml --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/UR5_processed --base_filenames_file base_filenames.txt
-	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_tw --hparams_file=training/hparams/tw/${exp}.yaml --num_nodes 1 --max_epochs 24000 --data_dir=$SCRATCH/data/UR5_processed --base_filenames_file base_filenames.txt --continue_train --learning_rate 7e-6 --load_weights_only --no_load_hparams --load_optimizer_states
 	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_tw_zp --hparams_file=training/hparams/tw/${exp}.yaml --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/UR5_processed --base_filenames_file base_filenames.txt --zero_padding
 	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_tw_zp --hparams_file=training/hparams/tw/${exp}.yaml --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/UR5_processed --base_filenames_file base_filenames.txt --zero_padding --continue_train
 	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_tw3 --hparams_file=training/hparams/tw/${exp}.yaml --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/UR5_processed --base_filenames_file base_filenames.txt --continue_train
