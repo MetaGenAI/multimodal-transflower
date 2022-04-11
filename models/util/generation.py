@@ -80,10 +80,11 @@ def autoregressive_generation_multimodal(features, model, autoreg_mods=[], teach
                                 trace = torch.jit.trace(lambda x,y: model(x,zss=y), ((inputs,latents),))
                 else:
                     if use_temperature:
-                        if save_jit and t==0:
-                            outputs = model.forward(inputs, temp=temperature)
-                        elif save_jit:
-                            outputs = trace(inputs)
+                        outputs = model.forward(inputs, temp=temperature)
+                        #if save_jit and t==0:
+                        #    outputs = model.forward(inputs, temp=temperature)
+                        #elif save_jit:
+                        #    outputs = trace(inputs)
                         if type(outputs) is tuple:
                             outputs=outputs[0]
                         #outputs = model.forward(inputs)#, temp=temperature)
