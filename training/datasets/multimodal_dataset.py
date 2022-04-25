@@ -229,7 +229,7 @@ class MultimodalDataset(BaseDataset):
 
     def name(self):
         return "MultiModalDataset"
-    
+
     def preprocess_inputs(self,i,features, tile_length = 1, padding_length = 0):
         if self.input_types[i] == "d" and self.opt.use_one_hot:
             features = F.one_hot(torch.tensor(features).long(),num_classes=self.input_num_tokens[i]).numpy()
@@ -267,10 +267,17 @@ class MultimodalDataset(BaseDataset):
         if self.input_proc_types[j]!= "single":
             return_tensor = torch.tensor(xx[index+input_time_offsets[j]:index+input_time_offsets[j]+input_lengths[j]]).float()
         else:
-            if self.opt.use_one_hot:
-                return_tensor = torch.tensor(xx)
-            else:
+            if len(xx.shape) == 3:
+                idx = np.random.randint(xx.shape[0]) #chose random from the set
+                xx = xx[idx]
+                # print(xx.shape)
+            # if self.opt.use_one_hot:
+            #     return_tensor = torch.tensor(xx)
+            # else:
+            #     return_tensor = torch.tensor(xx).long().unsqueeze(1)
+            if len(xx.shape) == 1:
                 return_tensor = torch.tensor(xx).long().unsqueeze(1)
+            return_tensor = torch.tensor(xx).long()
 
         if self.input_dropouts[j]>0:
             mask = torch.rand(return_tensor.shape[0])<(1-self.input_dropouts[j])
