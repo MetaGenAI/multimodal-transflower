@@ -6,7 +6,7 @@ def dance_style(path):
     return [arr[1]]
 
 def annotation(path):
-    path = str(path)+".annotation.txt"
+    #path = str(path)+".annotation.txt"
     annotation = open(path, "r").read()
     return annotation.split(" ")
 

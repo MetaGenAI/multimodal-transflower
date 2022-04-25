@@ -91,10 +91,9 @@ class FlowPlusPlus(nn.Module):
             # x = self.distribution.sample((cond.size(0), c, h, w), eps_std, device=cond.device).type_as(cond)
             assert w==1
             if noise is None:
-                x = self.distribution.sample((cond.size(0), c, h), eps_std, device=cond.device).type_as(cond)
+                noise = self.distribution.sample((cond.size(0), c, h), eps_std, device=cond.device).type_as(cond)
                 #print((cond.size(0), c, h))
-            else:
-                x = noise
+            x = noise
             x = x.unsqueeze(-1)
             # import pdb;pdb.set_trace()
 
@@ -105,9 +104,9 @@ class FlowPlusPlus(nn.Module):
             if x is not None:
                 x = x.squeeze(3).permute(0,2,1)
 
-        return x, sldj
+        return x, sldj, noise
 
-    def loss_generative(self, z, sldj):
+    def loss_generative(self, z, sldj, reduce=True):
         """Negative log-likelihood loss assuming isotropic gaussian with unit norm.
 
         Args:
@@ -121,13 +120,17 @@ class FlowPlusPlus(nn.Module):
         # prior_ll = -0.5 * (z ** 2 + np.log(2 * np.pi))
         # prior_ll = prior_ll.flatten(1).sum(-1)# \
         prior_ll = self.distribution.logp(z)
+        # print(prior_ll.shape)
         prior_ll = prior_ll.flatten(1).sum(-1)# \
         # import pdb;pdb.set_trace()
 #            - np.log(k) * np.prod(z.size()[1:])
         ll = prior_ll + sldj
         # print(sldj.mean())
         # import pdb;pdb.set_trace()
-        nll = -ll.mean()/float(np.log(2.) * z.size(2) * z.size(3))
+        if reduce:
+            nll = -ll.mean()/float(np.log(2.) * z.size(2) * z.size(3))
+        else:
+            nll = -ll/float(np.log(2.) * z.size(2) * z.size(3))
         # nll = -ll.mean()/float(np.log(2.))
 
         return nll

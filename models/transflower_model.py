@@ -187,7 +187,7 @@ class TransflowerModel(BaseModel):
 
     #def forward_internal(self, data):
     #def forward_internal(self, data, temp=1.0, noises=None):
-    def forward(self, data, temp=1.0, noises=None):
+    def forward(self, data, temp=1.0, noises=None, output_mods=None):
     #def forward(self, data):
         # in lightning, forward defines the prediction/inference actions
         #noises = None
@@ -198,29 +198,43 @@ class TransflowerModel(BaseModel):
             latents.append(self.input_mod_nets[i](data[i]))
         latent = torch.cat(latents)
         outputs = []
+        logPs = []
+        if output_mods is None:
+            output_mods = self.output_mods
         if self.opt.residual:
-            for i, mod in enumerate(self.output_mods):
+            for mod in self.output_mods:
+                i = self.output_mods.index(mod)
                 trans_output = self.output_mod_nets[i](latent)[:self.conditioning_seq_lens[i]]
                 trans_predicted_mean_latents = self.output_mod_nets[i](latent)[self.conditioning_seq_lens[i]:self.conditioning_seq_lens[i]+self.output_lengths[i]]
                 predicted_mean = self.output_mod_mean_nets[i](trans_predicted_mean_latents)
                 noise = noises[i] if noises is not None else None
-                residual, _ = self.output_mod_glows[i](x=None, cond=trans_output.permute(1,0,2), reverse=True, eps_std=temp, noise=noise)
+                glow = self.output_mod_glows[i]
+                residual, sldj, z = glow(x=None, cond=trans_output.permute(1,0,2), reverse=True, eps_std=temp, noise=noise)
                 output = predicted_mean + residual.permute(1,0,2)
                 outputs.append(output)
+                logP = glow.loss_generative(z, sldj)
+                logPs.append(logP)
         else:
-            for i, mod in enumerate(self.output_mods):
+            for mod in output_mods:
+                i = self.output_mods.index(mod)
                 trans_output = self.output_mod_nets[i](latent)[:self.conditioning_seq_lens[i]]
                 noise = noises[i] if noises is not None else None
-                output, sldj = self.output_mod_glows[i](x=None, cond=trans_output.permute(1,0,2), reverse=True, eps_std=temp, noise=noise)
+                glow = self.output_mod_glows[i]
+                output, sldj, z = glow(x=None, cond=trans_output.permute(1,0,2), reverse=True, eps_std=temp, noise=noise)
                 outputs.append(output.permute(1,0,2))
+                z = z.unsqueeze(3)
+                # print(z.shape)
+                # print(sldj.shape)
+                logP = glow.loss_generative(z, sldj)
+                logPs.append(logP)
 
-        return outputs, sldj
+        return outputs, sldj, logPs
 
     # def on_train_epoch_start(self):
     #     if self.opt.residual:
     #         self.residual_loss_weight = self.opt.max_residual_loss_weight * min((self.opt.residual_loss_weight_warmup_epochs - self.current_epoch)/self.opt.residual_loss_weight_warmup_epochs, 1)
 
-    def training_step(self, batch, batch_idx):
+    def training_step(self, batch, batch_idx, reduce_loss=True):
         self.set_inputs(batch)
         # print(self.input_mod_nets[0].encoder1.weight.data)
         # print(self.targets[0])
@@ -240,8 +254,8 @@ class TransflowerModel(BaseModel):
                 trans_predicted_mean_latents = trans_output[self.conditioning_seq_lens[i]:self.conditioning_seq_lens[i]+self.output_lengths[i]]
                 predicted_mean = self.output_mod_mean_nets[i](trans_predicted_mean_latents)
                 glow = self.output_mod_glows[i]
-                z, sldj = glow(x=self.targets[i].permute(1,0,2) - predicted_mean.permute(1,0,2), cond=latents.permute(1,0,2)) #time, batch, features -> batch, time, features
-                nll_loss += glow.loss_generative(z, sldj)
+                z, sldj, _ = glow(x=self.targets[i].permute(1,0,2) - predicted_mean.permute(1,0,2), cond=latents.permute(1,0,2)) #time, batch, features -> batch, time, features
+                nll_loss += glow.loss_generative(z, sldj, reduce=reduce_loss)
                 # import pdb;pdb.set_trace()
                 mse_loss += 100*self.mean_loss(predicted_mean, self.targets[i])
 
@@ -260,11 +274,11 @@ class TransflowerModel(BaseModel):
                 glow = self.output_mod_glows[i]
                 # import pdb;pdb.set_trace()
                 # print(output)
-                z, sldj = glow(x=self.targets[i].permute(1,0,2), cond=output.permute(1,0,2)) #time, batch, features -> batch, time, features
+                z, sldj, _ = glow(x=self.targets[i].permute(1,0,2), cond=output.permute(1,0,2)) #time, batch, features -> batch, time, features
                 # print(z)
                 #print(sldj)
                 # n_timesteps = self.targets[i].shape[1]
-                loss += glow.loss_generative(z, sldj)
+                loss += glow.loss_generative(z, sldj, reduce=reduce_loss)
 
         self.log('loss', loss)
         # print(loss)

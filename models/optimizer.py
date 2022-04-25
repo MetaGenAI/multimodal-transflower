@@ -19,7 +19,7 @@ def get_optimizers(net, opt):
     elif opt.optimizer == "adadelta":
         optimizer = torch.optim.Adadelta(net.parameters(), lr=opt.learning_rate, weight_decay=opt.weight_decay)
     elif opt.optimizer == "rmsprop":
-        optimizer = torch.optim.Rmsprop(net.parameters(), lr=opt.learning_rate, weight_decay=opt.weight_decay)
+        optimizer = torch.optim.RMSprop(net.parameters(), lr=opt.learning_rate, weight_decay=opt.weight_decay)
     elif opt.optimizer == "nero":
         optimizer = Nero(net.parameters(), lr=opt.learning_rate)
     elif opt.optimizer == "madgrad":
@@ -48,7 +48,7 @@ def get_scheduler(optimizer, opt):
     elif opt.lr_policy == 'multistep':
         scheduler = lr_scheduler.MultiStepLR(optimizer, milestones=ast.literal_eval(opt.lr_decay_milestones), gamma=opt.lr_decay_factor)
     elif opt.lr_policy == 'plateau':
-        scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.2, threshold=0.01, patience=5)
+        scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=opt.lr_decay_factor, threshold=0.01, patience=5)
     elif opt.lr_policy == 'cosine':
         scheduler = lr_scheduler.CosineAnnealingLR(optimizer, T_max=opt.max_epochs, eta_min=0)
     elif opt.lr_policy == 'cyclic':
@@ -62,7 +62,7 @@ def get_scheduler(optimizer, opt):
         scheduler = None
     else:
         return NotImplementedError('learning rate policy [%s] is not implemented', opt.lr_policy)
-    return {'scheduler': scheduler, 'interval': interval}
+    return {'scheduler': scheduler, 'interval': interval, 'monitor': 'loss'}
 
 
 class CyclicLR(object):

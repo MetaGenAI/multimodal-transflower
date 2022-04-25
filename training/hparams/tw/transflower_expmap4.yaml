@@ -1,4 +1,5 @@
 model: transflower
+zero_padding: true
 dins: 256,125,8
 douts: 8
 input_modalities: "annotation,npz.obs_scaled,npz.acts_scaled"
@@ -14,7 +15,6 @@ input_num_tokens: 67,0,0
 nlayers: 12
 nhead: 10
 scales: "[[16,0]]"
-num_glow_coupling_blocks: 2
 glow_use_attn: True
 use_transformer_nn: True
 use_rel_pos_emb_inputs: True
@@ -24,6 +24,7 @@ use_pos_emb_output: True
 dhid: 800
 dhid_flow: 800
 num_heads_flow: 10
+num_glow_coupling_blocks: 2
 cond_concat_dims: True
 #conditioning_seq_lens: 100
 #glow_norm_layer: batchnorm
@@ -32,13 +33,14 @@ glow_bn_momentum: 0.1
 dropout: 0
 #lr_policy: cosine
 #lr_policy: multistep
+optimizer: adam
+#lr_policy: LinearWarmupCosineAnnealing
 lr_policy: plateau
+#warmup_epochs: 10
+#lr_policy: cyclic
 #lr_decay_milestones: [1,2,4,8,16,32,64]
 lr_decay_factor: 0.5
 learning_rate: 1e-3
-gradient_clip_val: 100
+gradient_clip_val: 0
 #batch_size: 128
 batch_size: 64
-
-
-

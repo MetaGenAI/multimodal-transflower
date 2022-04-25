@@ -85,9 +85,13 @@ class BaseModel(LightningModule):
     #def setup_opt(self, is_train):
     #    pass
 
+    #def on_train_start(self):
+    #    for s in self.schedulers:
+    #        s['scheduler'].step(0)
+
     def configure_optimizers(self):
-        optimizers = get_optimizers(self, self.opt)
-        schedulers = [get_scheduler(optimizer, self.opt) for optimizer in self.optimizers]
+        self.optimizers = optimizers = get_optimizers(self, self.opt)
+        self.schedulers = schedulers = [get_scheduler(optimizer, self.opt) for optimizer in self.optimizers]
         return optimizers, schedulers
         #return self.optimizers
 

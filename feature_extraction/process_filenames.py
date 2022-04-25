@@ -51,6 +51,7 @@ func = getattr(name_processing_functions, name_processing_function)
 anns = list(map(func,files))
 unique_labels = np.unique(sum(anns,[]))
 print(unique_labels)
+print(len(unique_labels))
 label_index = {c:i for i,c in enumerate(unique_labels)}
 label_index_reverse = {i:c for i,c in enumerate(unique_labels)}
 with open(str(data_path) + "/" + files_extension+"."+name_processing_function+'.class_index.json', 'w') as f:
