@@ -24,6 +24,7 @@ parser = argparse.ArgumentParser(description="Extract features from filenames")
 
 parser.add_argument("data_path", type=str, help="Directory contining Beat Saber level folders")
 parser.add_argument("--files_extension", type=str, help="file extension (the stuff after the base filename) to match")
+parser.add_argument("--dictionary_file", type=str, help="(optional) dictionary file to use")
 parser.add_argument("--name_processing_function", type=str, default="dance_style", help="function for processing the names")
 parser.add_argument("--replace_existing", action="store_true")
 
@@ -50,10 +51,16 @@ import name_processing_functions
 func = getattr(name_processing_functions, name_processing_function)
 anns = list(map(func,files))
 unique_labels = np.unique(sum(anns,[]))
-print(unique_labels)
-print(len(unique_labels))
-label_index = {c:i for i,c in enumerate(unique_labels)}
-label_index_reverse = {i:c for i,c in enumerate(unique_labels)}
+if dictionary_file is not None:
+    assert dictionary_file[-5:] == ".json"
+    label_index = json.loads(open(dictionary_file, "r").read())
+    reverse_filename = dictionary_file[:-5]+"_reverse.json"
+    label_index_reverse = json.loads(open(reverse_filename, "r").read())
+else:
+    label_index = {c:i for i,c in enumerate(unique_labels)}
+    label_index_reverse = {i:c for i,c in enumerate(unique_labels)}
+print(label_index)
+print(len(label_index.items()))
 with open(str(data_path) + "/" + files_extension+"."+name_processing_function+'.class_index.json', 'w') as f:
     json.dump(label_index, f)
 with open(str(data_path) + "/" + files_extension+"."+name_processing_function+'.class_index_reverse.json', 'w') as f:
