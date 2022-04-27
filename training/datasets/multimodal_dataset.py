@@ -277,7 +277,9 @@ class MultimodalDataset(BaseDataset):
             #     return_tensor = torch.tensor(xx).long().unsqueeze(1)
             if len(xx.shape) == 1:
                 return_tensor = torch.tensor(xx).long().unsqueeze(1)
-            return_tensor = torch.tensor(xx).long()
+            else:
+                print(xx)
+                return_tensor = torch.tensor(xx).long()
 
         if self.input_dropouts[j]>0:
             mask = torch.rand(return_tensor.shape[0])<(1-self.input_dropouts[j])

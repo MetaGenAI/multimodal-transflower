@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --time=80:00:00
+#SBATCH --time=100:00:00
 ##SBATCH --time=20:00:00
 ##SBATCH --time=01:00:00
 #SBATCH --qos=qos_gpu-t4
@@ -13,7 +13,8 @@
 #SBATCH --nodes=1 --ntasks-per-node=4 --cpus-per-task=6 --gres=gpu:4
 ##SBATCH --nodes=1 --ntasks-per-node=2 --cpus-per-task=6 --gres=gpu:2
 ##SBATCH --partition=gpu_p2
-#SBATCH -A imi@gpu
+##SBATCH -A imi@gpu
+#SBATCH -A imi@v100
 #SBATCH -C v100-32g
 #SBATCH --exclusive
 
@@ -23,6 +24,7 @@ echo $slurm_nodes
 export MASTER_ADDRESS=$(echo $slurm_nodes | cut -d' ' -f1)
 echo $MASTER_ADDRESS
 
+module purge
 module load pytorch-gpu/py3/1.8.0
 
 #exp=$1

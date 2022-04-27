@@ -2,6 +2,7 @@ import sys
 import os
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = os.path.abspath(os.path.join(THIS_DIR, os.pardir))
+sys.path.remove(THIS_DIR)
 sys.path.append(ROOT_DIR)
 import glob
 import torch
