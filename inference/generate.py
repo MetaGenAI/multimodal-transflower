@@ -28,8 +28,8 @@ from analysis.visualization.generate_video_from_moglow_pos import generate_video
 
 from training.utils import get_latest_checkpoint
 
-def load_model_from_logs_path(logs_path, no_grad=True):
-    latest_checkpoint = get_latest_checkpoint(logs_path)
+def load_model_from_logs_path(logs_path, no_grad=True, version_index=-1):
+    latest_checkpoint = get_latest_checkpoint(logs_path, index=version_index)
     print(latest_checkpoint)
     checkpoint_dir = Path(latest_checkpoint).parent.parent.absolute()
     # exp_opt = json.loads(open("training/experiments/"+args.experiment_name+"/opt.json","r").read())
@@ -91,6 +91,7 @@ if __name__ == '__main__':
     parser.add_argument('--use_temperature', action='store_true')
     parser.add_argument('--temperature', type=float, default=1.0)
     parser.add_argument('--save_jit', action='store_true')
+    parser.add_argument('--version_index', type=int, default=-1, help="index of the checkpoint to get for the model weights. -1 means the latest one")
     #parser.add_argument('--save_jit_path', type=string, default="")
     #parser.add_argument('--nostrict', action='store_true')
     parser.add_argument('--fps', type=int, default=20)
@@ -132,7 +133,7 @@ if __name__ == '__main__':
     #load hparams file
     default_save_path = "training/experiments/"+args.experiment_name
     logs_path = default_save_path
-    model, opt = load_model_from_logs_path(logs_path)
+    model, opt = load_model_from_logs_path(logs_path, version_index=args.version_index)
 
     input_mods = opt.input_modalities.split(",")
     output_mods = opt.output_modalities.split(",")

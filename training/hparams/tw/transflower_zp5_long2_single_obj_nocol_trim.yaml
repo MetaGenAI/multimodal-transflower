@@ -12,7 +12,7 @@ input_proc_types: single,none,none
 input_types: d,c,c
 output_proc_types: none
 #output_types: c
-input_num_tokens: 67,0,0
+input_num_tokens: 73,0,0
 nlayers: 12
 nhead: 10
 scales: "[[24,0]]"

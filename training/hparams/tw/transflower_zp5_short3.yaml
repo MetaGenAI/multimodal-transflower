@@ -2,9 +2,9 @@ model: transflower
 zero_padding: true
 dins: 256,71,8
 douts: 8
-input_modalities: "disc_cond,obs_cont_scaled,npz.acts_scaled"
+input_modalities: "npz.disc_cond,obs_cont_scaled,npz.acts_scaled"
 output_modalities: npz.acts_scaled
-input_lengths: 14,3,3
+input_lengths: 14,1,1
 output_lengths: 1
 output_time_offsets: 1
 input_dropouts: 0,0,0
@@ -12,7 +12,7 @@ input_proc_types: single,none,none
 input_types: d,c,c
 output_proc_types: none
 #output_types: c
-input_num_tokens: 67,0,0
+input_num_tokens: 73,0,0
 nlayers: 12
 nhead: 10
 scales: "[[24,0]]"

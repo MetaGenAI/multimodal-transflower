@@ -6,6 +6,7 @@ import os.path
 import sys
 import argparse
 import pickle
+import torch
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT_DIR = os.path.abspath(os.path.join(os.path.join(THIS_DIR, os.pardir), os.pardir))

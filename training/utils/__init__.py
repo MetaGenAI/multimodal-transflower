@@ -16,7 +16,7 @@ def mkdir(path):
     except FileExistsError:
         pass
 
-def get_latest_checkpoint(logs_path):
+def get_latest_checkpoint(logs_path, index=-1):
     def get_checkpoint_files(dir):
         checkpoint_path=logs_path+"/"+dir+"/checkpoints/"
         if not os.path.isdir(checkpoint_path):
@@ -26,7 +26,7 @@ def get_latest_checkpoint(logs_path):
 
     checkpoint_subdirs = [(d,int(d.split("_")[1])) for d in os.listdir(logs_path) if (os.path.isdir(logs_path+"/"+d) and len(get_checkpoint_files(d))>0)]
     checkpoint_subdirs = sorted(checkpoint_subdirs, key=lambda t: t[1])
-    list_of_files = get_checkpoint_files(checkpoint_subdirs[-1][0])
+    list_of_files = get_checkpoint_files(checkpoint_subdirs[index][0])
     latest_file = max(list_of_files, key=os.path.getctime)
     return latest_file
 

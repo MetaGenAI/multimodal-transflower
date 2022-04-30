@@ -5,6 +5,7 @@ import json
 import os.path
 import sys
 import argparse
+import torch
 
 '''
 Compute transforms which can be computed sequentially (so they implement the `partial_fit` function)
@@ -31,33 +32,35 @@ comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 size = comm.Get_size()
 print(rank)
-assert size == 1
-candidate_files = sorted(data_path.glob('**/*'+feature_name+'.npy'), key=lambda path: path.parent.__str__())
-tasks = range(len(candidate_files))
+#assert size == 1
+if rank == 0:
+    candidate_files = sorted(data_path.glob('**/*'+feature_name+'.npy'), key=lambda path: path.parent.__str__())
+    tasks = range(len(candidate_files))
 
-from sklearn import decomposition, preprocessing
-import pickle
-transforms = transforms.split(",")
-transforms_dict = {}
-for transform in transforms:
-    if transform == "scaler":
-        scaler = preprocessing.StandardScaler()
-        transforms_dict["scaler"] = scaler
-    elif transform == "pca_transform":
-        features = np.load(candidate_files[0].__str__())
-        feature_size = features.shape[1]
-        pca = decomposition.PCA(n_components=feature_size)
-        transforms_dict["pca_transform"] = pca
-    else:
-        raise NotImplementedError("Transform type "+transform+" not implemented")
-for i in tasks:
-    path = candidate_files[i]
-    feature_file = path.__str__()
-    features = np.load(feature_file)
+    from sklearn import decomposition, preprocessing
+    import pickle
+    transforms = transforms.split(",")
+    transforms_dict = {}
     for transform in transforms:
-        if len(features.shape) == 3:
-            features = features[:,0,:]
-        transforms_dict[transform].partial_fit(features)
+        if transform == "scaler":
+            scaler = preprocessing.StandardScaler()
+            transforms_dict["scaler"] = scaler
+        elif transform == "pca_transform":
+            features = np.load(candidate_files[0].__str__())
+            feature_size = features.shape[1]
+            pca = decomposition.PCA(n_components=feature_size)
+            transforms_dict["pca_transform"] = pca
+        else:
+            raise NotImplementedError("Transform type "+transform+" not implemented")
+    for i in tasks:
+        path = candidate_files[i]
+        print(path)
+        feature_file = path.__str__()
+        features = np.load(feature_file)
+        for transform in transforms:
+            if len(features.shape) == 3:
+                features = features[:,0,:]
+            transforms_dict[transform].partial_fit(features)
 
-for transform in transforms:
-    pickle.dump(transforms_dict[transform], open(data_path.joinpath(feature_name+'_'+transform+'.pkl'), 'wb'))
+    for transform in transforms:
+        pickle.dump(transforms_dict[transform], open(data_path.joinpath(feature_name+'_'+transform+'.pkl'), 'wb'))

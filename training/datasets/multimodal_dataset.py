@@ -278,7 +278,7 @@ class MultimodalDataset(BaseDataset):
             if len(xx.shape) == 1:
                 return_tensor = torch.tensor(xx).long().unsqueeze(1)
             else:
-                print(xx)
+                #print(xx)
                 return_tensor = torch.tensor(xx).long()
 
         if self.input_dropouts[j]>0:
@@ -302,8 +302,10 @@ class MultimodalDataset(BaseDataset):
     def __getitem__(self, item):
         idx = find_example_idx(item, self.frame_cum_sums)
         base_filename = self.base_filenames[idx]
+        #print(base_filename)
 
         input_mods = self.opt.input_modalities.split(",")
+        #print(input_mods)
         output_mods = self.opt.output_modalities.split(",")
 
         x = [self.input_features[mod][base_filename] for mod in input_mods]
