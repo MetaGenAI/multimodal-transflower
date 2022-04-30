@@ -20,3 +20,4 @@ madgrad
 lightning-bolts
 loguru
 mido
+tianshou
