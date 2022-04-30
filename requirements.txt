@@ -19,3 +19,4 @@ lightning-bolts
 loguru
 madgrad
 PyYaml==5.4.1
+tianshou

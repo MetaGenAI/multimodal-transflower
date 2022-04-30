@@ -9,6 +9,8 @@ import torch.nn.functional as F
 
 from .util.generation import autoregressive_generation_multimodal
 
+from torch.distributions.distribution import Distribution
+
 class TransflowerModel(BaseModel):
     def __init__(self, opt):
         super().__init__(opt)
@@ -28,6 +30,7 @@ class TransflowerModel(BaseModel):
         self.output_mod_mean_nets = []
         self.output_mod_glows = []
         self.module_names = []
+        #TODO: include option for discrete outputs
         for i, mod in enumerate(input_mods):
             net = BasicTransformerModel(opt.dhid, dins[i], opt.nhead, opt.dhid, 2, opt.dropout,
                                         ntokens=self.input_num_tokens[i],
@@ -132,80 +135,48 @@ class TransflowerModel(BaseModel):
         parser.add_argument('--use_x_transformers', action='store_true', help="whether to use rotary position embeddings")
         return parser
 
-    # def generate_full_masks(self):
-    #     input_mods = self.input_mods
-    #     output_mods = self.output_mods
-    #     input_lengths = self.input_lengths
-    #     self.src_masks = []
-    #     for i, mod in enumerate(input_mods):
-    #         mask = torch.zeros(input_lengths[i],input_lengths[i])
-    #         self.register_buffer('src_mask_'+str(i), mask)
-    #         self.src_masks.append(mask)
-    #
-    #     self.output_masks = []
-    #     for i, mod in enumerate(output_mods):
-    #         mask = torch.zeros(sum(input_lengths),sum(input_lengths))
-    #         self.register_buffer('out_mask_'+str(i), mask)
-    #         self.output_masks.append(mask)
-
-    def get_latent(self, data, temp=1.0, noises=None):
+    def get_data_representations(self, data):
         latents = []
         for i, mod in enumerate(self.input_mods):
             latents.append(self.input_mod_nets[i](data[i]))
         latent = torch.cat(latents)
         return latent
 
-    def run_norm_flow(self,x,cond):#,temp=1.0, noises=None):
-        #outputs = []
-        #for i, mod in enumerate(self.output_mods):
-        #trans_output = self.output_mod_nets[i](latent)[:self.conditioning_seq_lens[i]]
-        #noise = noises[i] if noises is not None else None
-        #output, _ = self.output_mod_glows[i](x=None, cond=trans_output.permute(1,0,2), reverse=True, eps_std=temp, noise=noise)
-        #output, _ = self.output_mod_glows[i](x=None, cond=trans_output.permute(1,0,2))
-        #outputs.append(output.permute(1,0,2))
-        output, sldj = self.output_mod_glows[0](x=x, cond=cond)
-        #outputs = [output.permute(1,0,2)]
-        return output
+    def get_latents(self, data, output_mods=None):
+        assert not self.opt.residual
+        if output_mods is None:
+            output_mods = self.output_mods
+        latent1 = self.get_data_representations(data)
+        latents = []
+        for mod in output_mods:
+            i = self.output_mods.index(mod)
+            trans_output = self.output_mod_nets[i](latent1)[:self.conditioning_seq_lens[i]]
+            latents.append(trans_output.permute(1,0,2)) #time, batch, features -> batch, time, features
 
-    def run_flow_step(self,x,cond):
-        #outputs = []
-        #for i, mod in enumerate(self.output_mods):
-        #trans_output = self.output_mod_nets[i](latent)[:self.conditioning_seq_lens[i]]
-        #noise = noises[i] if noises is not None else None
-        #output, _ = self.output_mod_glows[i](x=None, cond=trans_output.permute(1,0,2), reverse=True, eps_std=temp, noise=noise)
-        #output, _ = self.output_mod_glows[i](x=None, cond=trans_output.permute(1,0,2))
-        #outputs.append(output.permute(1,0,2))
-        outputs = []
-        sldj = torch.zeros(x.size(0), device=x.device)
-        output, _ = self.output_mod_glows[0].flows(x,cond,sldj)
-        outputs.append(output)
-        return outputs
+        return latents
 
-    #def forward(self, data, temp=1.0, noises=None):
-    #    #return self.forward_internal(data, temp, noises)[0]
-    #    return self.forward_internal(data)[0]
+    def get_dists(self, latents):
+        dists = []
+        for i,latent in enumerate(latents):
+            dist = NormalizingFlow(self.output_mod_glows[i], latent)
+            dists.append(dist)
+        return dists
 
-    #def forward_internal(self, data):
-    #def forward_internal(self, data, temp=1.0, noises=None):
-    def forward(self, data, temp=1.0, noises=None, output_mods=None):
-    #def forward(self, data):
+    def forward(self, data, temp=1.0, noises=None, output_mods=None, compute_logPs=True):
         # in lightning, forward defines the prediction/inference actions
-        #noises = None
         #temp=1.0
         #temp=0.1
-        latents = []
-        for i, mod in enumerate(self.input_mods):
-            latents.append(self.input_mod_nets[i](data[i]))
-        latent = torch.cat(latents)
         outputs = []
         logPs = []
         if output_mods is None:
             output_mods = self.output_mods
         if self.opt.residual:
+            latent1 = self.get_data_representations(data)
             for mod in self.output_mods:
                 i = self.output_mods.index(mod)
-                trans_output = self.output_mod_nets[i](latent)[:self.conditioning_seq_lens[i]]
-                trans_predicted_mean_latents = self.output_mod_nets[i](latent)[self.conditioning_seq_lens[i]:self.conditioning_seq_lens[i]+self.output_lengths[i]]
+                latent_tmp = self.output_mod_nets[i](latent1)
+                trans_output = latent_tmp[:self.conditioning_seq_lens[i]]
+                trans_predicted_mean_latents = latent_tmp[self.conditioning_seq_lens[i]:self.conditioning_seq_lens[i]+self.output_lengths[i]]
                 predicted_mean = self.output_mod_mean_nets[i](trans_predicted_mean_latents)
                 noise = noises[i] if noises is not None else None
                 glow = self.output_mod_glows[i]
@@ -215,18 +186,19 @@ class TransflowerModel(BaseModel):
                 logP = glow.loss_generative(z, sldj)
                 logPs.append(logP)
         else:
-            for mod in output_mods:
+            latents = self.get_latents(data, output_mods)
+            for j,mod in enumerate(output_mods):
                 i = self.output_mods.index(mod)
-                trans_output = self.output_mod_nets[i](latent)[:self.conditioning_seq_lens[i]]
                 noise = noises[i] if noises is not None else None
                 glow = self.output_mod_glows[i]
-                output, sldj, z = glow(x=None, cond=trans_output.permute(1,0,2), reverse=True, eps_std=temp, noise=noise)
+                output, sldj, z = glow(x=None, cond=latents[j], reverse=True, eps_std=temp, noise=noise)
                 outputs.append(output.permute(1,0,2))
                 z = z.unsqueeze(3)
                 # print(z.shape)
                 # print(sldj.shape)
-                logP = glow.loss_generative(z, sldj)
-                logPs.append(logP)
+                if compute_logPs:
+                    logP = glow.loss_generative(z, sldj)
+                    logPs.append(logP)
 
         return outputs, sldj, logPs
 
@@ -236,20 +208,12 @@ class TransflowerModel(BaseModel):
 
     def training_step(self, batch, batch_idx, reduce_loss=True):
         self.set_inputs(batch)
-        # print(self.input_mod_nets[0].encoder1.weight.data)
-        # print(self.targets[0])
-        latents = []
-        for i, mod in enumerate(self.input_mods):
-            latents.append(self.input_mod_nets[i].forward(self.inputs[i]))
-
-        # import pdb;pdb.set_trace()
-        latent = torch.cat(latents)
-        # print(latent)
         if self.opt.residual:
+            latent1 = get_data_representations(self.inputs)
             nll_loss = 0
             mse_loss = 0
             for i, mod in enumerate(self.output_mods):
-                trans_output = self.output_mod_nets[i].forward(latent)
+                trans_output = self.output_mod_nets[i].forward(latent1)
                 latents = trans_output[:self.conditioning_seq_lens[i]]
                 trans_predicted_mean_latents = trans_output[self.conditioning_seq_lens[i]:self.conditioning_seq_lens[i]+self.output_lengths[i]]
                 predicted_mean = self.output_mod_mean_nets[i](trans_predicted_mean_latents)
@@ -263,25 +227,17 @@ class TransflowerModel(BaseModel):
             loss = (1-adaptive_weight)*nll_loss + adaptive_weight*mse_loss
             self.mse_loss = mse_loss
             self.nll_loss = nll_loss
-            #print(mse_loss)
-            #print(nll_loss)
             self.log('mse_loss', mse_loss)
             self.log('nll_loss', nll_loss)
         else:
+            latents = self.get_latents(self.inputs)
             loss = 0
             for i, mod in enumerate(self.output_mods):
-                output = self.output_mod_nets[i].forward(latent)[:self.conditioning_seq_lens[i]]
                 glow = self.output_mod_glows[i]
-                # import pdb;pdb.set_trace()
-                # print(output)
-                z, sldj, _ = glow(x=self.targets[i].permute(1,0,2), cond=output.permute(1,0,2)) #time, batch, features -> batch, time, features
-                # print(z)
-                #print(sldj)
-                # n_timesteps = self.targets[i].shape[1]
+                z, sldj, _ = glow(x=self.targets[i].permute(1,0,2), cond=latents[i]) #time, batch, features -> batch, time, features
                 loss += glow.loss_generative(z, sldj, reduce=reduce_loss)
 
         self.log('loss', loss)
-        # print(loss)
         return loss
 
     def test_step(self, batch, batch_idx):
@@ -315,3 +271,22 @@ class TransflowerModel(BaseModel):
     #def optimizer_step(self, epoch, batch_idx, optimizer, optimizer_idx,
     #                           optimizer_closure, on_tpu, using_native_amp, using_lbfgs):
     #    optimizer.zero_grad()
+
+class NormalizingFlow(Distribution):
+    def __init__(self, model, cond, temp=1.0, validate_args=False):
+        self.model = model
+        self.cond = cond
+        self.temp = 1.0
+        super(NormalizingFlow, self).__init__(torch.Size(), validate_args=validate_args)
+
+    def log_prob(self,value):
+        z, sldj, _ = self.model(x=value.permute(1,0,2), cond=self.cond) #time, batch, features -> batch, time, features
+        logP = self.model.loss_generative(z, sldj, reduce=True)
+        return logP
+
+    def sample(self):
+        output, sldj, z = self.model(x=None, cond=self.cond, reverse=True, eps_std=self.temp, noise=None)
+        return output
+
+    def __repr__(self):
+        return self.__class__.__name__
