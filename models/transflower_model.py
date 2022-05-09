@@ -137,12 +137,19 @@ class TransflowerModel(BaseModel):
 
     def get_data_representations(self, data):
         latents = []
+        # print(data)
         for i, mod in enumerate(self.input_mods):
-            latents.append(self.input_mod_nets[i](data[i]))
+            # print(data[i])
+            # print(data[i].shape)
+            if len(data[i].shape) == 2:
+                this_data = data[i].unsqueeze(1) #assume we didn't have the batch dim
+            else:
+                this_data = data[i]
+            latents.append(self.input_mod_nets[i](this_data))
         latent = torch.cat(latents)
         return latent
 
-    def get_latents(self, data, output_mods=None):
+    def get_latents(self, data, output_mods=None, latent_chunk_index=0):
         assert not self.opt.residual
         if output_mods is None:
             output_mods = self.output_mods
@@ -150,7 +157,7 @@ class TransflowerModel(BaseModel):
         latents = []
         for mod in output_mods:
             i = self.output_mods.index(mod)
-            trans_output = self.output_mod_nets[i](latent1)[:self.conditioning_seq_lens[i]]
+            trans_output = self.output_mod_nets[i](latent1)[latent_chunk_index*self.conditioning_seq_lens[i]:(latent_chunk_index+1)*self.conditioning_seq_lens[i]]
             latents.append(trans_output.permute(1,0,2)) #time, batch, features -> batch, time, features
 
         return latents
@@ -280,13 +287,18 @@ class NormalizingFlow(Distribution):
         super(NormalizingFlow, self).__init__(torch.Size(), validate_args=validate_args)
 
     def log_prob(self,value):
-        z, sldj, _ = self.model(x=value.permute(1,0,2), cond=self.cond) #time, batch, features -> batch, time, features
+        # print(value.shape)
+        z, sldj, _ = self.model(x=value, cond=self.cond) #value comes in batch, time, features
         logP = self.model.loss_generative(z, sldj, reduce=True)
-        return logP
+        # print(logP)
+        return logP.unsqueeze(0)
 
     def sample(self):
         output, sldj, z = self.model(x=None, cond=self.cond, reverse=True, eps_std=self.temp, noise=None)
         return output
+
+    def entropy(self):
+        return torch.tensor([0]).float()
 
     def __repr__(self):
         return self.__class__.__name__
