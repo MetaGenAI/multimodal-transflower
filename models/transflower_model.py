@@ -25,6 +25,16 @@ class TransflowerModel(BaseModel):
         else:
             self.conditioning_seq_lens = [int(x) for x in str(self.opt.output_lengths).split(",")]
 
+        self.use_shared_crossmodal_encoder = self.opt.use_shared_crossmodal_encoder
+
+        if self.opt.input_mod_masks is not None:
+            self.input_mod_masks = [tuple((int(x) for x in y.split(" "))) for y in self.opt.input_mod_masks.split(",")]
+            assert len(self.input_mod_masks) == len(output_mods)
+            for mask in self.input_mod_masks:
+                assert len(mask) == len(input_mods)
+        else:
+            self.input_mod_masks = [tuple((1 for x in input_mods)) for y in output_mods]
+
         self.input_mod_nets = []
         self.output_mod_nets = []
         self.output_mod_mean_nets = []
@@ -46,20 +56,20 @@ class TransflowerModel(BaseModel):
             self.module_names.append(name)
         for i, mod in enumerate(output_mods):
             # if self.opt.cond_concat_dims:
-            net = BasicTransformerModel(opt.dhid, opt.dhid, opt.nhead, opt.dhid, opt.nlayers, opt.dropout,
-                                        ntokens=self.output_num_tokens[i], # tho not being used yet
-                                        use_pos_emb=opt.use_pos_emb_output,
-                                        use_rel_pos_emb=opt.use_rel_pos_emb_output,
-                                        input_length=sum(input_lengths),
-                                        use_x_transformers=opt.use_x_transformers,
-                                        opt=opt)
-            # else:
-            #     net = BasicTransformerModel(douts[i]//2, opt.dhid, opt.nhead, opt.dhid, opt.nlayers, opt.dropout, self.device, use_pos_emb=opt.use_pos_emb_output, input_length=sum(input_lengths), use_x_transformers=opt.use_x_transformers, opt=opt)
-            name = "_output_"+mod.replace(".","_")
-            setattr(self, "net"+name, net)
-            self.output_mod_nets.append(net)
-            self.module_names.append(name)
+            if not self.use_shared_crossmodal_encoder or i == 0:
+                net = BasicTransformerModel(opt.dhid, opt.dhid, opt.nhead, opt.dhid, opt.nlayers, opt.dropout,
+                                            ntokens=self.output_num_tokens[i], # tho not being used yet
+                                            use_pos_emb=opt.use_pos_emb_output,
+                                            use_rel_pos_emb=opt.use_rel_pos_emb_output,
+                                            input_length=sum(input_lengths),
+                                            use_x_transformers=opt.use_x_transformers,
+                                            opt=opt)
+                name = "_output_"+mod.replace(".","_")
+                setattr(self, "net"+name, net)
+                self.output_mod_nets.append(net)
+                self.module_names.append(name)
             if opt.residual:
+                assert not self.use_shared_crossmodal_encoder # not supported yet
                 # if self.opt.cond_concat_dims:
                 net = nn.Linear(opt.dhid,douts[i])
                 # else:
@@ -110,6 +120,7 @@ class TransflowerModel(BaseModel):
         parser.add_argument('--dhid', type=int, default=512)
         parser.add_argument('--dhid_flow', type=int, default=512)
         parser.add_argument('--conditioning_seq_lens', type=str, default=None, help="the number of outputs of the conditioning transformers to feed (meaning the number of elements along the sequence dimension)")
+        parser.add_argument('--input_mod_masks', type=str, default=None, help="the inputs to feed to each mod, as a comma separated list of space sparated lists of 0s and 1s")
         parser.add_argument('--nlayers', type=int, default=6)
         parser.add_argument('--nhead', type=int, default=8)
         parser.add_argument('--num_heads_flow', type=int, default=8)
@@ -121,6 +132,7 @@ class TransflowerModel(BaseModel):
         parser.add_argument('--glow_bn_momentum', type=float, default=0.1)
         parser.add_argument('--num_glow_coupling_blocks', type=int, default=10)
         parser.add_argument('--num_mixture_components', type=int, default=0)
+        parser.add_argument('--use_shared_crossmodal_encoder', action='store_true', help="whether to feed different elements of the latent sequence of a single x-modal encoder to each output mod, or use a different encoder for each mod")
         parser.add_argument('--glow_use_attn', action='store_true', help="whether to use the internal attention for the FlowPlusPLus model")
         parser.add_argument('--use_transformer_nn', action='store_true', help="whether to use the internal attention for the FlowPlusPLus model")
         parser.add_argument('--use_rel_pos_emb_inputs', action='store_true', help="whether to use T5 relative positional embeddings for input modality transformers")
@@ -137,27 +149,34 @@ class TransflowerModel(BaseModel):
 
     def get_data_representations(self, data):
         latents = []
-        # print(data)
         for i, mod in enumerate(self.input_mods):
-            # print(data[i])
-            # print(data[i].shape)
             if len(data[i].shape) == 2:
                 this_data = data[i].unsqueeze(1) #assume we didn't have the batch dim
             else:
                 this_data = data[i]
+            if self.input_mod_nets[i].discrete_inputs: this_data = this_data.long()
+            else: this_data = this_data.float()
             latents.append(self.input_mod_nets[i](this_data))
-        latent = torch.cat(latents)
-        return latent
+        return latents
 
     def get_latents(self, data, output_mods=None, latent_chunk_index=0):
         assert not self.opt.residual
         if output_mods is None:
             output_mods = self.output_mods
-        latent1 = self.get_data_representations(data)
+        latents1 = self.get_data_representations(data)
         latents = []
+        all_latentss = {}
         for mod in output_mods:
             i = self.output_mods.index(mod)
-            trans_output = self.output_mod_nets[i](latent1)[latent_chunk_index*self.conditioning_seq_lens[i]:(latent_chunk_index+1)*self.conditioning_seq_lens[i]]
+            if self.input_mod_masks[i] not in all_latentss:
+                latent1 = torch.cat([self.input_mod_masks[i][j]*l for j,l in enumerate(latents1)])
+                all_latents = self.output_mod_nets[i](latent1)
+                all_latentss[self.input_mod_masks[i]] = all_latents
+            all_latents = all_latentss[self.input_mod_masks[i]]
+            if not self.use_shared_crossmodal_encoder:
+                trans_output = all_latents[latent_chunk_index*self.conditioning_seq_lens[i]:(latent_chunk_index+1)*self.conditioning_seq_lens[i]]
+            else:
+                trans_output = all_latents[(i+latent_chunk_index)*self.conditioning_seq_lens[i]:(i+latent_chunk_index+1)*self.conditioning_seq_lens[i]]
             latents.append(trans_output.permute(1,0,2)) #time, batch, features -> batch, time, features
 
         return latents
@@ -178,7 +197,8 @@ class TransflowerModel(BaseModel):
         if output_mods is None:
             output_mods = self.output_mods
         if self.opt.residual:
-            latent1 = self.get_data_representations(data)
+            latents1 = self.get_data_representations(data)
+            latent1 = torch.cat(latents1)
             for mod in self.output_mods:
                 i = self.output_mods.index(mod)
                 latent_tmp = self.output_mod_nets[i](latent1)
@@ -216,7 +236,8 @@ class TransflowerModel(BaseModel):
     def training_step(self, batch, batch_idx, reduce_loss=True):
         self.set_inputs(batch)
         if self.opt.residual:
-            latent1 = get_data_representations(self.inputs)
+            latents1 = get_data_representations(self.inputs)
+            latent1 = torch.cat(latents1)
             nll_loss = 0
             mse_loss = 0
             for i, mod in enumerate(self.output_mods):
