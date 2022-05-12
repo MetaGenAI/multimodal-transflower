@@ -122,7 +122,7 @@ class BaseOptions:
             hparams_json2 = {}
             for k,v in hparams_json.items():
                 if k in defaults or k in self.extra_hparams:
-                    if v!= False:
+                    if not(v== False and type(v) == type(False)):
                         hparams_json2[k] = v
                 else:
                     raise Exception("Hparam "+k+" not recognized!")
