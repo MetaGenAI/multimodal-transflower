@@ -16,8 +16,9 @@ data/*
 !data/scripts
 !data/scripts/*
 !data/fixed_skeleton.bvh
-inference/*
-!inference/generate.py
+inference/generated/*
+inference/aist_only/*
+inference/tmp/*
 test_data/*
 test_data2/*
 outs/*
