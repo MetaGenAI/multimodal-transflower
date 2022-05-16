@@ -300,6 +300,9 @@ class TransflowerModel(BaseModel):
     #                           optimizer_closure, on_tpu, using_native_amp, using_lbfgs):
     #    optimizer.zero_grad()
 
+# MIN_LOGP=-1e8
+# MAX_LOGP=1e8
+
 class NormalizingFlow(Distribution):
     def __init__(self, model, cond, temp=1.0, validate_args=False):
         self.model = model
@@ -310,9 +313,14 @@ class NormalizingFlow(Distribution):
     def log_prob(self,value):
         # print(value.shape)
         z, sldj, _ = self.model(x=value, cond=self.cond) #value comes in batch, time, features
-        logP = self.model.loss_generative(z, sldj, reduce=True)
+        # print(z)
+        # print(sldj)
+        #logP = self.model.loss_generative(z, sldj, reduce=True)
+        logP = self.model.loss_generative(z, sldj, reduce=False)
+        # logP = torch.clamp(logP, MIN_LOGP, MAX_LOGP)
         # print(logP)
-        return logP.unsqueeze(0)
+        # return logP.unsqueeze(0)
+        return logP
 
     def sample(self):
         output, sldj, z = self.model(x=None, cond=self.cond, reverse=True, eps_std=self.temp, noise=None)

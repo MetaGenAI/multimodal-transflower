@@ -80,8 +80,8 @@ class FlowPlusPlus(nn.Module):
     def forward(self, x, cond, reverse=False, eps_std=1.0, noise=None):
         if cond is not None:
             cond = cond.permute(0,2,1).unsqueeze(3)
-            
-        if not reverse:        
+
+        if not reverse:
             if x is not None:
                 x = x.permute(0,2,1).unsqueeze(3)
         else:
@@ -99,7 +99,7 @@ class FlowPlusPlus(nn.Module):
 
         sldj = torch.zeros(x.size(0), device=x.device)
         x, sldj = self.flows(x, cond, sldj, reverse)
-        
+
         if reverse:
             if x is not None:
                 x = x.squeeze(3).permute(0,2,1)
@@ -134,7 +134,7 @@ class FlowPlusPlus(nn.Module):
         # nll = -ll.mean()/float(np.log(2.))
 
         return nll
-        
+
 class _FlowStep(nn.Module):
     """Recursive builder for a Flow++ model.
 
@@ -189,7 +189,7 @@ class _FlowStep(nn.Module):
                                   output_length=in_height,
                                   concat_dims=cond_concat_dims,
                                   drop_prob=drop_prob)]#,
-                         #Flip()] Flip currently does not work with odd number of channels. But is it needed when we have channel mixing with 1x1convs? 
+                         #Flip()] Flip currently does not work with odd number of channels. But is it needed when we have channel mixing with 1x1convs?
 
         checkers = []
         if cond_concat_dims:
@@ -244,14 +244,14 @@ class _FlowStep(nn.Module):
                                   cond_concat_dims = cond_concat_dims,
                                   cond_seq_len = cond_seq_len,
                                   drop_prob=drop_prob)
-                                  
+
         self.z_shape = (in_channels, in_height, in_width)
-        
+
     def z_dim(self):
         return self.z_shape
 
     def forward(self, x, cond, sldj, reverse=False):
-        
+
         if reverse:
             #import pdb;pdb.set_trace()
             if self.next is not None:
@@ -279,8 +279,10 @@ class _FlowStep(nn.Module):
             if self.channels:
                 x = channelwise(x)
                 for flow in self.channels:
+                    # print("Heyo")
                     # import pdb;pdb.set_trace()
                     x, sldj = flow(x, cond, sldj, reverse)
+                    # print(sldj)
                     # print(type(flow).__name__)
                     # print(x[0].std())
                 x = channelwise(x, reverse=True)
@@ -303,7 +305,7 @@ class _FlowStep(nn.Module):
 
         # print(x.std())
         return x, sldj
-        
+
 class _FlowStepTesting(nn.Module):
     """Recursive builder for a Flow++ model.
 
@@ -358,7 +360,7 @@ class _FlowStepTesting(nn.Module):
                                   output_length=in_height,
                                   concat_dims=cond_concat_dims,
                                   drop_prob=drop_prob)]#,
-                         #Flip()] Flip currently does not work with odd number of channels. But is it needed when we have channel mixing with 1x1convs? 
+                         #Flip()] Flip currently does not work with odd number of channels. But is it needed when we have channel mixing with 1x1convs?
 
         checkers = []
         if cond_concat_dims:
@@ -413,14 +415,14 @@ class _FlowStepTesting(nn.Module):
                                   cond_concat_dims = cond_concat_dims,
                                   cond_seq_len = cond_seq_len,
                                   drop_prob=drop_prob)
-                                  
+
         self.z_shape = (in_channels, in_height, in_width)
-        
+
     def z_dim(self):
         return self.z_shape
 
     def forward(self, x, cond, sldj):#, reverse=False):
-            
+
         reverse=True
         if reverse:
             #import pdb;pdb.set_trace()
@@ -473,4 +475,3 @@ class _FlowStepTesting(nn.Module):
 
         # print(x.std())
         return x, sldj
-        

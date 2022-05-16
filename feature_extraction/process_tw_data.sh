@@ -4,8 +4,8 @@ folder=$1
 py=python3
 n=$(nproc)
 #n=6
-#mpirun="mpirun --use-hwthread-cpus"
-mpirun=""
+mpirun="mpirun --use-hwthread-cpus"
+#mpirun=""
 
 #$py ./feature_extraction/process_filenames.py $1 --files_extension npz.annotation.txt --name_processing_function annotation ${@:2}
 #find $1 -exec rename -f 's/npz.acts.npy.annotation/annotation/' {} +
@@ -18,6 +18,7 @@ mpirun=""
 
 #$py ./feature_extraction/process_filenames.py $1 --files_extension acts.npy --name_processing_function annotation ${@:2}
 #find $1 -exec rename -f 's/npz.acts.npy.annotation/annotation/' {} +
+
 $py feature_extraction/extract_transform2.py $1 --feature_name npz.acts --transforms scaler
 $mpirun $py feature_extraction/apply_transforms.py $@ --feature_name npz.acts --transform_name scaler --new_feature_name npz.acts_scaled
 $py feature_extraction/extract_transform2.py $1 --feature_name npz.obs_cont --transforms scaler
@@ -25,10 +26,18 @@ $mpirun $py feature_extraction/apply_transforms.py $@ --feature_name npz.obs_con
 
 #$py feature_extraction/extract_transform2.py $1 --feature_name obs_cont_single_nocol --transforms scaler
 #$mpirun $py feature_extraction/apply_transforms.py $@ --feature_name obs_cont_single_nocol --transform_name scaler --new_feature_name obs_cont_single_nocol_scaled
-$py feature_extraction/extract_transform2.py $1 --feature_name obs_cont_single_nocol_noarm --transforms scaler
-$mpirun $py feature_extraction/apply_transforms.py $@ --feature_name obs_cont_single_nocol_noarm --transform_name scaler --new_feature_name obs_cont_single_nocol_noarm_scaled
+
+#$py feature_extraction/extract_transform2.py $1 --feature_name obs_cont_single_nocol_noarm --transforms scaler
+#$mpirun $py feature_extraction/apply_transforms.py $@ --feature_name obs_cont_single_nocol_noarm --transform_name scaler --new_feature_name obs_cont_single_nocol_noarm_scaled
 #$py feature_extraction/trim_seqs.py $1 --feature_name obs_cont_single_nocol_noarm --trim_begin 10 --new_feature_name obs_cont_single_nocol_noarm_trim
 #$py feature_extraction/extract_transform2.py $1 --feature_name obs_cont_single_nocol_noarm_trim --transforms scaler
+$py feature_extraction/extract_transform2.py $1 --feature_name obs_cont_single_nocol_noarm_incsize --transforms scaler
+$mpirun $py feature_extraction/apply_transforms.py $@ --feature_name obs_cont_single_nocol_noarm_incsize --transform_name scaler --new_feature_name obs_cont_single_nocol_noarm_incsize_scaled
+
+#$mpirun $py feature_extraction/trim_seqs.py $1 --feature_name obs_cont_single_nocol_noarm_incsize --trim_begin 10 --new_feature_name obs_cont_single_nocol_noarm_incsize_trim
+#$py feature_extraction/extract_transform2.py $1 --feature_name obs_cont_single_nocol_noarm_incsize_trim --transforms scaler
+#$mpirun $py feature_extraction/apply_transforms.py $@ --feature_name obs_cont_single_nocol_noarm_incsize_trim --transform_name scaler --new_feature_name obs_cont_single_nocol_noarm_incsize_trim_scaled
+
 #$mpirun $py feature_extraction/apply_transforms.py $@ --feature_name obs_cont_single_nocol_noarm_trim --transform_name scaler --new_feature_name obs_cont_single_nocol_noarm_trim_scaled
 #$py feature_extraction/trim_seqs.py $1 --feature_name npz.acts --trim_begin 10 --new_feature_name acts_trim
 #$py feature_extraction/extract_transform2.py $1 --feature_name acts_trim --transforms scaler
