@@ -17,6 +17,7 @@
 ##SBATCH -A imi@gpu
 #SBATCH -C v100-32g
 #SBATCH --exclusive
+#SBATCH --signal=TERM@120
 
 export MASTER_PORT=1234
 slurm_nodes=$(scontrol show hostnames $SLURM_JOB_NODELIST)

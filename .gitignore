@@ -32,3 +32,5 @@ to_check*
 MNIST/
 models/x_transformers
 stderr.txt
+inference/generated_*
+core-srun-*

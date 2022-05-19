@@ -10,6 +10,7 @@ import torch.nn.functional as F
 from .util.generation import autoregressive_generation_multimodal
 
 from torch.distributions.distribution import Distribution
+import numpy as np
 
 class TransflowerModel(BaseModel):
     def __init__(self, opt):
@@ -166,17 +167,22 @@ class TransflowerModel(BaseModel):
         latents1 = self.get_data_representations(data)
         latents = []
         all_latentss = {}
+        cumsum = np.cumsum([0]+self.conditioning_seq_lens)
         for mod in output_mods:
             i = self.output_mods.index(mod)
             if self.input_mod_masks[i] not in all_latentss:
                 latent1 = torch.cat([self.input_mod_masks[i][j]*l for j,l in enumerate(latents1)])
-                all_latents = self.output_mod_nets[i](latent1)
+                if not self.use_shared_crossmodal_encoder:
+                    all_latents = self.output_mod_nets[i](latent1)
+                else:
+                    all_latents = self.output_mod_nets[0](latent1)
                 all_latentss[self.input_mod_masks[i]] = all_latents
             all_latents = all_latentss[self.input_mod_masks[i]]
             if not self.use_shared_crossmodal_encoder:
                 trans_output = all_latents[latent_chunk_index*self.conditioning_seq_lens[i]:(latent_chunk_index+1)*self.conditioning_seq_lens[i]]
             else:
-                trans_output = all_latents[(i+latent_chunk_index)*self.conditioning_seq_lens[i]:(i+latent_chunk_index+1)*self.conditioning_seq_lens[i]]
+                assert latent_chunk_index == 0
+                trans_output = all_latents[cumsum[i]:cumsum[i+1]]
             latents.append(trans_output.permute(1,0,2)) #time, batch, features -> batch, time, features
 
         return latents
