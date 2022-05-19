@@ -11,8 +11,8 @@ import sys
 sys.path.append(root_dir_model)
 from inference.utils import load_model_from_logs_path
 pretrained_folder = "/home/guillefix/code/inria/pretrained/"
-pretrained_name="transflower_zp5_short_single_obj_nocol_trim_tw_single_more_filtered"
-# pretrained_name="transflower_zp5_short_single_obj_nocol_trim_tw_single_more_filtered_nodp"
+# pretrained_name="transflower_zp5_short_single_obj_nocol_trim_tw_single_more_filtered"
+pretrained_name="transflower_zp5_short_single_obj_nocol_trim_tw_single_more_filtered_nodp"
 default_save_path = pretrained_folder+pretrained_name
 logs_path = default_save_path
 model, opt = load_model_from_logs_path(logs_path, no_grad=False);
@@ -141,7 +141,7 @@ print("AAAAAAAAAAAAAAAAA", list(actor.model.output_mod_glows[0].parameters())[-1
 # lr = 0.0
 # lr = 0.9695e-3
 # lr = 1e-7
-lr = 5e-7
+lr = 5e-6
 optim = torch.optim.Adam(
     list(actor.parameters()) + list(critic.parameters()), lr=lr
 )
@@ -230,7 +230,7 @@ lr_decay = False
 step_per_epoch = 30000
 step_per_collect = 2048
 # step_per_collect = 256
-epoch = 200
+epoch = 1
 if lr_decay:
     # decay learning rate to 0 linearly
     max_update_num = np.ceil(
@@ -252,11 +252,11 @@ vf_coef = 0.25
 ent_coef = 0.0
 rew_norm = False
 bound_action_method = "clip"
-# eps_clip = 0.2
-eps_clip = 20000
+eps_clip = 0.2
+# eps_clip = 20000
 value_clip = None
-dual_clip = 2.0
-# dual_clip = 20000
+# dual_clip = 2.0
+dual_clip = 20
 # dual_clip = None
 norm_adv = 0
 recompute_adv = 1
@@ -298,7 +298,7 @@ test_num = 8
 test_envs = SubprocVectorEnv(
     [env_fn for _ in range(test_num)],
 )
-train_envs.seed([6969*training_num+int(time.time())+i*training_num for i in range(training_num)])
+test_envs.seed([6969*training_num+int(time.time())+i*training_num for i in range(training_num)])
 
 buffer_size = 4096
 # buffer_size = 256
@@ -311,7 +311,7 @@ else:
 train_collector = Collector(policy, train_envs, buffer, exploration_noise=True)
 # test_collector = Collector(policy, train_envs)
 test_collector = Collector(policy, test_envs)
-# test_collector = None
+test_collector = None
 
 # policy.eval()
 # test_envs.seed([6969+i*test_num for i in range(test_num)])
@@ -350,6 +350,7 @@ result = onpolicy_trainer(
     save_best_fn=save_best_fn,
     logger=logger,
     test_in_train=False,
+    # test_in_train=True,
 )
 pprint.pprint(result)
 
