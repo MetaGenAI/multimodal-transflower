@@ -12,6 +12,7 @@ sys.path.append(root_dir_model)
 from inference.utils import load_model_from_logs_path
 pretrained_folder = "/home/guillefix/code/inria/pretrained/"
 pretrained_name="transflower_zp5_short_single_obj_nocol_trim_tw_single_more_filtered"
+# pretrained_name="transflower_zp5_short_single_obj_nocol_trim_tw_single_more_filtered_nodp"
 default_save_path = pretrained_folder+pretrained_name
 logs_path = default_save_path
 model, opt = load_model_from_logs_path(logs_path, no_grad=False);
@@ -33,11 +34,54 @@ latents=model.get_latents(data) #this will be the actor
 latents[0].shape
 
 dists = model.get_dists(latents) #this will be the distribution function
+#%%
 
 # testing it works
-dists
-dists[0].sample()
-dists[0].log_prob(dists[0].sample())
+# dists
+# a = dists[0].sample()
+# dists[0].log_prob(a)
+# c=dists[0].cond
+# a=a.permute(0,2,1).unsqueeze(3)
+# c=c.permute(0,2,1).unsqueeze(3)
+# sldj = torch.zeros(a.size(0), device=a.device)
+# model.output_mod_glows[0].flows(a,c,sldj, False)
+# from models.util import channelwise, checkerboard, Flip, safe_log, squeeze, unsqueeze
+# asplit=channelwise(a)
+# sldj = torch.zeros(a.size(0), device=a.device)
+# model.output_mod_glows[0].flows.channels[1]
+# # for m in model.output_mod_glows[0].flows.channels[2].modules():
+# # for m in model.output_mod_glows[0].flows.channels[2].modules()
+# from models.flowplusplus.act_norm import BatchNorm
+
+# def eval_dropouts(model):
+#     for m in model.children():
+#         if isinstance(m, torch.nn.Dropout):
+#             m.p=0.0
+#             # m.eval()
+#         elif isinstance(m, torch.nn.MultiheadAttention):
+#             m.dropout=0.0
+#             # m.eval()
+#         elif isinstance(m, torch.nn.Module):
+#             eval_dropouts(m)
+#
+# eval_dropouts(model)
+
+#
+# eval_dropouts(model.output_mod_glows[0].flows.channels[2])
+# for p in model.output_mod_glows[0].flows.channels[2].parameters():
+#     print(p)
+# # model.output_mod_glows[0].flows.channels[2] = model.output_mod_glows[0].flows.channels[2].eval()
+# asplit=channelwise(a)
+# sldj = torch.zeros(a.size(0), device=a.device)
+# asplit,sldj = model.output_mod_glows[0].flows.channels[2](asplit,c,sldj, False); print(sldj)
+# model = model.eval()
+# model.output_mod_glows[0].flows.channels[2].eval()
+# asplit=channelwise(a)
+# sldj = torch.zeros(a.size(0), device=a.device)
+# for i in range(3):
+#     asplit,sldj = model.output_mod_glows[0].flows.channels[i](asplit,c,sldj, False); print(sldj)
+
+# model.eval()
 
 # from models.transflower_model import NormalizingFlow
 #
@@ -94,9 +138,10 @@ critic = Critic(net_c, device=device, preprocess_net_output_dim=800*net_c.model.
 critic.to(device)
 
 print("AAAAAAAAAAAAAAAAA", list(actor.model.output_mod_glows[0].parameters())[-10])
-# lr = 9e-4
-lr = 0.965e-3
-# lr = 3e-5
+# lr = 0.0
+# lr = 0.9695e-3
+# lr = 1e-7
+lr = 5e-7
 optim = torch.optim.Adam(
     list(actor.parameters()) + list(critic.parameters()), lr=lr
 )
@@ -168,7 +213,7 @@ import src.envs.envList; importlib.reload(src.envs.envList); from src.envs.envLi
 # goal_str = "Put green dog on the shelf"
 goal_str = None
 env_fn = lambda: ExtendedUR5PlayAbsRPY1Obj(goal_str = goal_str, obs_scaler = obs_scaler, acts_scaler = acts_scaler, prev_obs = prev_obs, save_relabelled_trajs = save_relabelled_trajs,
-                                check_completed_goals = False, use_dict_space = True, max_episode_length = 512, sample_random_goal = True,
+                                check_completed_goals = False, use_dict_space = True, max_episode_length = 3000, sample_random_goal = True, sample_goal_from_train_set = True,
                                 prev_acts = prev_acts, times_to_go = times_to_go, desc_max_len = input_lengths[ann_mod_idx], obs_mod = obs_mod, args=args)
 
 env = env_fn()
@@ -181,11 +226,11 @@ from torch.optim.lr_scheduler import LambdaLR
 
 lr_scheduler = None
 lr_decay = False
-step_per_epoch = 2048
-# step_per_epoch = 30000
-# step_per_collect = 2048
-step_per_collect = 256
-epoch = 1
+# step_per_epoch = 2048
+step_per_epoch = 30000
+step_per_collect = 2048
+# step_per_collect = 256
+epoch = 200
 if lr_decay:
     # decay learning rate to 0 linearly
     max_update_num = np.ceil(
@@ -202,14 +247,16 @@ def dist(latent):
 
 gamma = 0.99
 gae_lambda = 0.95
-max_grad_norm = 10.0
+max_grad_norm = 1.0
 vf_coef = 0.25
 ent_coef = 0.0
 rew_norm = False
 bound_action_method = "clip"
-eps_clip = 0.2
+# eps_clip = 0.2
+eps_clip = 20000
 value_clip = None
 dual_clip = 2.0
+# dual_clip = 20000
 # dual_clip = None
 norm_adv = 0
 recompute_adv = 1
@@ -241,19 +288,20 @@ policy = PPOPolicy(
 from tianshou.data import Collector, ReplayBuffer, VectorReplayBuffer
 from tianshou.env import SubprocVectorEnv
 
-training_num = 4
+training_num = 8
 train_envs = SubprocVectorEnv(
     [env_fn for _ in range(training_num)]
 )
-train_envs.seed([int(time.time())+i for i in range(training_num)])
+train_envs.seed([int(time.time())+i*training_num for i in range(training_num)])
 
-test_num = 0
-# test_envs = SubprocVectorEnv(
-#     [env for _ in range(test_num)],
-# )
+test_num = 8
+test_envs = SubprocVectorEnv(
+    [env_fn for _ in range(test_num)],
+)
+train_envs.seed([6969*training_num+int(time.time())+i*training_num for i in range(training_num)])
 
-# buffer_size = 4096
-buffer_size = 256
+buffer_size = 4096
+# buffer_size = 256
 # collector
 if training_num > 1:
     buffer = VectorReplayBuffer(buffer_size, len(train_envs))
@@ -262,15 +310,24 @@ else:
 #%%
 train_collector = Collector(policy, train_envs, buffer, exploration_noise=True)
 # test_collector = Collector(policy, train_envs)
-test_collector = None
+test_collector = Collector(policy, test_envs)
+# test_collector = None
+
+# policy.eval()
+# test_envs.seed([6969+i*test_num for i in range(test_num)])
+# test_collector.reset()
+# result = test_collector.collect(n_episode=test_num*10, render=False)
+# print(result)
+# print(f'Final reward: {result["rews"].mean()}, length: {result["lens"].mean()}')
 
 log_path = "./tmp"
 def save_best_fn(policy):
     torch.save(policy.state_dict(), os.path.join(log_path, 'policy.pth'))
 
 # repeat_per_collect = 2048
-repeat_per_collect = 1
-batch_size = 128
+repeat_per_collect = 2
+# batch_size = 128
+batch_size = 64
 from tianshou.trainer import onpolicy_trainer
 # env.observation_space.sample()[1].shape
 # trainer
@@ -292,12 +349,16 @@ result = onpolicy_trainer(
     step_per_collect=step_per_collect,
     save_best_fn=save_best_fn,
     logger=logger,
-    test_in_train=True
+    test_in_train=False,
 )
 pprint.pprint(result)
 
-print("AAAAAAAAAAAAAAAAA", list(actor.model.output_mod_glows[0].parameters())[-10])
+# print("AAAAAAAAAAAAAAAAA", list(actor.model.output_mod_glows[0].parameters())[-10])
 # for i,p in enumerate(policy.actor.model.parameters()):
 #     print(p.data == saved_params[i])
 # Let's watch its performance!
 policy.eval()
+test_collector.reset()
+result = test_collector.collect(n_episode=test_num*10, render=False)
+print(result)
+print(f'Final reward: {result["rews"].mean()}, length: {result["lens"].mean()}')
