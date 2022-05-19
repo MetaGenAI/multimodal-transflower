@@ -20,6 +20,7 @@ parser = argparse.ArgumentParser(description="Preprocess songs data")
 parser.add_argument("data_path", type=str, help="Directory contining Beat Saber level folders")
 parser.add_argument("--feature_name", metavar='', type=str, default="mel", help="mel, chroma, multi_mel")
 parser.add_argument("--transforms", metavar='', type=str, default="scaler", help="comma-separated lists of transforms to extract (scaler,pca_transform)")
+parser.add_argument("--replace_existing", action='store_true')
 args = parser.parse_args()
 
 # makes arugments into global variables of the same name, used later in the code
