@@ -1,5 +1,10 @@
 import numpy as np
 import pprint
+import argparse
+parser = argparse.ArgumentParser(description='PPO')
+parser.add_argument('--n', type=int, default=40, help='number of envs')
+args = parser.parse_args()
+
 
 ### GETTING THE MODEL ###
 import os
@@ -10,7 +15,8 @@ else:
 import sys
 sys.path.append(root_dir_model)
 from inference.utils import load_model_from_logs_path
-pretrained_folder = "/home/guillefix/code/inria/pretrained/"
+#pretrained_folder = "/home/guillefix/code/inria/pretrained/"
+pretrained_folder = "/gpfswork/rech/imi/usc19dv/mt-lightning/training/experiments/"
 # pretrained_name="transflower_zp5_short_single_obj_nocol_trim_tw_single_more_filtered"
 pretrained_name="transflower_zp5_short_single_obj_nocol_trim_tw_single_more_filtered_nodp"
 default_save_path = pretrained_folder+pretrained_name
@@ -138,17 +144,18 @@ critic = Critic(net_c, device=device, preprocess_net_output_dim=800*net_c.model.
 critic.to(device)
 
 print("AAAAAAAAAAAAAAAAA", list(actor.model.output_mod_glows[0].parameters())[-10])
-# lr = 0.0
+#lr = 0.0
 # lr = 0.9695e-3
 # lr = 1e-7
-lr = 5e-6
+lr = 1e-7
 optim = torch.optim.Adam(
     list(actor.parameters()) + list(critic.parameters()), lr=lr
 )
 #%%
 
 import sys
-root_env="/home/guillefix/code/inria/RobotLangEnv/"
+#root_env="/home/guillefix/code/inria/RobotLangEnv/"
+root_env="/gpfswork/rech/imi/usc19dv/captionRLenv/"
 sys.path.append(root_env)
 
 
@@ -205,7 +212,7 @@ prev_obs = obs_scaler.inverse_transform(np.zeros((context_size_obs,input_dims[ob
 prev_acts = acts_scaler.inverse_transform(np.zeros((context_size_acts,output_dims[0])))
 #%%
 save_relabelled_trajs = False
-args = {}
+args_tmp = {}
 
 import importlib
 import src.envs.envList; importlib.reload(src.envs.envList); from src.envs.envList import ExtendedUR5PlayAbsRPY1Obj
@@ -214,7 +221,7 @@ import src.envs.envList; importlib.reload(src.envs.envList); from src.envs.envLi
 goal_str = None
 env_fn = lambda: ExtendedUR5PlayAbsRPY1Obj(goal_str = goal_str, obs_scaler = obs_scaler, acts_scaler = acts_scaler, prev_obs = prev_obs, save_relabelled_trajs = save_relabelled_trajs,
                                 check_completed_goals = False, use_dict_space = True, max_episode_length = 3000, sample_random_goal = True, sample_goal_from_train_set = True,
-                                prev_acts = prev_acts, times_to_go = times_to_go, desc_max_len = input_lengths[ann_mod_idx], obs_mod = obs_mod, args=args)
+                                prev_acts = prev_acts, times_to_go = times_to_go, desc_max_len = input_lengths[ann_mod_idx], obs_mod = obs_mod, args=args_tmp)
 
 env = env_fn()
 
@@ -230,7 +237,7 @@ lr_decay = False
 step_per_epoch = 30000
 step_per_collect = 2048
 # step_per_collect = 256
-epoch = 1
+epoch = 200
 if lr_decay:
     # decay learning rate to 0 linearly
     max_update_num = np.ceil(
@@ -255,8 +262,8 @@ bound_action_method = "clip"
 eps_clip = 0.2
 # eps_clip = 20000
 value_clip = None
-# dual_clip = 2.0
-dual_clip = 20
+dual_clip = 2.0
+#dual_clip = 20
 # dual_clip = None
 norm_adv = 0
 recompute_adv = 1
@@ -288,13 +295,13 @@ policy = PPOPolicy(
 from tianshou.data import Collector, ReplayBuffer, VectorReplayBuffer
 from tianshou.env import SubprocVectorEnv
 
-training_num = 8
+training_num = args.n
 train_envs = SubprocVectorEnv(
     [env_fn for _ in range(training_num)]
 )
 train_envs.seed([int(time.time())+i*training_num for i in range(training_num)])
 
-test_num = 8
+test_num = args.n
 test_envs = SubprocVectorEnv(
     [env_fn for _ in range(test_num)],
 )
@@ -311,7 +318,7 @@ else:
 train_collector = Collector(policy, train_envs, buffer, exploration_noise=True)
 # test_collector = Collector(policy, train_envs)
 test_collector = Collector(policy, test_envs)
-test_collector = None
+#test_collector = None
 
 # policy.eval()
 # test_envs.seed([6969+i*test_num for i in range(test_num)])
@@ -320,12 +327,12 @@ test_collector = None
 # print(result)
 # print(f'Final reward: {result["rews"].mean()}, length: {result["lens"].mean()}')
 
-log_path = "./tmp"
+log_path = "./tmp2"
 def save_best_fn(policy):
     torch.save(policy.state_dict(), os.path.join(log_path, 'policy.pth'))
 
 # repeat_per_collect = 2048
-repeat_per_collect = 2
+repeat_per_collect = 10
 # batch_size = 128
 batch_size = 64
 from tianshou.trainer import onpolicy_trainer
