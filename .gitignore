@@ -34,5 +34,4 @@ models/x_transformers
 stderr.txt
 inference/generated_*
 core-srun-*
-tmp/*
-tmp2/*
+tmp*

@@ -80,7 +80,7 @@ class TransflowerModel(BaseModel):
                 self.output_mod_mean_nets.append(net)
 
             # import pdb;pdb.set_trace()
-            glow = FlowPlusPlus(scales=ast.literal_eval(opt.scales),
+            glow = FlowPlusPlus(scales=ast.literal_eval(opt.scales.split(";")[i]),
                                      in_shape=(douts[i], output_lengths[i], 1),
                                      cond_dim=opt.dhid,
                                      mid_channels=opt.dhid_flow,
@@ -126,7 +126,7 @@ class TransflowerModel(BaseModel):
         parser.add_argument('--nhead', type=int, default=8)
         parser.add_argument('--num_heads_flow', type=int, default=8)
         parser.add_argument('--dropout', type=float, default=0.1)
-        parser.add_argument('--scales', type=str, default="[[10,0]]")
+        parser.add_argument('--scales', type=str, default="[[10,0]]", help="semi-colon separated list of scales, one for each mod")
         parser.add_argument('--flow_dist', type=str, default="normal")
         parser.add_argument('--flow_dist_param', type=int, default=50)
         parser.add_argument('--glow_norm_layer', type=str, default=None)

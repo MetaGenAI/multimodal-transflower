@@ -40,6 +40,8 @@ class MultimodalDataset(BaseDataset):
 
         input_mods = self.opt.input_modalities.split(",")
         output_mods = self.opt.output_modalities.split(",")
+        self.dins = dins = [int(x) for x in str(self.opt.dins).split(",")]
+        self.douts = douts = [int(x) for x in str(self.opt.douts).split(",")]
         self.input_lengths = input_lengths = [int(x) for x in str(self.opt.input_lengths).split(",")]
         self.output_lengths = output_lengths = [int(x) for x in str(self.opt.output_lengths).split(",")]
         self.output_time_offsets = output_time_offsets = [int(x) for x in str(self.opt.output_time_offsets).split(",")]
@@ -50,6 +52,11 @@ class MultimodalDataset(BaseDataset):
             input_types = ["c" for inp in input_mods]
         else:
             input_types = self.opt.input_types.split(",")
+            
+        if self.opt.output_types is None:
+            output_types = ["c" for o in output_mods]
+        else:
+            output_types = self.opt.output_types.split(",")
 
         if self.opt.input_proc_types is None:
             input_proc_types = ["none" for inp in input_mods]
@@ -62,9 +69,11 @@ class MultimodalDataset(BaseDataset):
             output_proc_types = self.opt.output_proc_types.split(",")
 
         assert len(input_types) == len(input_mods)
+        assert len(output_types) == len(output_mods)
         assert len(input_proc_types) == len(input_mods)
         assert len(output_proc_types) == len(output_mods)
         self.input_types = input_types
+        self.output_types = output_types
         self.input_proc_types = input_proc_types
         self.output_proc_types = output_proc_types
 
@@ -116,6 +125,8 @@ class MultimodalDataset(BaseDataset):
             first_length=True
             for i, mod in enumerate(input_mods):
                 feature_file = data_path.joinpath(base_filename+"."+mod+".npy")
+                if input_types[i] == 'c':
+                    assert feature_file.shape[-1] == dins[i]
                 if self.input_proc_types[i] != "none": continue
                 # print(feature_file)
                 try:
@@ -141,6 +152,8 @@ class MultimodalDataset(BaseDataset):
             #first_length=True
             for i, mod in enumerate(output_mods):
                 feature_file = data_path.joinpath(base_filename+"."+mod+".npy")
+                if output_types[i] == 'c':
+                    assert feature_file.shape[-1] == douts[i]
                 if self.output_proc_types[i] != "none": continue
                 try:
                     features = np.load(feature_file)
@@ -212,6 +225,7 @@ class MultimodalDataset(BaseDataset):
         parser.add_argument('--input_num_tokens', help='num_tokens. use 0 for continuous inputs')
         parser.add_argument('--output_num_tokens', help='num_tokens. use 0 for continuous inputs')
         parser.add_argument('--input_types', default=None, help='Comma-separated list of input types: d for discrete, c for continuous. E.g. d,c,c. Assumes continuous if not specified')
+        parser.add_argument('--output_types', default=None, help='Comma-separated list of output types: d for discrete, c for continuous. E.g. d,c,c. Assumes continuous if not specified')
         parser.add_argument('--input_proc_types', default=None, help='Comma-separated list of approaches to process input: tile for tiling, single for non-timedsynnced, e.g. Assumes none if not specified')
         parser.add_argument('--output_proc_types', default=None, help='Comma-separated list of approaches to process outputs: tile for tiling, single for non-timedsynnced, e.g.. Assumes none if not specified')
         # parser.add_argument('--predict_deltas', default="false", help='Comma-separated list of true or false, specifying whether to predict deltas (changes) for each the output modalities')

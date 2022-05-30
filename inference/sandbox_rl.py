@@ -21,7 +21,7 @@ pretrained_folder = "/gpfswork/rech/imi/usc19dv/mt-lightning/training/experiment
 pretrained_name="transflower_zp5_short_single_obj_nocol_trim_tw_single_more_filtered_nodp"
 default_save_path = pretrained_folder+pretrained_name
 logs_path = default_save_path
-model, opt = load_model_from_logs_path(logs_path, no_grad=False);
+model, opt = load_model_from_logs_path(logs_path, no_grad=False, version_index=0);
 # latest_checkpoint = get_latest_checkpoint(logs_path)
 # latest_state_dict = latest_checkpoint["state_dict"]
 saved_params = [p.data.clone() for p in model.parameters()]
@@ -147,7 +147,7 @@ print("AAAAAAAAAAAAAAAAA", list(actor.model.output_mod_glows[0].parameters())[-1
 #lr = 0.0
 # lr = 0.9695e-3
 # lr = 1e-7
-lr = 1e-7
+lr = 1e-6
 optim = torch.optim.Adam(
     list(actor.parameters()) + list(critic.parameters()), lr=lr
 )
@@ -254,19 +254,22 @@ def dist(latent):
 
 gamma = 0.99
 gae_lambda = 0.95
-max_grad_norm = 1.0
+max_grad_norm = 0.1
+#max_grad_norm = 10.0
 vf_coef = 0.25
 ent_coef = 0.0
-rew_norm = False
-bound_action_method = "clip"
+#rew_norm = False
+rew_norm = True
+#bound_action_method = "clip"
+bound_action_method = ""
 eps_clip = 0.2
 # eps_clip = 20000
-value_clip = None
-dual_clip = 2.0
+value_clip = True
+dual_clip = 2
 #dual_clip = 20
 # dual_clip = None
 norm_adv = 0
-recompute_adv = 1
+recompute_adv = True
 from tianshou.policy import PPOPolicy
 
 policy = PPOPolicy(
@@ -327,7 +330,7 @@ test_collector = Collector(policy, test_envs)
 # print(result)
 # print(f'Final reward: {result["rews"].mean()}, length: {result["lens"].mean()}')
 
-log_path = "./tmp2"
+log_path = "./tmp3"
 def save_best_fn(policy):
     torch.save(policy.state_dict(), os.path.join(log_path, 'policy.pth'))
 

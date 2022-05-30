@@ -2,10 +2,10 @@
 
 folder=$1
 py=python3
-n=$(nproc)
-#n=6
-mpirun="mpirun --use-hwthread-cpus"
-#mpirun=""
+#n=$(nproc)
+n=6
+#mpirun="mpirun --use-hwthread-cpus"
+mpirun=""
 
 #$py ./feature_extraction/process_filenames.py $1 --files_extension npz.annotation.txt --name_processing_function annotation ${@:2}
 #find $1 -exec rename -f 's/npz.acts.npy.annotation/annotation/' {} +
@@ -35,10 +35,10 @@ mpirun="mpirun --use-hwthread-cpus"
 #$mpirun $py feature_extraction/apply_transforms.py $@ --feature_name obs_cont_single_nocol_noarm --transform_name scaler --new_feature_name obs_cont_single_nocol_noarm_scaled
 #$py feature_extraction/trim_seqs.py $1 --feature_name obs_cont_single_nocol_noarm --trim_begin 25 --new_feature_name obs_cont_single_nocol_noarm_trim
 
-$mpirun $py ./feature_extraction/combine_feats.py $@ $1/base_filenames.txt --feature_names npz.times_to_go,npz.times_to_go --new_feature_name duplicated_times_to_go
+#$mpirun $py ./feature_extraction/combine_feats.py $@ $1/base_filenames.txt --feature_names npz.times_to_go,npz.times_to_go --new_feature_name duplicated_times_to_go
 
-#$py feature_extraction/extract_transform2.py $1 --feature_name npz.times_to_go --transforms scaler
-#$mpirun $py feature_extraction/apply_transforms.py $@ --feature_name npz.times_to_go --transform_name scaler --new_feature_name times_to_go_scaled
+$py feature_extraction/extract_transform2.py $1 --feature_name npz.times_to_go --transforms scaler
+$mpirun $py feature_extraction/apply_transforms.py $@ --feature_name npz.times_to_go --transform_name scaler --new_feature_name times_to_go_scaled
 $py feature_extraction/extract_transform2.py $1 --feature_name duplicated_times_to_go --transforms scaler
 $mpirun $py feature_extraction/apply_transforms.py $@ --feature_name duplicated_times_to_go --transform_name scaler --new_feature_name duplicated_times_to_go_scaled
 

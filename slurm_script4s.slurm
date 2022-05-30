@@ -18,6 +18,8 @@
 #SBATCH -C v100-32g
 #SBATCH --exclusive
 #SBATCH --signal=TERM@120
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=guillefix@gmail.com
 
 export MASTER_PORT=1234
 slurm_nodes=$(scontrol show hostnames $SLURM_JOB_NODELIST)
