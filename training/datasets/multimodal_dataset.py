@@ -125,12 +125,12 @@ class MultimodalDataset(BaseDataset):
             first_length=True
             for i, mod in enumerate(input_mods):
                 feature_file = data_path.joinpath(base_filename+"."+mod+".npy")
-                if input_types[i] == 'c':
-                    assert feature_file.shape[-1] == dins[i]
                 if self.input_proc_types[i] != "none": continue
                 # print(feature_file)
                 try:
                     features = np.load(feature_file)
+                    if input_types[i] == 'c':
+                        assert features.shape[-1] == dins[i]
                     length = features.shape[0]
                     if opt.zero_padding:
                         length += padding_length
@@ -152,11 +152,11 @@ class MultimodalDataset(BaseDataset):
             #first_length=True
             for i, mod in enumerate(output_mods):
                 feature_file = data_path.joinpath(base_filename+"."+mod+".npy")
-                if output_types[i] == 'c':
-                    assert feature_file.shape[-1] == douts[i]
                 if self.output_proc_types[i] != "none": continue
                 try:
                     features = np.load(feature_file)
+                    if output_types[i] == 'c':
+                        assert features.shape[-1] == douts[i]
                     length = features.shape[0]
                     if opt.zero_padding:
                         length += padding_length

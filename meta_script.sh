@@ -78,7 +78,7 @@ do
 	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_kulzaworld_neosraw_rel --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/kulzaworld_guille_neosdata_npy_relative --base_filenames_file base_filenames.txt --gradient_clip_val 10.0 --learning_rate 1e-5 --continue_train
 	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_kulzaworld_neosraw_rel_nonshuff --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/kulzaworld_guille_neosdata_npy_relative --base_filenames_file base_filenames.txt --gradient_clip_val 20.0 --learning_rate 5e-6 --not_shuffle
 
-	sbatch slurm_script4s.slurm $exp --hparams_file=training/hparams/neos_qb/${exp}.yaml --experiment_name ${exp}_quantum_bar_rel --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/quantum_bar_neosdata1_npy_relative --base_filenames_file base_filenames.txt
+	sbatch slurm_script4s.slurm $exp --hparams_file=training/hparams/neos_qb/${exp}.yaml --experiment_name ${exp}_quantum_bar_rel_nodp --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/quantum_bar_neosdata1_npy_relative --base_filenames_file base_filenames.txt
 	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_dekaworld_neosraw_rel --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/dekaworld_alex_guille_neosdata_npy_relative --base_filenames_file base_filenames.txt
 
 	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_kulzaworld_neosraw_fixed --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/kulzaworld_guille_neosdata_npy2 --base_filenames_file base_filenames.txt --continue_train

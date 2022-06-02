@@ -235,7 +235,8 @@ lr_scheduler = None
 lr_decay = False
 # step_per_epoch = 2048
 step_per_epoch = 30000
-step_per_collect = 2048
+#step_per_collect = 2048
+step_per_collect = 256
 # step_per_collect = 256
 epoch = 200
 if lr_decay:
@@ -254,7 +255,7 @@ def dist(latent):
 
 gamma = 0.99
 gae_lambda = 0.95
-max_grad_norm = 0.1
+max_grad_norm = 1.0
 #max_grad_norm = 10.0
 vf_coef = 0.25
 ent_coef = 0.0
@@ -265,7 +266,7 @@ bound_action_method = ""
 eps_clip = 0.2
 # eps_clip = 20000
 value_clip = True
-dual_clip = 2
+dual_clip = 1
 #dual_clip = 20
 # dual_clip = None
 norm_adv = 0
@@ -310,8 +311,8 @@ test_envs = SubprocVectorEnv(
 )
 test_envs.seed([6969*training_num+int(time.time())+i*training_num for i in range(training_num)])
 
-buffer_size = 4096
-# buffer_size = 256
+#buffer_size = 4096
+buffer_size = 256
 # collector
 if training_num > 1:
     buffer = VectorReplayBuffer(buffer_size, len(train_envs))

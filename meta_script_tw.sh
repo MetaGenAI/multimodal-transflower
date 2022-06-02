@@ -30,10 +30,10 @@ export sb=/linkhome/rech/genini01/usc19dv/sbatch.sh
 #for exp in transflower_zp5_short_single_obj_nocol_trim_incsize
 #for exp in transflower_zp5_long_single_obj_nocol_trim
 #for exp in transflower_zp5_short4
-#for exp in transflower_udrl_short4
+for exp in transflower_zp5_short4_nodp
 #for exp in transflower_udrl_short_single_obj_nocol_trim
 #for exp in transflower_udrl2_short_single_obj_nocol_trim
-for exp in transflower_udrl2b_short_single_obj_nocol_trim
+#for exp in transflower_udrl2b_short_single_obj_nocol_trim
 #for exp in transflower_zp5_short3
 #for exp in transflower_udrl_short3 
 #for exp in transflower_zp5_long2_single_obj_nocol_trim 
@@ -84,7 +84,7 @@ do
 
 	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_tw_single --hparams_file=training/hparams/tw/${exp}.yaml --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/UR5_processed --base_filenames_file base_filenames_single_objs.txt
 
-	sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_tw_udrl_single_filtered --hparams_file=training/hparams/tw/${exp}.yaml --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/generated_data_processed --base_filenames_file base_filenames_single_objs.txt
+	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_tw_udrl_single_filtered --hparams_file=training/hparams/tw/${exp}.yaml --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/generated_data_processed --base_filenames_file base_filenames_single_objs.txt
 
 	#export job1=$($sb slurm_script4s.slurm $exp --experiment_name ${exp}_tw_single_filtered_nodp --hparams_file=training/hparams/tw/${exp}.yaml --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/UR5_processed --base_filenames_file base_filenames_single_objs_filtered.txt)
 	#export job1=$($sb slurm_script4s.slurm $exp --experiment_name ${exp}_tw_single_filtered_nodp --hparams_file=training/hparams/tw/${exp}.yaml --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/UR5_processed --base_filenames_file base_filenames_single_objs_filtered.txt --continue_train)
@@ -96,8 +96,8 @@ do
 	#for i in 1 2 3; do
 	#	export job1=$($sb --dependency=afternotok:$job1 slurm_script4s.slurm $exp --experiment_name ${exp}_tw_single_more_filtered_nodp --hparams_file=training/hparams/tw/${exp}.yaml --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/UR5_processed --base_filenames_file base_filenames_single_objs_more_filtered.txt --continue_train)
 	#done
-	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_tw_filtered --hparams_file=training/hparams/tw/${exp}.yaml --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/UR5_processed --base_filenames_file base_filenames_filtered.txt --continue_train
-	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_tw_more_filtered --hparams_file=training/hparams/tw/${exp}.yaml --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/UR5_processed --base_filenames_file base_filenames_more_filtered.txt --continue_train
+	sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_tw_filtered --hparams_file=training/hparams/tw/${exp}.yaml --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/UR5_processed --base_filenames_file base_filenames_filtered.txt --continue_train
+	sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_tw_more_filtered --hparams_file=training/hparams/tw/${exp}.yaml --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/UR5_processed --base_filenames_file base_filenames_more_filtered.txt --continue_train
 	
 	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_tw_single_filtered --hparams_file=training/hparams/tw/${exp}.yaml --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/UR5_processed --base_filenames_file base_filenames_single_objs_filtered.txt
 	#sbatch slurm_script4s.slurm $exp --experiment_name ${exp}_tw_single --hparams_file=training/hparams/tw/${exp}.yaml --num_nodes 1 --max_epochs 6000 --data_dir=$SCRATCH/data/UR5_processed --base_filenames_file base_filenames_single_objs.txt --continue_train
