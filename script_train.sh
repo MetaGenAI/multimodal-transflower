@@ -46,9 +46,10 @@ $py training/train.py --data_dir=${data_dir} \
     --experiment_name=$exp\
     --workers=$(nproc) \
     --gpus=-1 \
-    --accelerator=ddp \
+    --accelerator=cuda \
     ${@:2} #NOTE: can override experiment_name, and any of the options above
     #--batch_size=32 \
+    #--accelerator=ddp \
     #--plugins=deepspeed \
     #--precision=16 \
 

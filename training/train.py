@@ -15,7 +15,7 @@ from training.options.train_options import TrainOptions
 from pytorch_lightning import Trainer
 from pytorch_lightning.loggers import TensorBoardLogger
 print("HIII")
-from pytorch_lightning.plugins import DDPPlugin
+#from pytorch_lightning.plugins import DDPPlugin
 from pytorch_lightning.plugins.training_type.deepspeed import DeepSpeedPlugin
 from pytorch_lightning.callbacks import ModelCheckpoint
 
@@ -42,8 +42,9 @@ if __name__ == '__main__':
     if "tpu_cores" in vars(opt) and opt.tpu_cores is not None and opt.tpu_cores > 0:
         plugins = None
     elif opt.plugins is None:
-        print("DDPPlugin")
-        plugins = DDPPlugin(find_unused_parameters=opt.find_unused_parameters, num_nodes=opt.num_nodes)
+        #print("DDPPlugin")
+        #plugins = DDPPlugin(find_unused_parameters=opt.find_unused_parameters, num_nodes=opt.num_nodes)
+        plugins = None
     elif opt.plugins == "deepspeed":
         deepspeed_config = {
                 "zero_optimization": {

@@ -2,11 +2,11 @@
 
 #SBATCH --job-name=ppo_test
 ##SBATCH --time=100:00:00
-#SBATCH --time=20:00:00
-##SBATCH --time=01:00:00
+##SBATCH --time=20:00:00
+#SBATCH --time=01:00:00
 ##SBATCH --qos=qos_gpu-t4
-#SBATCH --qos=qos_gpu-t3
-##SBATCH --qos=qos_gpu-dev
+##SBATCH --qos=qos_gpu-t3
+#SBATCH --qos=qos_gpu-dev
 ##SBATCH --ntasks=1 --cpus-per-task=24 --gres=gpu:4
 ##SBATCH --ntasks=1 --cpus-per-task=24 --gres=gpu:1
 ##SBATCH --nodes=4 --ntasks-per-node=4 --cpus-per-task=6 --gres=gpu:4
@@ -27,6 +27,7 @@ export MASTER_ADDRESS=$(echo $slurm_nodes | cut -d' ' -f1)
 echo $MASTER_ADDRESS
 export ROOT_DIR_MODEL=/gpfswork/rech/imi/usc19dv/mt-lightning/
 
+export PYTHONPATH=${PYTHONPATH}:/gpfswork/rech/imi/usc19dv/lib/python3.7/site-packages:/gpfsscratch/rech/imi/usc19dv/lib/python3.7/site-packages/
 export ROOT_FOLDER=/gpfswork/rech/imi/usc19dv/captionRLenv/
 export DATA_FOLDER=/gpfsscratch/rech/imi/usc19dv/data/UR5/
 export PROCESSED_DATA_FOLDER=/gpfsscratch/rech/imi/usc19dv/data/UR5_processed/

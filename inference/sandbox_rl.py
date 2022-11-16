@@ -146,8 +146,9 @@ critic.to(device)
 print("AAAAAAAAAAAAAAAAA", list(actor.model.output_mod_glows[0].parameters())[-10])
 #lr = 0.0
 # lr = 0.9695e-3
-# lr = 1e-7
-lr = 1e-6
+lr = 1e-7
+#lr = 1e-6
+#lr = 5e-7
 optim = torch.optim.Adam(
     list(actor.parameters()) + list(critic.parameters()), lr=lr
 )
@@ -235,8 +236,8 @@ lr_scheduler = None
 lr_decay = False
 # step_per_epoch = 2048
 step_per_epoch = 30000
-#step_per_collect = 2048
-step_per_collect = 256
+step_per_collect = 2048
+#step_per_collect = 256
 # step_per_collect = 256
 epoch = 200
 if lr_decay:
@@ -254,19 +255,23 @@ def dist(latent):
     return dists[0]
 
 gamma = 0.99
-gae_lambda = 0.95
-max_grad_norm = 1.0
+#gae_lambda = 0.95
+gae_lambda = 0.9
+#max_grad_norm = 1.0
+max_grad_norm = 0.01
+#max_grad_norm = 0.1
 #max_grad_norm = 10.0
 vf_coef = 0.25
 ent_coef = 0.0
-#rew_norm = False
-rew_norm = True
+rew_norm = False
+#rew_norm = True
 #bound_action_method = "clip"
 bound_action_method = ""
 eps_clip = 0.2
 # eps_clip = 20000
-value_clip = True
-dual_clip = 1
+#value_clip = True
+value_clip = False
+dual_clip = 2.0
 #dual_clip = 20
 # dual_clip = None
 norm_adv = 0
@@ -312,7 +317,8 @@ test_envs = SubprocVectorEnv(
 test_envs.seed([6969*training_num+int(time.time())+i*training_num for i in range(training_num)])
 
 #buffer_size = 4096
-buffer_size = 256
+#buffer_size = 256
+buffer_size = step_per_collect
 # collector
 if training_num > 1:
     buffer = VectorReplayBuffer(buffer_size, len(train_envs))
@@ -336,9 +342,10 @@ def save_best_fn(policy):
     torch.save(policy.state_dict(), os.path.join(log_path, 'policy.pth'))
 
 # repeat_per_collect = 2048
-repeat_per_collect = 10
-# batch_size = 128
-batch_size = 64
+#repeat_per_collect = 10
+repeat_per_collect = 2
+batch_size = 128
+#batch_size = 64
 from tianshou.trainer import onpolicy_trainer
 # env.observation_space.sample()[1].shape
 # trainer

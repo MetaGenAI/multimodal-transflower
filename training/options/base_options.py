@@ -78,7 +78,7 @@ class BaseOptions:
             if hparams_file.endswith(".json"):
                 hparams_json = json.loads(jsmin(open(hparams_file).read()))
             elif hparams_file.endswith(".yaml"):
-                hparams_json = yaml.load(open(hparams_file))
+                hparams_json = yaml.full_load(open(hparams_file))
             hparams_json2 = {k:v for k,v in hparams_json.items() if (v != False and k in defaults)}
             self.parser.set_defaults(**hparams_json2)
 
