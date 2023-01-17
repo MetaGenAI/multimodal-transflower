@@ -24,9 +24,10 @@ gsutil=gsutil
 #$gsutil -m -o GSUtil:parallel_process_count=1 -o GSUtil:parallel_thread_count=24 cp gs://metagen/data/dance_combined2/*.pkl $data_dir/dance_combined2
 #$gsutil -m -o GSUtil:parallel_process_count=1 -o GSUtil:parallel_thread_count=24 cp gs://metagen/data/dance_combined2/*.sav $data_dir/dance_combined2
 
-mkdir dance_combined3
+#mkdir dance_combined3
 #gsutil -m cp -r gs://metagen/data/dance_combined3/*expmap_cr_scaled_20.npy gs://metagen/data/dance_combined3/*audio_feats_scaled_20.npy gs://metagen/data/dance_combined3/*pkl gs://metagen/data/dance_combined3/*sav gs://metagen/data/dance_combined3/base_filenames* ./dance_combined3
-gsutil -m cp -r gs://metagen/data/dance_combined3/*dance_style.npy ./dance_combined3
+gsutil -m cp -r gs://metagen/data/dance_combined3/*expmap_scaled_20.npy gs://metagen/data/dance_combined3/*audio_feats_scaled_20.npy gs://metagen/data/dance_combined3/*pkl gs://metagen/data/dance_combined3/*sav gs://metagen/data/dance_combined3/base_filenames* ./dance_combined3
+#gsutil -m cp -r gs://metagen/data/dance_combined3/*dance_style.npy ./dance_combined3
 
 #gsutil -m cp gs://metagen/data/features_20/*mel_ddcpca_scaled_20* features/
 #gsutil -m cp gs://metagen/data/features_20/*scaler* features/

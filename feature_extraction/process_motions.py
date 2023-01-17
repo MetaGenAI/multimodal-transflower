@@ -50,7 +50,7 @@ if do_mirror:
         ('jtsel', JointSelector(['Spine','Spine1','Neck','Head','RightShoulder', 'RightArm', 'RightForeArm', 'RightHand', 'LeftShoulder', 'LeftArm', 'LeftForeArm', 'LeftHand', 'RightUpLeg', 'RightLeg', 'RightFoot', 'LeftUpLeg', 'LeftLeg', 'LeftFoot'], include_root=True)),
         #('root', RootTransformer('pos_rot_deltas', position_smoothing=3, rotation_smoothing=3)),
         ('root', RootTransformer('pos_rot_deltas')),
-        ('exp', MocapParameterizer('expmap')), 
+        (param, MocapParameterizer(param)),
 #            ('cnst', ConstantsRemover()),
         ('npf', Numpyfier())
     ])
@@ -60,7 +60,7 @@ else:
 #        ('mir', Mirror(axis='X', append=True)),
         ('jtsel', JointSelector(['Spine','Spine1','Neck','Head','RightShoulder', 'RightArm', 'RightForeArm', 'RightHand', 'LeftShoulder', 'LeftArm', 'LeftForeArm', 'LeftHand', 'RightUpLeg', 'RightLeg', 'RightFoot', 'LeftUpLeg', 'LeftLeg', 'LeftFoot'], include_root=True)),
         ('root', RootTransformer('pos_rot_deltas', position_smoothing=3, rotation_smoothing=3)),
-        ('exp', MocapParameterizer('expmap')), 
+        (param, MocapParameterizer(param)),
 #            ('cnst', ConstantsRemover()),
         ('npf', Numpyfier())
     ])

@@ -120,11 +120,14 @@ class MultimodalDataset(BaseDataset):
 
         #Get the list of files containing features (in numpy format for now), and populate the dictionaries of input and output features (separated by modality)
         for base_filename in temp_base_filenames:
+            # print(base_filename)
             length_0 = 1
             file_too_short = False
             first_length=True
+            # print(input_mods)
             for i, mod in enumerate(input_mods):
                 feature_file = data_path.joinpath(base_filename+"."+mod+".npy")
+                # print(self.input_proc_types[i])
                 if self.input_proc_types[i] != "none": continue
                 # print(feature_file)
                 try:
@@ -160,10 +163,12 @@ class MultimodalDataset(BaseDataset):
                     length = features.shape[0]
                     if opt.zero_padding:
                         length += padding_length
-                    #if first_length:
+                    # if first_length:
                     #    length_0 = length
                     #    first_length=False
-                    #else:
+                    # else:
+                    # print(length)
+                    # print(length_0)
                     assert length == length_0
                     #if length < min_length:
                     #    # print("Smol sequence "+base_filename+"."+mod+"; ignoring..")
