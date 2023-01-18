@@ -8,8 +8,9 @@ output_time_offsets: 60
 output_lengths: 1
 num_diff_steps: 50
 num_sampling_steps: 50
-nhead: 10
-diffu_depth: 6
+nhead: 8
+nlayers: 12
+diffu_depth: 8
 dhid: 800
 dhid_diffu: 800 #need to allow for this to be diff from dhid
 diffu_patch_size: (1,3)
@@ -23,9 +24,10 @@ dropout: 0
 lr_policy: plateau
 #lr_policy: multistep
 #lr_decay_milestones: "[200]"
+optimizer: adamw
 learning_rate: 1e-4
 gradient_clip_val: 0.0
-batch_size: 64
+batch_size: 32
 
 
 

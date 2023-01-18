@@ -52,6 +52,7 @@ class TransfusionModel(BaseModel):
             self.diffu_patch_size = ast.literal_eval(opt.diffu_patch_size)
 
         # print(type(self.diffu_patch_size))
+        # print(ModelVarType[opt.diffu_model_var_type])
 
         self.gd = GaussianDiffusion(
             betas=get_beta_schedule(
@@ -62,7 +63,8 @@ class TransfusionModel(BaseModel):
             model_var_type=ModelVarType[opt.diffu_model_var_type],
             loss_type=LossType[opt.diffu_loss_type],
         )
-        self.diffusion = create_diffusion(str(opt.num_sampling_steps))
+        # self.diffusion = create_diffusion(str(opt.num_sampling_steps))
+        self.diffusion = self.gd
 
         self.num_diff_steps = opt.num_diff_steps
         #TODO: include option for discrete outputs

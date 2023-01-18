@@ -5,6 +5,8 @@ from .nero import Nero
 import ast
 from madgrad import MADGRAD
 from pl_bolts.optimizers.lr_scheduler import LinearWarmupCosineAnnealingLR
+from torch.optim import Optimizer
+import numpy as np
 
 
 def get_optimizers(net, opt):

@@ -159,6 +159,7 @@ class GaussianDiffusion:
         loss_type
     ):
 
+        # import pdb; pdb.set_trace()
         self.model_mean_type = model_mean_type
         self.model_var_type = model_var_type
         self.loss_type = loss_type
@@ -282,6 +283,7 @@ class GaussianDiffusion:
         else:
             extra = None
 
+        # import pdb; pdb.set_trace()
         if self.model_var_type in [ModelVarType.LEARNED, ModelVarType.LEARNED_RANGE]:
             assert model_output.shape == (B, C * 2, *x.shape[2:])
             model_output, model_var_values = th.split(model_output, C, dim=1)
