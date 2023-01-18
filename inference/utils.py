@@ -10,7 +10,7 @@ def load_model_from_logs_path(logs_path, no_grad=True, version_index=-1):
     print(latest_checkpoint)
     checkpoint_dir = Path(latest_checkpoint).parent.parent.absolute()
     # exp_opt = json.loads(open("training/experiments/"+args.experiment_name+"/opt.json","r").read())
-    exp_opt = yaml.load(open(str(checkpoint_dir)+"/hparams.yaml","r").read())
+    exp_opt = yaml.safe_load(open(str(checkpoint_dir)+"/hparams.yaml","r").read())
     opt = vars(TrainOptions().parse(parse_args=["--model", exp_opt["model"]]))
     print(opt)
     opt.update(exp_opt)

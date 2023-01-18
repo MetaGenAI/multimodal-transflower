@@ -13,6 +13,7 @@ from torch.distributions.distribution import Distribution
 import numpy as np
 
 from diffusion.models import DiT
+from diffusion import create_diffusion
 from diffusion.gaussian_diffusion import LossType, ModelMeanType, ModelVarType
 from diffusion.gaussian_diffusion import GaussianDiffusion, get_beta_schedule
 
@@ -61,6 +62,7 @@ class TransfusionModel(BaseModel):
             model_var_type=ModelVarType[opt.diffu_model_var_type],
             loss_type=LossType[opt.diffu_loss_type],
         )
+        self.diffusion = create_diffusion(str(opt.num_sampling_steps))
 
         self.num_diff_steps = opt.num_diff_steps
         #TODO: include option for discrete outputs
@@ -128,6 +130,7 @@ class TransfusionModel(BaseModel):
         parser.add_argument('--diffu_patch_size', type=str, default="(1,2)")
         parser.add_argument('--dropout', type=float, default=0.1)
         parser.add_argument('--num_diff_steps', type=int, default=30)
+        parser.add_argument('--num_sampling_steps', type=int, default=50)
         parser.add_argument('--diffu_depth', type=int, default=6)
         parser.add_argument('--diffu_mlp_ratio', type=float, default=4.0)
         parser.add_argument('--diffu_model_var_type', type=str, default="LEARNED", help="the type of parametrization for the variance parameter of the diffusion head. One of LEARNED, FIXED_SMALL, FIXED_LARGE, LEARNED_RANGE")
@@ -206,28 +209,30 @@ class TransfusionModel(BaseModel):
             # noise = noises[i] if noises is not None else None
             diffu = self.output_mod_diffus[i]
             # output, sldj, z = diffu(x=None, cond=latents[j])
-            z1 = torch.randn(1, 1, self.douts[j], self.output_lengths[j], device=diffu.device)
+            z1 = torch.randn(1, 1, self.output_lengths[j], self.douts[j], device=self.device)
             #TODO: use this prev_outputs when generating to use the prev pose as initial estimate for next one awo!
+            #TODO: during training sometimes dont condition (i think this is not currently done)
             if prev_outputs is not None:
                 z = prev_outputs[j] + z1*0.8
             else:
                 z = z1
             # Setup classifier-free guidance:
             z = torch.cat([z, z], 0)
-            model_kwargs={"cond":latents[j][:,0,:]}
-            samples = diffusion.p_sample_loop(
-                diffu.forward_with_cfg, z.shape, z, clip_denoised=False, model_kwargs=model_kwargs, progress=True, device=diffu.device
+            model_kwargs={"cond":latents[j][:,0,:], "cfg_scale": 0.0}
+            samples = self.diffusion.p_sample_loop(
+                diffu.forward_with_cfg, z.shape, z, clip_denoised=False, model_kwargs=model_kwargs, progress=True, device=self.device
             )
             output = samples[0]
             outputs.append(output.permute(1,0,2))
             z = z.unsqueeze(3)
             # print(z.shape)
             # print(sldj.shape)
-            if compute_logPs:
-                logP = glow.loss_generative(z, sldj)
-                logPs.append(logP)
+            # if compute_logPs:
+            #     logP = glow.loss_generative(z, sldj)
+            #     logPs.append(logP)
 
-        return outputs, sldj, logPs
+        # return outputs, sldj, logPs
+        return outputs
 
     def training_step(self, batch, batch_idx, reduce_loss=True):
         self.set_inputs(batch)
