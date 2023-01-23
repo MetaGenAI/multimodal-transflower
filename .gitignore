@@ -35,3 +35,5 @@ stderr.txt
 inference/generated_*
 core-srun-*
 tmp*
+training/datasets/__pycache__/**/*
+training/options/__pycache__/**/*
