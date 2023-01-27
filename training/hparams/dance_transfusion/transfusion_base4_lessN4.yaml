@@ -14,7 +14,7 @@ nhead: 8
 nlayers: 12
 diffu_depth: 8
 diffu_model_mean_type: START_X
-#diffu_model_var_type: FIXED_SMALL
+diffu_model_var_type: FIXED_SMALL
 #diffu_model_var_type: FIXED_LARGE
 #diffu_model_var_type: LEARNED_RANGE
 dhid: 800

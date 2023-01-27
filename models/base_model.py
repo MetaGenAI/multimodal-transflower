@@ -13,10 +13,11 @@ from models.util.generation import autoregressive_generation_multimodal
 # to implement stuff
 
 class BaseModel(LightningModule):
-    def __init__(self, opt):
+    def __init__(self, opt, info={}, **kwargs):
         super().__init__()
         self.save_hyperparameters(vars(opt))
         self.opt = opt
+        self.info = info
         self.parse_base_arguments()
         self.optimizers = []
         self.schedulers = []
@@ -90,8 +91,9 @@ class BaseModel(LightningModule):
     #        s['scheduler'].step(0)
 
     def configure_optimizers(self):
-        self.optimizers = optimizers = get_optimizers(self, self.opt)
-        self.schedulers = schedulers = [get_scheduler(optimizer, self.opt) for optimizer in self.optimizers]
+        self.optimizers = optimizers = get_optimizers(self, self.opt, info=self.info)
+        self.schedulers = schedulers = [get_scheduler(optimizer, self.opt, info=self.info) for optimizer in self.optimizers]
+        #return [{"optimizer": opt, "lr_scheduler": sched} for opt, sched in zip(self.optimizers, self.schedulers)]
         return optimizers, schedulers
         #return self.optimizers
 

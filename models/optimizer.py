@@ -9,7 +9,7 @@ from torch.optim import Optimizer
 import numpy as np
 
 
-def get_optimizers(net, opt):
+def get_optimizers(net, opt, info={}):
     if opt.optimizer == "adam":
         optimizer = torch.optim.Adam(net.parameters(), lr=opt.learning_rate, weight_decay=opt.weight_decay)
     elif opt.optimizer == "adamw":
@@ -32,7 +32,7 @@ def get_optimizers(net, opt):
         return NotImplementedError('optimizer [%s] is not implemented', opt.optimizer)
     return [optimizer]
 
-def get_scheduler(optimizer, opt):
+def get_scheduler(optimizer, opt, info={}):
     interval = opt.scheduler_interval
     if opt.lr_policy == 'lambda':
         def lambda_rule(epoch):
@@ -52,14 +52,29 @@ def get_scheduler(optimizer, opt):
     elif opt.lr_policy == 'plateau':
         scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=opt.lr_decay_factor, threshold=0.01, patience=5)
     elif opt.lr_policy == 'cosine':
-        scheduler = lr_scheduler.CosineAnnealingLR(optimizer, T_max=opt.max_epochs, eta_min=0)
+        if interval == "step":
+            num_iters_per_epoch = 1000
+            if "num_train_data_points" in info:
+                num_iters_per_epoch = num_train_data_points//opt.batch_size
+            lr_scheduler_max_iters = opt.max_epochs*num_iters_per_epoch
+        else:
+            lr_scheduler_max_iters = opt.max_epochs
+        scheduler = lr_scheduler.CosineAnnealingLR(optimizer, T_max=lr_scheduler_max_iters, eta_min=0)
     elif opt.lr_policy == 'cyclic':
         scheduler = CyclicLR(optimizer, base_lr=opt.learning_rate / 10, max_lr=opt.learning_rate,
                              step_size=opt.nepoch_decay, mode='triangular2')
     elif opt.lr_policy == 'reduceOnPlateau':
         scheduler = ReduceLROnPlateau(optimizer, 'min', factor=opt.lr_decay_factor)
     elif opt.lr_policy == 'LinearWarmupCosineAnnealing':
-        scheduler = LinearWarmupCosineAnnealingLR(optimizer, warmup_epochs=opt.warmup_epochs, max_epochs=opt.max_epochs)
+        if interval == "step":
+            num_iters_per_epoch = 1000
+            if "num_train_data_points" in info:
+                num_iters_per_epoch = num_train_data_points//opt.batch_size
+            lr_scheduler_max_iters = opt.max_epochs*num_iters_per_epoch
+        else:
+            lr_scheduler_max_iters = opt.max_epochs
+        scheduler = LinearWarmupCosineAnnealingLR(optimizer, warmup_epochs=opt.lr_scheduler_warmup_iters, max_epochs=lr_scheduler_max_iters)
+        #print(scheduler.optimizer)
     elif opt.lr_policy == 'none':
         scheduler = None
     else:

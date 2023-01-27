@@ -21,7 +21,6 @@ class BaseOptions:
         parser.add_argument('--dataset_name', type=str, default="multimodal")
         parser.add_argument('--base_filenames_file', type=str, default="base_filenames_train.txt")
         parser.add_argument('--phase', type=str, default='train', help='train, val, test, etc')
-        parser.add_argument('--batch_size', default=1, type=int)
         parser.add_argument('--val_batch_size', default=1, type=int, help='batch size for validation data loader')
         parser.add_argument('--do_validation', action='store_true', help='whether to do validation steps during training')
         parser.add_argument('--do_testing', action='store_true', help='whether to do evaluation on test set at the end of training')

@@ -13,8 +13,8 @@ from torch.distributions.distribution import Distribution
 import numpy as np
 
 class TransflowerModel(BaseModel):
-    def __init__(self, opt):
-        super().__init__(opt)
+    def __init__(self, opt, **kwargs):
+        super().__init__(opt, **kwargs)
         input_mods = self.input_mods
         output_mods = self.output_mods
         dins = self.dins

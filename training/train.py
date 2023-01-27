@@ -17,7 +17,7 @@ from pytorch_lightning.loggers import TensorBoardLogger
 print("HIII")
 #from pytorch_lightning.plugins import DDPPlugin
 from pytorch_lightning.plugins.training_type.deepspeed import DeepSpeedPlugin
-from pytorch_lightning.callbacks import ModelCheckpoint
+from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 
 
 from training.utils import get_latest_checkpoint
@@ -37,8 +37,6 @@ if __name__ == '__main__':
             os.makedirs(opt.checkpoints_dir+"/"+opt.experiment_name)
     print("loaded options")
     print(opt.experiment_name)
-    model = create_model(opt)
-    print("loaded model")
     if "tpu_cores" in vars(opt) and opt.tpu_cores is not None and opt.tpu_cores > 0:
         plugins = None
     elif opt.plugins is None:
@@ -77,7 +75,13 @@ if __name__ == '__main__':
         test_dataset = create_dataset(opt, split="test")
         test_dataset.setup()
         test_dataloader = create_dataloader(test_dataset, split="test")
-    print('#training sequences = {:d}'.format(len(train_dataset)))
+
+    num_train_data_points = len(train_dataset)
+    print('#training sequences = {:d}'.format(num_train_data_points))
+
+    print("Loading model "+opt.model)
+    model = create_model(opt, info={"num_train_data_points":num_train_data_points})
+    print("loaded model")
 
     default_save_path = opt.checkpoints_dir+"/"+opt.experiment_name
 
@@ -89,7 +93,8 @@ if __name__ == '__main__':
             # every_n_train_steps = 1000,
             every_n_train_steps = 10,
     )
-    callbacks = [checkpoint_callback]
+    lr_monitor = LearningRateMonitor(logging_interval='step')
+    callbacks = [checkpoint_callback, lr_monitor]
     args = Trainer.parse_argparser(opt)
 
     if opt.continue_train:
