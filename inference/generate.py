@@ -92,7 +92,7 @@ if __name__ == '__main__':
     #load hparams file
     default_save_path = "training/experiments/"+args.experiment_name
     logs_path = default_save_path
-    model, opt = load_model_from_logs_path(logs_path, version_index=args.version_index)
+    model, opt = load_model_from_logs_path(logs_path, version_index=args.version_index, args=args)
     print("Device: "+str(model.device))
 
     input_mods = opt.input_modalities.split(",")

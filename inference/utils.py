@@ -5,7 +5,7 @@ from training.utils import get_latest_checkpoint
 from models import create_model
 from training.options.train_options import TrainOptions
 
-def load_model_from_logs_path(logs_path, no_grad=True, version_index=-1):
+def load_model_from_logs_path(logs_path, no_grad=True, version_index=-1, args=None):
     latest_checkpoint = get_latest_checkpoint(logs_path, index=version_index)
     print(latest_checkpoint)
     checkpoint_dir = Path(latest_checkpoint).parent.parent.absolute()
@@ -14,6 +14,8 @@ def load_model_from_logs_path(logs_path, no_grad=True, version_index=-1):
     opt = vars(TrainOptions().parse(parse_args=["--model", exp_opt["model"]]))
     print(opt)
     opt.update(exp_opt)
+    if args is not None:
+        opt.update(args)
     # opt["cond_concat_dims"] = True
     # opt["bn_momentum"] = 0.0
     opt["batch_size"] = 1
