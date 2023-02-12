@@ -68,6 +68,7 @@ def autoregressive_generation_multimodal(features, model, autoreg_mods=[], teach
 
             if not ground_truth:
                 if keep_latents:
+                    #TODO: do the keep latents stuff on the model side
                     if use_temperature:
                         outputs, latents = model.forward(inputs, zss=latents, temp=temperature)
                         if save_jit and t==0:

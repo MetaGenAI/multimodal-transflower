@@ -117,6 +117,8 @@ class TransfusionModel(BaseModel):
         self.mse_loss = 0
         self.nll_loss = 0
 
+        self.prev_outputs = None
+
     def name(self):
         return "Transfusion"
 
@@ -135,6 +137,7 @@ class TransfusionModel(BaseModel):
         parser.add_argument('--num_sampling_steps', type=int, default=50)
         parser.add_argument('--diffu_depth', type=int, default=6)
         parser.add_argument('--diffu_mlp_ratio', type=float, default=4.0)
+        parser.add_argument('--prev_outputs_factor', type=float, default=0.5)
         parser.add_argument('--diffu_model_var_type', type=str, default="LEARNED", help="the type of parametrization for the variance parameter of the diffusion head. One of LEARNED, FIXED_SMALL, FIXED_LARGE, LEARNED_RANGE")
         parser.add_argument('--diffu_model_mean_type', type=str, default="START_X", help="the type of parametrization for the mean parameter of the diffusion head. One of PREVIOUS_X, START_X, EPSILON")
         parser.add_argument('--diffu_loss_type', type=str, default="MSE", help="the type of loss for the diffusion model")
@@ -197,7 +200,7 @@ class TransfusionModel(BaseModel):
             dists.append(dist)
         return dists
 
-    def forward(self, data, temp=1.0, prev_outputs=None, noises=None, output_mods=None, compute_logPs=True):
+    def forward(self, data, temp=1.0, noises=None, output_mods=None, compute_logPs=True):
         # in lightning, forward defines the prediction/inference actions
         #temp=1.0
         #temp=0.1
@@ -214,9 +217,21 @@ class TransfusionModel(BaseModel):
             z1 = torch.randn(1, 1, self.output_lengths[j], self.douts[j], device=self.device)
             #TODO: use this prev_outputs when generating to use the prev pose as initial estimate for next one awo!
             #TODO: during training sometimes dont condition (i think this is not currently done)
-            if prev_outputs is not None:
-                z = prev_outputs[j] + z1*0.8
+            if self.prev_outputs is not None:
+                betas = get_beta_schedule(
+                        self.opt.diffu_beta_schedule, beta_start=self.opt.diffu_beta_start, beta_end=self.opt.diffu_beta_end,
+                        num_diffusion_timesteps=self.opt.num_diff_steps,
+                    )
+                diffusion = GaussianDiffusion(
+                    betas=betas[int(self.opt.num_diff_steps*(1.0-self.opt.prev_outputs_factor)):],
+                    model_mean_type=ModelMeanType[self.opt.diffu_model_mean_type],
+                    model_var_type=ModelVarType[self.opt.diffu_model_var_type],
+                    loss_type=LossType[self.opt.diffu_loss_type],
+                )
+                # self.diffusion = create_diffusion(str(opt.num_sampling_steps))
+                z = self.prev_outputs[j] + z1*(1.0-self.opt.prev_outputs_factor)
             else:
+                diffusion = self.diffusion
                 z = z1
             # Setup classifier-free guidance:
             z = torch.cat([z, z], 0)
@@ -234,6 +249,7 @@ class TransfusionModel(BaseModel):
             #     logPs.append(logP)
 
         # return outputs, sldj, logPs
+        self.prev_outputs = outputs
         return outputs
 
     def training_step(self, batch, batch_idx, reduce_loss=True):
