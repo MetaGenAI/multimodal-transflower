@@ -54,7 +54,7 @@ if __name__ == '__main__':
     #parser.add_argument('--save_jit_path', type=string, default="")
     #parser.add_argument('--nostrict', action='store_true')
     parser.add_argument('--fps', type=int, default=20)
-    args = parser.parse_args()
+    args, unknown_args = parser.parse_known_args()
     data_dir = args.data_dir
     audio_format = args.audio_format
     fps = args.fps
@@ -92,7 +92,7 @@ if __name__ == '__main__':
     #load hparams file
     default_save_path = "training/experiments/"+args.experiment_name
     logs_path = default_save_path
-    model, opt = load_model_from_logs_path(logs_path, version_index=args.version_index, args=args)
+    model, opt = load_model_from_logs_path(logs_path, version_index=args.version_index, args=unknown_args)
     print("Device: "+str(model.device))
 
     input_mods = opt.input_modalities.split(",")
