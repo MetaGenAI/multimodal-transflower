@@ -61,6 +61,7 @@ class BaseOptions:
 
         defaults = vars(self.parser.parse_args([]))
 
+        hparams_file = None
         if opt.continue_train and not opt.no_load_hparams:
             logs_path = opt.checkpoints_dir+"/"+opt.experiment_name
             try:
@@ -73,7 +74,7 @@ class BaseOptions:
         else:
             hparams_file = opt.hparams_file
 
-        if opt.hparams_file is not None:
+        if hparams_file is not None:
             if hparams_file.endswith(".json"):
                 hparams_json = json.loads(jsmin(open(hparams_file).read()))
             elif hparams_file.endswith(".yaml"):
