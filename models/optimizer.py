@@ -53,9 +53,7 @@ def get_scheduler(optimizer, opt, info={}):
         scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=opt.lr_decay_factor, threshold=0.01, patience=5)
     elif opt.lr_policy == 'cosine':
         if interval == "step":
-            num_iters_per_epoch = 1000
-            if "num_train_data_points" in info:
-                num_iters_per_epoch = num_train_data_points//opt.batch_size
+            num_iters_per_epoch = info["num_train_data_points"]//opt.batch_size
             lr_scheduler_max_iters = opt.max_epochs*num_iters_per_epoch
         else:
             lr_scheduler_max_iters = opt.max_epochs
@@ -67,9 +65,7 @@ def get_scheduler(optimizer, opt, info={}):
         scheduler = ReduceLROnPlateau(optimizer, 'min', factor=opt.lr_decay_factor)
     elif opt.lr_policy == 'LinearWarmupCosineAnnealing':
         if interval == "step":
-            num_iters_per_epoch = 1000
-            if "num_train_data_points" in info:
-                num_iters_per_epoch = num_train_data_points//opt.batch_size
+            num_iters_per_epoch = info["num_train_data_points"]//opt.batch_size
             lr_scheduler_max_iters = opt.max_epochs*num_iters_per_epoch
         else:
             lr_scheduler_max_iters = opt.max_epochs
