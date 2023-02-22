@@ -2,7 +2,8 @@ Cython
 numpy
 scipy
 librosa
-pytorch-lightning
+pytorch-lightning==1.8.6
+lightning-bolts==0.6.0.post1
 #torch
 pandas
 matplotlib
@@ -18,7 +19,7 @@ axial_positional_embedding
 einops
 entmax
 madgrad
-lightning-bolts
 loguru
 mido
 tianshou
+timm

@@ -17,6 +17,8 @@ from diffusion import create_diffusion
 from diffusion.gaussian_diffusion import LossType, ModelMeanType, ModelVarType
 from diffusion.gaussian_diffusion import GaussianDiffusion, get_beta_schedule
 
+import time
+
 class TransfusionModel(BaseModel):
     def __init__(self, opt, **kwargs):
         super().__init__(opt, **kwargs)
@@ -208,7 +210,9 @@ class TransfusionModel(BaseModel):
         logPs = []
         if output_mods is None:
             output_mods = self.output_mods
+        start_time = time.time()
         latents = self.get_latents(data, output_mods)
+        print("--- TF part: %s seconds ---" % (time.time() - start_time))
         for j,mod in enumerate(output_mods):
             i = self.output_mods.index(mod)
             # noise = noises[i] if noises is not None else None
@@ -222,23 +226,32 @@ class TransfusionModel(BaseModel):
                         self.opt.diffu_beta_schedule, beta_start=self.opt.diffu_beta_start, beta_end=self.opt.diffu_beta_end,
                         num_diffusion_timesteps=self.opt.num_diff_steps,
                     )
+                #betas=betas[int(self.opt.num_diff_steps*(1.0-self.opt.prev_outputs_factor)):]
+                #betas=betas[:int(self.opt.num_diff_steps*(1.0-self.opt.prev_outputs_factor))]
+                betas=betas[:int(self.opt.num_diff_steps*self.opt.prev_outputs_factor)]
                 diffusion = GaussianDiffusion(
-                    betas=betas[int(self.opt.num_diff_steps*(1.0-self.opt.prev_outputs_factor)):],
+                    betas=betas,
                     model_mean_type=ModelMeanType[self.opt.diffu_model_mean_type],
                     model_var_type=ModelVarType[self.opt.diffu_model_var_type],
                     loss_type=LossType[self.opt.diffu_loss_type],
                 )
                 # self.diffusion = create_diffusion(str(opt.num_sampling_steps))
-                z = self.prev_outputs[j] + z1*(1.0-self.opt.prev_outputs_factor)
+                #z = self.prev_outputs[j] + z1*(1.0-self.opt.prev_outputs_factor)
+                #z = self.prev_outputs[j]*np.prod(np.sqrt(1-betas)) + np.sqrt(np.sum(betas))*z1
+                device = self.prev_outputs[j].device
+                z = self.diffusion.q_sample(self.prev_outputs[j].unsqueeze(0),torch.tensor(len(betas), device=device))
             else:
                 diffusion = self.diffusion
                 z = z1
             # Setup classifier-free guidance:
             z = torch.cat([z, z], 0)
+            print(z.shape)
             model_kwargs={"cond":latents[j][:,0,:], "cfg_scale": 0.0}
-            samples = self.diffusion.p_sample_loop(
+            start_time = time.time()
+            samples = diffusion.p_sample_loop(
                 diffu.forward_with_cfg, z.shape, z, clip_denoised=False, model_kwargs=model_kwargs, progress=True, device=self.device
             )
+            print("--- Diffu part: %s seconds ---" % (time.time() - start_time))
             output = samples[0]
             outputs.append(output.permute(1,0,2))
             z = z.unsqueeze(3)
