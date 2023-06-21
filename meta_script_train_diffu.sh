@@ -9,7 +9,10 @@
 
 ## quantum bar gesture data
 
-exp=transfusion_base4_lessN5 
-./script_train_diffu.sh $exp --hparams_file=training/hparams/neos_qb/${exp}.yaml --experiment_name ${exp}_quantum_bar_rel_nodp --num_nodes 1 --max_epochs 200 --data_dir=./data/quantum_bar_neosdata1_npy_relative --base_filenames_file base_filenames.txt
+#exp=transfusion_base4_lessN5 
+#./script_train_diffu.sh $exp --hparams_file=training/hparams/neos_qb/${exp}.yaml --experiment_name ${exp}_quantum_bar_rel_nodp --num_nodes 1 --max_epochs 200 --data_dir=./data/quantum_bar_neosdata1_npy_relative --base_filenames_file base_filenames.txt
 
+## edf gesture data
 
+exp=transfusion_baseA
+./script_train_diffu.sh $exp --hparams_file=training/hparams/edf_gestures/${exp}.yaml --experiment_name ${exp}_edf_gestures1_nodp --num_nodes 1 --max_epochs 200 --data_dir=./data/edf_extracted_data/ --base_filenames_file base_filenames.txt $@
