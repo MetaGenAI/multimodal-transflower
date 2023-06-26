@@ -9,7 +9,9 @@ DATA_DIR = os.path.join(ROOT_DIR, 'data')
 sys.path.append(ROOT_DIR)
 
 import feature_extraction.madmom as madmom
+#import madmom
 from feature_extraction.madmom.audio.cepstrogram import MFCC
+#from madmom.audio.cepstrogram import MFCC
 
 def extract_features_spectral_flux(music_file,tgt_fps=20):
     filtbank = madmom.audio.filters.MelFilterbank

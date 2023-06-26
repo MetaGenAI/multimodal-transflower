@@ -140,6 +140,8 @@ if __name__ == '__main__':
             if len(scalers)>0:
                 print(scalers[i])
                 transform = pickle.load(open(data_dir+"/"+scalers[i], "rb"))
+                print(transform)
+                print(predicted_mod.shape)
                 predicted_mod = transform.inverse_transform(predicted_mod)
                 #predicted_mod = transform.inverse_transform(feature)
             print(feature.shape)
