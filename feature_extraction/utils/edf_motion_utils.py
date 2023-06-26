@@ -3,17 +3,36 @@ from scipy.spatial.transform import Rotation as R
 from pymo.rotation_tools import Rotation, euler2expmap, euler2expmap2, expmap2euler, euler_reorder, unroll
 from pymo.Quaternions import Quaternions
 
+import scipy.ndimage
+# import splines.quaternion
+
 import argparse
 parser = argparse.ArgumentParser(description='Convert motion features to relative or absolute.')
 parser.add_argument('path', metavar='path', type=str, help='path to the features file')
 parser.add_argument('--relative', dest='relative', action='store_true')
 parser.add_argument('--absolute', dest='relative', action='store_false')
+parser.add_argument('--init_theta_path', type=str, help='path to the init theta file')
+parser.add_argument('--init_pos_xz_path', type=str, help='path to the init pos_xz file')
+parser.add_argument('--position_smoothing', dest='position_smoothing', type=float, default=0.0)
+parser.add_argument('--rotation_smoothing', dest='rotation_smoothing', type=float, default=0.0)
 
 NODE_TYPES_LIST = ["Head", "LeftHand", "RightHand"]
 
 ROT_ORDER = "xyz"
 
-def make_relative(features, node_types_list = NODE_TYPES_LIST):
+def detect_quaternion_flips(quats):
+    flips = []
+
+    for i in range(1, len(quats)):
+        dot_product = np.dot(quats[i-1], quats[i])
+        dot_product_flipped = np.dot(quats[i-1], -quats[i])
+
+        if dot_product_flipped > dot_product:
+            flips.append(i)
+    
+    return flips
+
+def make_relative(features, node_types_list = NODE_TYPES_LIST, position_smoothing=0.0, rotation_smoothing=0.0):
 
     rots_y_head_inv = None
     head_forwards = None
@@ -39,6 +58,26 @@ def make_relative(features, node_types_list = NODE_TYPES_LIST):
         # eulers = expmap2euler(rot_stream, ROT_ORDER, True)
         # quats = Quaternions.from_euler(eulers, order=ROT_ORDER, world=True)
         Rs = R.from_rotvec(rot_stream, degrees=False)
+        if rotation_smoothing > 0:
+            filter_width = rotation_smoothing
+            # quats = Rs.as_quat()
+            # flips = detect_quaternion_flips(quats)
+            # print(node_type)
+            # print(flips)
+            # for flip in flips:
+            #     quats[flip:] = -quats[flip:]
+            # flips = detect_quaternion_flips(quats)
+            # print(flips)
+            # quats = scipy.ndimage.gaussian_filter1d(quats, filter_width, axis=0, mode='nearest')
+            # quats = quats/np.linalg.norm(quats, axis=1, keepdims=True)
+            # Rs = R.from_quat(quats)
+            mats = Rs.as_matrix()
+            mats = scipy.ndimage.gaussian_filter1d(mats, filter_width, axis=0, mode='nearest')
+            Rs = R.from_matrix(mats)
+            # s = splines.quaternion.PiecewiseSlerp([splines.quaternion.Quaternion(q[0], q[1:]) for q in quats], grid=np.arange(len(quats)))
+            # quats = s.evaluate(np.arange(len(quats)))
+            # rot_stream = scipy.ndimage.gaussian_filter1d(rot_stream, filter_width, axis=0, mode='nearest')
+            # Rs = R.from_rotvec(rot_stream, degrees=False)
         # Rs = R.from_quat(quats)
         if node_type == "Head":
             vs = Rs.apply(np.array([0,0,1]).T)
@@ -72,9 +111,10 @@ def make_relative(features, node_types_list = NODE_TYPES_LIST):
         # eulers = q.euler(order=ROT_ORDER)
         # rot_stream = euler2expmap(eulers, ROT_ORDER, True)
         rot_stream = Rs.as_rotvec(degrees=False)
+        rot_stream = unroll(rot_stream)
         features[:,i*3:(i+1)*3] = rot_stream
-        if node_type == "Head":
-            features[:,i*3+1:i*3+2] = head_theta_diffs
+        # if node_type == "Head":
+        #     features[:,i*3+1:i*3+2] = head_theta_diffs
     
     head_pos_y = None
     head_deltas_rel = None
@@ -94,10 +134,12 @@ def make_relative(features, node_types_list = NODE_TYPES_LIST):
         else:
             pos_stream[:, [0, 2]] -= pos_head[:, [0, 2]]
             pos_stream = rots_y_head_inv.apply(pos_stream)
-            ## what is happening?
+            if position_smoothing > 0:
+                filter_width = position_smoothing
+                pos_stream = scipy.ndimage.gaussian_filter1d(pos_stream, filter_width, axis=0, mode='nearest')
             features[:,len(node_types_list)*3+3*i:len(node_types_list)*3+3*(i+1)] = pos_stream
     
-    # features = np.concatenate([head_theta_diffs, features],axis=1)
+    features = np.concatenate([head_theta_diffs, features],axis=1)
     return features, init_theta, init_pos_xz
 
 
@@ -119,6 +161,9 @@ def make_absolute(features, node_types_list = NODE_TYPES_LIST, init_thetas = Non
         node_types_list[0] = "Head"
         node_types_list[idx] = other
 
+    thetas_diff = features[:,0:1]
+    features = features[:,1:]
+
     for i, node_type in enumerate(node_types_list):
         rot_stream = features[:, i*3:(i+1)*3]
         # Rs = R.from_rotvec(rot_stream)
@@ -128,7 +173,7 @@ def make_absolute(features, node_types_list = NODE_TYPES_LIST, init_thetas = Non
         Rs = R.from_rotvec(rot_stream, degrees=False)
         
         if node_type == "Head":
-            thetas_diff = features[:, i*3+1:(i+1)*3:2]
+            # thetas_diff = features[:, i*3+1:(i+1)*3:2]
             thetas = init_thetas + np.cumsum(thetas_diff, axis=0)
             rots_y_head = R.from_euler(seq="y", angles=thetas)
             Rs = rots_y_head * Rs
@@ -144,6 +189,7 @@ def make_absolute(features, node_types_list = NODE_TYPES_LIST, init_thetas = Non
             Rs = rots_y_head * Rs
 
         rot_stream = Rs.as_rotvec(degrees=False)
+        rot_stream = unroll(rot_stream)
         # quats = Rs.as_quat()
         # q = Quaternions(quats)
         # eulers = q.euler(order=ROT_ORDER)
@@ -177,7 +223,9 @@ if __name__ == '__main__':
     features = np.load(path)
 
     if relative:
-        features, init_theta, init_pos_xz = make_relative(features)
+        position_smoothing = parser.parse_args().position_smoothing
+        rotation_smoothing = parser.parse_args().rotation_smoothing
+        features, init_theta, init_pos_xz = make_relative(features, position_smoothing=position_smoothing, rotation_smoothing=rotation_smoothing)
         new_path = path[:-4] + "_relative.npy"
         new_path_init_theta = path[:-4] + "_relative_init_theta.npy"
         new_path_init_pos_xz = path[:-4] + "_relative_init_pos_xz.npy"
@@ -185,8 +233,10 @@ if __name__ == '__main__':
         np.save(new_path_init_theta, init_theta)
         np.save(new_path_init_pos_xz, init_pos_xz)
     else:
-        path_init_theta = path[:-4] + "_init_theta.npy"
-        path_init_pos_xz = path[:-4] + "_init_pos_xz.npy"
+        # path_init_theta = path[:-4] + "_init_theta.npy"
+        # path_init_pos_xz = path[:-4] + "_init_pos_xz.npy"
+        path_init_theta = parser.parse_args().init_theta_path
+        path_init_pos_xz = parser.parse_args().init_pos_xz_path
         init_theta = np.load(path_init_theta)
         init_pos_xz = np.load(path_init_pos_xz)
         features, new_theta, new_pos_xz = make_absolute(features, init_thetas=init_theta, init_pos_xz=init_pos_xz)

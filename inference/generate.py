@@ -114,6 +114,7 @@ if __name__ == '__main__':
         elif mod in zero_seeds:
             feature = np.zeros((model.input_lengths[i],model.dins[i]))
         else:
+            print(data_dir+"/"+seq_id+"."+mod+".npy")
             feature = np.load(data_dir+"/"+seq_id+"."+mod+".npy")
         if mod in zero_pads:
             feature = np.concatenate([np.zeros((model.input_lengths[i],model.dins[i])), feature], axis=0)

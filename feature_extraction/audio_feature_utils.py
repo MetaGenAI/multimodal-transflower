@@ -8,9 +8,12 @@ ROOT_DIR = os.path.abspath(os.path.join(THIS_DIR, os.pardir))
 DATA_DIR = os.path.join(ROOT_DIR, 'data')
 sys.path.append(ROOT_DIR)
 
+#print("awo")
 import feature_extraction.madmom as madmom
+#print("imported in audio_feat_utils1")
 #import madmom
 from feature_extraction.madmom.audio.cepstrogram import MFCC
+#print("imported in audio_feat_utils2")
 #from madmom.audio.cepstrogram import MFCC
 
 def extract_features_spectral_flux(music_file,tgt_fps=20):

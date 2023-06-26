@@ -7,13 +7,13 @@ export XRT_DEVICE_MAP="CPU:0;/job:localservice/replica:0/task:0/device:XLA_CPU:0
 py=python3
 
 exp=$1
-seq_id=1687207897900
+seq_id=1687209000059
 echo $exp $seq_id
 
 mkdir -p inference/generated/${exp}/predicted_mods
 mkdir -p inference/generated/${exp}/videos
 fps=30
-data_dir=data/edf_extracted_data
+data_dir=data/edf_extracted_data_rel
 
 # if we don't pass seq_id it will choose a random one from the test set
 $py inference/generate.py --data_dir=$data_dir --output_folder=inference/generated --experiment_name=$exp \
