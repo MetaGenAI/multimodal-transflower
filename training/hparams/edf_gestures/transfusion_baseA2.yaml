@@ -1,6 +1,6 @@
 model: transfusion
-dins: 1,18
-douts: 18
+dins: 1,19
+douts: 19
 input_modalities: "speech.wav_envelope_scaled,motion_features_scaled1"
 output_modalities: motion_features_scaled1
 input_lengths: 31,30
@@ -24,7 +24,7 @@ use_pos_emb_output: True
 #use_pos_emb_output: True
 #cond_concat_dims: True
 #conditioning_seq_lens: 100
-dropout: 0.1
+dropout: 0
 #lr_policy: cosine
 #lr_policy: plateau
 #lr_policy: multistep
@@ -35,6 +35,6 @@ learning_rate: 1e-4
 #learning_rate: 1e-5
 gradient_clip_val: 0.0
 #batch_size: 64
-batch_size: 84
+batch_size: 128
 scheduler_interval: step
 
