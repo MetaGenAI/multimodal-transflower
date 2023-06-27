@@ -227,8 +227,8 @@ class TransfusionModel(BaseModel):
                         num_diffusion_timesteps=self.opt.num_diff_steps,
                     )
                 #betas=betas[int(self.opt.num_diff_steps*(1.0-self.opt.prev_outputs_factor)):]
-                #betas=betas[:int(self.opt.num_diff_steps*(1.0-self.opt.prev_outputs_factor))]
-                betas=betas[:int(self.opt.num_diff_steps*self.opt.prev_outputs_factor)]
+                betas=betas[:int(self.opt.num_diff_steps*(1.0-self.opt.prev_outputs_factor))]
+                #betas=betas[:int(self.opt.num_diff_steps*self.opt.prev_outputs_factor)]
                 diffusion = GaussianDiffusion(
                     betas=betas,
                     model_mean_type=ModelMeanType[self.opt.diffu_model_mean_type],
@@ -239,7 +239,7 @@ class TransfusionModel(BaseModel):
                 #z = self.prev_outputs[j] + z1*(1.0-self.opt.prev_outputs_factor)
                 #z = self.prev_outputs[j]*np.prod(np.sqrt(1-betas)) + np.sqrt(np.sum(betas))*z1
                 device = self.prev_outputs[j].device
-                z = self.diffusion.q_sample(self.prev_outputs[j].unsqueeze(0),torch.tensor(len(betas), device=device))
+                z = self.diffusion.q_sample(self.prev_outputs[j].unsqueeze(0),torch.tensor(len(betas)-1, device=device))
             else:
                 diffusion = self.diffusion
                 z = z1

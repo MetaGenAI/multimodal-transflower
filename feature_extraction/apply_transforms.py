@@ -40,6 +40,13 @@ print(rank)
 candidate_files = sorted(data_path.glob('**/*'+feature_name+'.npy'), key=lambda path: path.parent.__str__())
 tasks = distribute_tasks(candidate_files,rank,size)
 
+# print("loading transform")
+transform = pickle.load(open(data_path.joinpath(feature_name+'_'+transform_name+'.pkl'), "rb"))
+# print("loaded transform")
+if rank == 0:
+    pickle.dump(transform, open(data_path.joinpath(new_feature_name+'_scaler.pkl'), "wb"))
+# print("dumped scaler")
+
 for i in tasks:
     path = candidate_files[i]
     print(path)
@@ -53,9 +60,11 @@ for i in tasks:
     new_feature_file = base_filename+new_feature_name+".npy"
     if replace_existing or not os.path.isfile(new_feature_file):
         features = np.load(feature_file)
-        transform = pickle.load(open(data_path.joinpath(feature_name+'_'+transform_name+'.pkl'), "rb"))
-        pickle.dump(transform, open(data_path.joinpath(new_feature_name+'_scaler.pkl'), "wb"))
+        #print("transforming")
         features = transform.transform(features)
+        #print("transformed")
         if transform_name == "pca_transform":
             features = features[:,:pca_dims]
         np.save(new_feature_file,features)
+        #print("saved")
+        #sys.stdout.flush()

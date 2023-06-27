@@ -1,10 +1,10 @@
 Cython
-numpy
+numpy==1.23.5
 scipy
 librosa
 pytorch-lightning==1.8.6
 lightning-bolts==0.6.0.post1
-#torch
+#torch==1.13.1+cu117
 pandas
 matplotlib
 mpi4py

@@ -114,6 +114,7 @@ if __name__ == '__main__':
         elif mod in zero_seeds:
             feature = np.zeros((model.input_lengths[i],model.dins[i]))
         else:
+            print(data_dir+"/"+seq_id+"."+mod+".npy")
             feature = np.load(data_dir+"/"+seq_id+"."+mod+".npy")
         if mod in zero_pads:
             feature = np.concatenate([np.zeros((model.input_lengths[i],model.dins[i])), feature], axis=0)
@@ -140,6 +141,8 @@ if __name__ == '__main__':
             if len(scalers)>0:
                 print(scalers[i])
                 transform = pickle.load(open(data_dir+"/"+scalers[i], "rb"))
+                print(transform)
+                print(predicted_mod.shape)
                 predicted_mod = transform.inverse_transform(predicted_mod)
                 #predicted_mod = transform.inverse_transform(feature)
             print(feature.shape)

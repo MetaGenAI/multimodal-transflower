@@ -27,6 +27,7 @@ parser.add_argument("--notranspose", action="store_true")
 
 args = parser.parse_args()
 
+print("parsing")
 # makes arugments into global variables of the same name, used later in the code
 globals().update(vars(args))
 step_size=1.0/fps
@@ -52,13 +53,13 @@ tasks = distribute_tasks(candidate_audio_files,rank,size)
 
 for i in tasks:
     path = candidate_audio_files[i]
+    print(path)
     song_file_path = path.__str__()
     # feature files are going to be saved as numpy files
     if feature_names == ["mel"] or feature_names == ["multi_mel"]:
         features_file = song_file_path+"_"+combined_feature_name+"_"+str(mel_feature_size)+".npy"
     else:
         features_file = song_file_path+"_"+combined_feature_name+".npy"
-
     if replace_existing or not os.path.isfile(features_file):
         print("creating feature file",i)
         featuress = []

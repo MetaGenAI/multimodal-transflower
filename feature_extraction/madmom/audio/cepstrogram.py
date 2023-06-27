@@ -195,13 +195,13 @@ class MFCC(Cepstrogram):
             spectrogram = Spectrogram(spectrogram, **kwargs)
 
         # recalculate the spec if it is filtered or scaled already
-        #if (spectrogram.filterbank is not None or
-        #        spectrogram.mul is not None or
-        #        spectrogram.add is not None):
-        #    import warnings
-        #    warnings.warn('Spectrogram was filtered or scaled already, redo '
-        #                  'calculation!')
-        #    spectrogram = Spectrogram(spectrogram.stft)
+        if (spectrogram.filterbank is not None or
+                spectrogram.mul is not None or
+                spectrogram.add is not None):
+            import warnings
+            warnings.warn('Spectrogram was filtered or scaled already, redo '
+                          'calculation!')
+            spectrogram = Spectrogram(spectrogram.stft)
 
         # instantiate a Filterbank if needed
         if issubclass(filterbank, Filterbank):
