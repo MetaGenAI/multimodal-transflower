@@ -202,7 +202,8 @@ def make_absolute(features, node_types_list = NODE_TYPES_LIST, init_thetas = Non
             pos_stream_y = pos_stream[:, 1:2]
             deltas_rel = pos_stream[:, [0, 2]]
             deltas = np.einsum("ijk,ik->ij",np.stack([head_forwards[:,[0,2]], head_rights[:,[0,2]]],axis=1).transpose(0,2,1),deltas_rel)
-            pos_xz = init_pos_xz + np.cumsum(deltas, axis=0)
+            # pos_xz = init_pos_xz + np.cumsum(deltas, axis=0)
+            pos_xz = init_pos_xz + np.zeros_like(deltas)
             pos_head = np.stack([pos_xz[:,0],pos_stream_y[:,0],pos_xz[:,1]],axis=1)
             features[:, len(node_types_list)*3 + i*3:len(node_types_list)*3 + (i+1)*3] = pos_head
             
@@ -239,6 +240,8 @@ if __name__ == '__main__':
         path_init_pos_xz = parser.parse_args().init_pos_xz_path
         init_theta = np.load(path_init_theta)
         init_pos_xz = np.load(path_init_pos_xz)
+        if len(features.shape) == 3:
+            features = features[:,0,:]
         features, new_theta, new_pos_xz = make_absolute(features, init_thetas=init_theta, init_pos_xz=init_pos_xz)
         new_path = path[:-4] + "_absolute.npy"
         np.save(new_path, features)
