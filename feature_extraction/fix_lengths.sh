@@ -1,8 +1,8 @@
 
 folder=$1
-#py=python3
+py=python3
 #py=python3.8
-py=python
+#py=python
 #n=$(nproc)
 n=6
 

@@ -85,7 +85,7 @@ class TransfusionModel(BaseModel):
             self.module_names.append(name)
         for i, mod in enumerate(output_mods):
             if not self.use_shared_crossmodal_encoder or i == 0:
-                net = BasicTransformerModel(opt.dhid, opt.dhid, opt.nhead, opt.dhid, opt.nlayers, opt.dropout,
+                net = BasicTransformerModel(opt.dhid_diffu, opt.dhid, opt.nhead, opt.dhid, opt.nlayers, opt.dropout,
                                             ntokens=self.output_num_tokens[i], # tho not being used yet
                                             use_pos_emb=opt.use_pos_emb_output,
                                             use_rel_pos_emb=opt.use_rel_pos_emb_output,
@@ -98,6 +98,7 @@ class TransfusionModel(BaseModel):
                 self.module_names.append(name)
 
             # import pdb;pdb.set_trace()
+            #print(self.douts[i])
             diffu = DiT(depth=opt.diffu_depth,
                         hidden_size=opt.dhid_diffu,
                         patch_size=self.diffu_patch_size,

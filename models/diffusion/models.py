@@ -304,7 +304,7 @@ class DiT(nn.Module):
         t: (N,) tensor of diffusion timesteps
         cond: (N,C') tensor of conditioning vectors
         """
-        # import pdb; pdb.set_trace()
+        #import pdb; pdb.set_trace()
         x = self.x_embedder(x) + self.pos_embed  # (N, T, D), where T = H * W / patch_size ** 2
         t = self.t_embedder(t)                   # (N, D)
         # y = self.y_embedder(y, self.training)    # (N, D)

@@ -746,7 +746,10 @@ class GaussianDiffusion:
             if self.loss_type == LossType.RESCALED_KL:
                 terms["loss"] *= self.num_timesteps
         elif self.loss_type == LossType.MSE or self.loss_type == LossType.RESCALED_MSE:
+            #print(x_t.shape)
+            #print(model_kwargs['cond'].shape)
             model_output = model(x_t, t, **model_kwargs)
+            #print(model_output.shape)
 
             if self.model_var_type in [
                 ModelVarType.LEARNED,
@@ -777,9 +780,9 @@ class GaussianDiffusion:
                 ModelMeanType.START_X: x_start,
                 ModelMeanType.EPSILON: noise,
             }[self.model_mean_type]
-            # print(model_output.shape)
-            # print(target.shape)
-            # print(x_start.shape)
+            #print(model_output.shape)
+            #print(target.shape)
+            #print(x_start.shape)
             assert model_output.shape == target.shape == x_start.shape
             terms["mse"] = mean_flat((target - model_output) ** 2)
             if "vb" in terms:

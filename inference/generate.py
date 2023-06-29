@@ -138,6 +138,7 @@ if __name__ == '__main__':
         # import pdb;pdb.set_trace()
         for i, mod in enumerate(output_mods):
             predicted_mod = predicted_mods[i].cpu().numpy()
+            #predicted_mod = predicted_mod[:,:,2:]
             if len(scalers)>0:
                 print(scalers[i])
                 transform = pickle.load(open(data_dir+"/"+scalers[i], "rb"))
