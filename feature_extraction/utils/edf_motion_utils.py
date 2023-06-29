@@ -111,7 +111,10 @@ def make_relative(features, node_types_list = NODE_TYPES_LIST, position_smoothin
         # eulers = q.euler(order=ROT_ORDER)
         # rot_stream = euler2expmap(eulers, ROT_ORDER, True)
         rot_stream = Rs.as_rotvec(degrees=False)
+        print(node_type)
         rot_stream = unroll(rot_stream)
+        # rot_stream = unroll(rot_stream)
+        # rot_stream = unroll(rot_stream)
         features[:,i*3:(i+1)*3] = rot_stream
         # if node_type == "Head":
         #     features[:,i*3+1:i*3+2] = head_theta_diffs
@@ -120,6 +123,9 @@ def make_relative(features, node_types_list = NODE_TYPES_LIST, position_smoothin
     head_deltas_rel = None
     for i, node_type in enumerate(node_types_list):
         pos_stream = features[:,(len(node_types_list)*3)+i*3:(len(node_types_list)*3)+(i+1)*3]
+        if position_smoothing > 0:
+            filter_width = position_smoothing
+            pos_stream = scipy.ndimage.gaussian_filter1d(pos_stream, filter_width, axis=0, mode='nearest')
         if node_type == "Head":
             pos_head = pos_stream.copy()
             pos_xz = np.stack([pos_head[:,0],pos_head[:,2]],axis=1)
@@ -134,9 +140,6 @@ def make_relative(features, node_types_list = NODE_TYPES_LIST, position_smoothin
         else:
             pos_stream[:, [0, 2]] -= pos_head[:, [0, 2]]
             pos_stream = rots_y_head_inv.apply(pos_stream)
-            if position_smoothing > 0:
-                filter_width = position_smoothing
-                pos_stream = scipy.ndimage.gaussian_filter1d(pos_stream, filter_width, axis=0, mode='nearest')
             features[:,len(node_types_list)*3+3*i:len(node_types_list)*3+3*(i+1)] = pos_stream
     
     features = np.concatenate([head_theta_diffs, features],axis=1)
@@ -202,8 +205,8 @@ def make_absolute(features, node_types_list = NODE_TYPES_LIST, init_thetas = Non
             pos_stream_y = pos_stream[:, 1:2]
             deltas_rel = pos_stream[:, [0, 2]]
             deltas = np.einsum("ijk,ik->ij",np.stack([head_forwards[:,[0,2]], head_rights[:,[0,2]]],axis=1).transpose(0,2,1),deltas_rel)
-            # pos_xz = init_pos_xz + np.cumsum(deltas, axis=0)
-            pos_xz = init_pos_xz + np.zeros_like(deltas)
+            pos_xz = init_pos_xz + np.cumsum(deltas, axis=0)
+            # pos_xz = init_pos_xz + np.zeros_like(deltas)
             pos_head = np.stack([pos_xz[:,0],pos_stream_y[:,0],pos_xz[:,1]],axis=1)
             features[:, len(node_types_list)*3 + i*3:len(node_types_list)*3 + (i+1)*3] = pos_head
             
