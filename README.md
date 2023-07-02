@@ -1,3 +1,11 @@
+# How to get started
+
+- Clone the repository
+- Get the data
+- [if not processed] then run relevant feature extraction scripts
+- run the relevant training script `script_train.sh` with the right data_dir and the exerpiment name `transflower_expmap` as the first argument (which matches the training/hparams/dance_combined/transflower_expmap.yaml hparams file), optionally increase epochs with argumetn `--max_epochs 100`.
+- Generate an example with `./script_generate.sh transflower_expmap [a squence id] --generate_bvh --data_dir data/dance_combined3 --generate_video`. You can get the list of sequence ids for the dance dataset inside the `base_filenames.txt` file in the data folder. The resulting dance will be in `inference/generated/transflower_exmap/videos`.
+
 # mt-lightning
 multimodal transformer
 
