@@ -208,7 +208,8 @@ class DiT(nn.Module):
         depth=6,
         num_heads=16,
         mlp_ratio=4.0,
-        class_dropout_prob=0.1,
+        #class_dropout_prob=0.1,
+        cond_dropout_prob=0.1,
         num_classes=1000,
         learn_sigma=True,
     ):
@@ -226,10 +227,11 @@ class DiT(nn.Module):
         self.out_channels = in_channels * 2 if learn_sigma else in_channels
         self.patch_size = patch_size
         self.num_heads = num_heads
+        self.cond_dropout_prob = cond_dropout_prob
 
         self.x_embedder = AsymPatchEmbed(input_size, patch_size, in_channels, hidden_size, bias=True)
         self.t_embedder = TimestepEmbedder(hidden_size)
-        self.y_embedder = LabelEmbedder(num_classes, hidden_size, class_dropout_prob)
+        #self.y_embedder = LabelEmbedder(num_classes, hidden_size, class_dropout_prob)
         num_patches = self.x_embedder.num_patches
         # Will use fixed sin-cos embedding:
         self.pos_embed = nn.Parameter(torch.zeros(1, num_patches, hidden_size), requires_grad=False)
@@ -262,7 +264,7 @@ class DiT(nn.Module):
         nn.init.xavier_uniform_(w.view([w.shape[0], -1]))
 
         # Initialize label embedding table:
-        nn.init.normal_(self.y_embedder.embedding_table.weight, std=0.02)
+        #nn.init.normal_(self.y_embedder.embedding_table.weight, std=0.02)
 
         # Initialize timestep embedding MLP:
         nn.init.normal_(self.t_embedder.mlp[0].weight, std=0.02)
@@ -296,6 +298,8 @@ class DiT(nn.Module):
         x = torch.einsum('nhwpqc->nchpwq', x)
         imgs = x.reshape(shape=(x.shape[0], c, h * p1, w * p2))
         return imgs
+    
+    
 
     def forward(self, x, t, cond):
         """
@@ -309,6 +313,9 @@ class DiT(nn.Module):
         t = self.t_embedder(t)                   # (N, D)
         # y = self.y_embedder(y, self.training)    # (N, D)
         # import pdb; pdb.set_trace()
+        mask = torch.rand(cond.shape[0])<(1-self.cond_dropout_prob)
+        mask = mask.unsqueeze(1).to(cond.device)
+        cond = cond * mask
         c = t + cond                                # (N, D)
         for block in self.blocks:
             x = block(x, c)                      # (N, T, D)

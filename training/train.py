@@ -122,6 +122,7 @@ if __name__ == '__main__':
                 for i,optim in enumerate(optims):
                     optim.load_state_dict(checkpoint_dict['optimizer_states'][i])
         else:
+            latest_file
             trainer = Trainer.from_argparse_args(args, logger=logger, default_root_dir=default_save_path, resume_from_checkpoint=latest_file, plugins=plugins, callbacks=callbacks)
     else:
         trainer = Trainer.from_argparse_args(args, logger=logger, default_root_dir=default_save_path, plugins=plugins, callbacks=callbacks)

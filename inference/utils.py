@@ -21,7 +21,9 @@ def load_model_from_logs_path(logs_path, no_grad=True, version_index=-1, args=No
     # opt["cond_concat_dims"] = True
     # opt["bn_momentum"] = 0.0
     opt["batch_size"] = 1
+
     opt["phase"] = "inference"
+
     opt["tpu_cores"] = 0
     class Struct:
         def __init__(self, **entries):
@@ -35,6 +37,11 @@ def load_model_from_logs_path(logs_path, no_grad=True, version_index=-1, args=No
     #model = model.load_from_checkpoint(latest_checkpoint, opt=opt, strict=False)
     #for name,param in model.named_parameters():
     #    print(name)
+    print(latest_checkpoint)
+    #from pytorch_lightning import Trainer
+    #trainer = Trainer.from_argparse_args(opt, resume_from_checkpoint=latest_checkpoint)
+    #trainer.strategy.connect(model)
+    #trainer._restore_modules_and_callbacks(latest_checkpoint)
     model = model.load_from_checkpoint(latest_checkpoint, opt=opt)
     if torch.cuda.is_available():
         model.cuda()

@@ -2,6 +2,7 @@
 import torch
 import torch.nn.functional as F
 import time
+import numpy as np
 
 #TODO: implement option to include the conditioning bit of input in the output
 def autoregressive_generation_multimodal(features, model, autoreg_mods=[], teacher_forcing=False, ground_truth=False, keep_latents=False, seed_lengths=None, sequence_length=None, use_temperature=False, temperature=1.0, save_jit=False, save_jit_path=None):
@@ -63,6 +64,7 @@ def autoregressive_generation_multimodal(features, model, autoreg_mods=[], teach
             start_time_inner = time.time()
             print(t)
             inputs = [x.clone().to(model.device) for x in input_tmp]
+            #inputs = [x.clone().to(model.device).permute(1,0,2) for x in input_tmp]
             # import pdb;pdb.set_trace()
 
             if not ground_truth:
@@ -118,6 +120,21 @@ def autoregressive_generation_multimodal(features, model, autoreg_mods=[], teach
                                 #trace = torch.jit.trace(lambda x,y: model.output_mod_glows[0](x,y), (noise,latent), check_trace=False)
                                 #trace = torch.jit.script(model.forward, example_inputs=(inputs,1.0))
                     else:
+                        input_dropouts0 = float(model.opt.input_dropouts.split(",")[0])
+                        #inputs[0] *= 1.0 - input_dropouts0
+                        mask = torch.rand(inputs[0].shape[0])<(1-input_dropouts0)
+                        mask = mask.unsqueeze(1).unsqueeze(1).cuda()
+                        #print(mask.shape)
+                        #print(inputs_[0].shape)
+                        inputs[0] = inputs[0]*mask
+                        #print(inputs[0].shape)
+                        input_dropouts1 = float(model.opt.input_dropouts.split(",")[1])
+                        #inputs[1] *= 1.0 - input_dropouts1
+                        mask = torch.rand(inputs[1].shape[0])<(1-input_dropouts1)
+                        mask = mask.unsqueeze(1).unsqueeze(1).cuda()
+                        #print(mask.shape)
+                        inputs[1] = inputs[1]*mask
+                        #print(inputs[1].shape)
                         outputs = model.forward(inputs)
                         if save_jit and t==0:
                             with torch.no_grad():
@@ -173,7 +190,56 @@ def autoregressive_generation_multimodal(features, model, autoreg_mods=[], teach
                         # print(torch.mean((inputs_[i][t+input_time_offsets[i]+input_lengths[i]+1:t+input_time_offsets[i]+input_lengths[i]+1+1]-outputs[j][:1].detach().clone())**2))
 
                         if not ground_truth:
-                            print(torch.mean((inputs_[i][t+output_time_offsets[j]:t+output_time_offsets[j]+1]-outputs[j][:1].detach().clone())**2))
+                            check_losses = False
+                            targets = inputs_[i][t+output_time_offsets[j]:t+output_time_offsets[j]+1].permute(1,0,2).unsqueeze(1)
+                            if check_losses:
+                                #targets = torch.tensor(features["in_motion_features_scaled1"][t+output_time_offsets[j]:t+output_time_offsets[j]+1]).permute(1,0,2).unsqueeze(1).float().cuda()
+                                #targets = torch.tensor(np.load("data/edf_extracted_data_rel/1687208181080.motion_features_scaled1.npy")[t+output_time_offsets[j]:t+output_time_offsets[j]+1]).unsqueeze(1).permute(1,0,2).unsqueeze(1).float().cuda()
+                                #targets = torch.tile(targets, (100,1,1,1))
+
+                                #targets = torch.Tensor(np.load("target.npy")).to(model.device).unsqueeze(1).unsqueeze(1)
+                                #targets = torch.Tensor(np.load("targets.npy")).to(model.device)
+                                print(targets.shape)
+                                print(targets.mean())
+                                print(targets.std())
+                                #inputs[0] = torch.tile(inputs[0], (1,100,1,))
+                                #inputs[1] = torch.tile(inputs[1], (1,100,1,))
+
+                                #inputs[0] = torch.Tensor(np.load("inputs0.npy")).to(model.device)
+                                #inputs[1] = torch.Tensor(np.load("inputs1.npy")).to(model.device)
+                                #inputs[0] = torch.Tensor(np.load("input0.npy")).to(model.device).unsqueeze(1)
+                                #inputs[1] = torch.Tensor(np.load("input1.npy")).to(model.device).unsqueeze(1)
+                                #print(output_time_offsets)
+                                #print(input_time_offsets)
+                                #inputs[0] = torch.tensor(features["in_speech.wav_envelope_scaled"][t+input_time_offsets[0]:t+input_time_offsets[0]+input_lengths[0]]).float().cuda()
+                                #inputs[1] = torch.tensor(features["in_motion_features_scaled1"][t+input_time_offsets[1]:t+input_time_offsets[1]+input_lengths[1]]).float().cuda()
+                                #inputs[0] = torch.tensor(np.load("data/edf_extracted_data_rel/1687208181080.speech.wav_envelope_scaled.npy")[t+input_time_offsets[0]:t+input_time_offsets[0]+input_lengths[0]]).float().cuda()
+                                #inputs[1] = torch.tensor(np.load("data/edf_extracted_data_rel/1687208181080.motion_features_scaled1.npy")[t+input_time_offsets[1]:t+input_time_offsets[1]+input_lengths[1]]).float().cuda()
+                                input_dropouts0 = float(model.opt.input_dropouts.split(",")[0])
+                                #inputs[0] *= 1.0 - 
+                                mask = torch.rand(inputs[0].shape[0])<(1-input_dropouts0)
+                                mask = mask.unsqueeze(1).unsqueeze(1).cuda()
+                                print(mask.shape)
+                                inputs[0] = inputs[0]*mask
+                                print(inputs[0].shape)
+                                input_dropouts1 = float(model.opt.input_dropouts.split(",")[1])
+                                mask = torch.rand(inputs[1].shape[0])<(1-input_dropouts1)
+                                mask = mask.unsqueeze(1).unsqueeze(1).cuda()
+                                print(mask.shape)
+                                inputs[1] = inputs[1]*mask
+                                print(inputs[1].shape)
+                                #inputs[1] *= 1.0 - 
+                                print(inputs[0].mean())
+                                print(inputs[0].std())
+                                print(inputs[1].mean())
+                                print(inputs[1].std())
+                                latents = model.get_latents(inputs, output_mods)
+                                print(latents[j].shape)
+                                ts = torch.randint(0,model.num_diff_steps,(targets.size(0),)).to(targets.device)
+                                losses = model.gd.training_losses(model.output_mod_diffus[j], targets, ts, model_kwargs={'cond':latents[j][:,0,:]})
+                                print(losses["loss"])
+                                print(torch.sum(losses["loss"]))
+                            print(torch.mean((targets-outputs[j][:1].detach().clone())**2))
                             print(outputs[j][:1].shape)
                             #print(outputs[j][:1][0,0,9])
                             #print(outputs[j][:1][0,0,16])

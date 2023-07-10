@@ -7,7 +7,10 @@ export XRT_DEVICE_MAP="CPU:0;/job:localservice/replica:0/task:0/device:XLA_CPU:0
 py=python3
 
 exp=$1
-seq_id=1687209000059
+#seq_id=1687209000059
+#seq_id=1687208181080
+#seq_id=1687210716516
+seq_id=1687208181080
 echo $exp $seq_id
 
 mkdir -p inference/generated/${exp}/predicted_mods

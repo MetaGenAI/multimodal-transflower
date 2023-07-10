@@ -67,6 +67,14 @@ class TransfusionModel(BaseModel):
         )
         # self.diffusion = create_diffusion(str(opt.num_sampling_steps))
         self.diffusion = self.gd
+        cond_dropout_probs = opt.cond_dropout_probs.split(",")
+        if len(cond_dropout_probs) == 1:
+            cond_dropout_probs = [float(cond_dropout_probs[0])]*len(self.output_mods)
+        else:
+            assert len(cond_dropout_probs) == len(self.output_mods)
+            cond_dropout_probs = [float(p) for p in cond_dropout_probs]
+
+        self.cond_dropout_probs = cond_dropout_probs
 
         self.num_diff_steps = opt.num_diff_steps
         #TODO: include option for discrete outputs
@@ -105,6 +113,7 @@ class TransfusionModel(BaseModel):
                         num_heads=opt.diffu_num_heads,
                         input_size=(self.output_lengths[i], self.douts[i]),
                         mlp_ratio=opt.diffu_mlp_ratio,
+                        cond_dropout_prob=self.cond_dropout_probs[i],
                         learn_sigma=(ModelVarType[opt.diffu_model_var_type] in [ModelVarType.LEARNED, ModelVarType.LEARNED_RANGE]),
                         in_channels=1)
             name = "_output_diffu_"+mod.replace(".","_")
@@ -141,6 +150,7 @@ class TransfusionModel(BaseModel):
         parser.add_argument('--diffu_depth', type=int, default=6)
         parser.add_argument('--diffu_mlp_ratio', type=float, default=4.0)
         parser.add_argument('--prev_outputs_factor', type=float, default=0.5)
+        parser.add_argument('--cond_dropout_probs', type=str, default="0.1", help="the probabilities of dropping out the conditioning vector for each output, to be used for CFG")
         parser.add_argument('--diffu_model_var_type', type=str, default="LEARNED", help="the type of parametrization for the variance parameter of the diffusion head. One of LEARNED, FIXED_SMALL, FIXED_LARGE, LEARNED_RANGE")
         parser.add_argument('--diffu_model_mean_type', type=str, default="START_X", help="the type of parametrization for the mean parameter of the diffusion head. One of PREVIOUS_X, START_X, EPSILON")
         parser.add_argument('--diffu_loss_type', type=str, default="MSE", help="the type of loss for the diffusion model")
@@ -219,9 +229,10 @@ class TransfusionModel(BaseModel):
             # noise = noises[i] if noises is not None else None
             diffu = self.output_mod_diffus[i]
             # output, sldj, z = diffu(x=None, cond=latents[j])
-            z1 = torch.randn(1, 1, self.output_lengths[j], self.douts[j], device=self.device)
+            z1 = torch.randn(1, 1, self.output_lengths[i], self.douts[i], device=self.device)
             #TODO: use this prev_outputs when generating to use the prev pose as initial estimate for next one awo!
             #TODO: during training sometimes dont condition (i think this is not currently done)
+            #if False:
             if self.prev_outputs is not None:
                 betas = get_beta_schedule(
                         self.opt.diffu_beta_schedule, beta_start=self.opt.diffu_beta_start, beta_end=self.opt.diffu_beta_end,
@@ -246,12 +257,19 @@ class TransfusionModel(BaseModel):
                 z = z1
             # Setup classifier-free guidance:
             z = torch.cat([z, z], 0)
-            print(z.shape)
-            model_kwargs={"cond":latents[j][:,0,:], "cfg_scale": 0.0}
+            #print(z.shape)
+            #model_kwargs={"cond":latents[j][:,0,:], "cfg_scale": 0.0}
+            latents[j] = latents[j][:,0,:]
+            latents[j] = torch.cat([latents[j],torch.zeros_like(latents[j])],0)
+            model_kwargs={"cond":latents[j][:,:], "cfg_scale": 0.5}
+            #model_kwargs={"cond":latents[j][:,0,:]}
             start_time = time.time()
             samples = diffusion.p_sample_loop(
                 diffu.forward_with_cfg, z.shape, z, clip_denoised=False, model_kwargs=model_kwargs, progress=True, device=self.device
             )
+            #samples = diffusion.p_sample_loop(
+            #    diffu.forward, z.shape, z, clip_denoised=True, model_kwargs=model_kwargs, progress=True, device=self.device
+            #)
             print("--- Diffu part: %s seconds ---" % (time.time() - start_time))
             output = samples[0]
             outputs.append(output.permute(1,0,2))
@@ -273,10 +291,25 @@ class TransfusionModel(BaseModel):
         for i, mod in enumerate(self.output_mods):
             diffu = self.output_mod_diffus[i]
             x = self.targets[i].permute(1,0,2).unsqueeze(1) #time, batch, features -> batch, time, features
-            # print(x.shape)
+            #np.save("targets.npy", x.cpu().numpy())
+            #np.save("inputs0.npy", self.inputs[0].cpu().numpy())
+            #np.save("inputs1.npy", self.inputs[1].cpu().numpy())
+            #print(x.shape)
+            #print(x.mean())
+            #print(x.std())
+            #print(self.inputs[1].shape)
+            #print(self.inputs[0].mean())
+            #print(self.inputs[0].std())
+            #print(self.inputs[1].mean())
+            #print(self.inputs[1].std())
+            #print(latents[i].shape)
             t = torch.randint(0,self.num_diff_steps,(x.size(0),)).to(x.device)
             losses = self.gd.training_losses(diffu, x, t, model_kwargs={'cond':latents[i][:,0,:]})
-            loss += torch.sum(losses["loss"])
+            #print(losses)
+            #print(torch.sum(losses["loss"]))
+            #TODO: make average?
+            #loss += torch.sum(losses["loss"])
+            loss += torch.mean(losses["loss"])
 
         self.log('loss', loss)
         return loss

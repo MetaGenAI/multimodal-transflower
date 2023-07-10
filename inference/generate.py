@@ -41,6 +41,7 @@ if __name__ == '__main__':
     parser.add_argument('--sequence_length', type=int, default=-1)
     parser.add_argument('--experiment_name', type=str)
     parser.add_argument('--seq_id', type=str)
+    parser.add_argument('--starting_index', type=int, default=0)
     parser.add_argument('--max_length', type=int, default=-1)
     parser.add_argument('--no-use_scalers', dest='use_scalers', action='store_false')
     parser.add_argument('--generate_video', action='store_true')
@@ -93,6 +94,7 @@ if __name__ == '__main__':
     default_save_path = "training/experiments/"+args.experiment_name
     logs_path = default_save_path
     model, opt = load_model_from_logs_path(logs_path, version_index=args.version_index, args=unknown_args)
+    #model, opt = load_model_from_logs_path(logs_path, version_index=args.version_index, args=unknown_args, no_grad=False)
     print("Device: "+str(model.device))
 
     input_mods = opt.input_modalities.split(",")
@@ -116,6 +118,7 @@ if __name__ == '__main__':
         else:
             print(data_dir+"/"+seq_id+"."+mod+".npy")
             feature = np.load(data_dir+"/"+seq_id+"."+mod+".npy")
+            feature = feature[args.starting_index:]
         if mod in zero_pads:
             feature = np.concatenate([np.zeros((model.input_lengths[i],model.dins[i])), feature], axis=0)
         if args.max_length != -1:
@@ -125,10 +128,14 @@ if __name__ == '__main__':
         else:
             features["in_"+mod] = np.expand_dims(feature,1)
 
+        print("Feature mean: "+str(feature.mean()))
+        print("Feature std: "+str(feature.std()))
+
     # Generate prediction
     #import pdb;pdb.set_trace()
     #import time
     #start_time = time.time()
+
     save_jit_path = output_folder+"/"+args.experiment_name+"/compiled_jit.pth"
     predicted_mods = model.generate(features, teacher_forcing=args.teacher_forcing, ground_truth=args.generate_ground_truth, sequence_length=sequence_length, use_temperature=args.use_temperature, temperature=args.temperature, save_jit=args.save_jit, save_jit_path=save_jit_path)
     #print("--- %s seconds ---" % (time.time() - start_time))
@@ -138,7 +145,6 @@ if __name__ == '__main__':
         # import pdb;pdb.set_trace()
         for i, mod in enumerate(output_mods):
             predicted_mod = predicted_mods[i].cpu().numpy()
-            #predicted_mod = predicted_mod[:,:,2:]
             if len(scalers)>0:
                 print(scalers[i])
                 transform = pickle.load(open(data_dir+"/"+scalers[i], "rb"))
@@ -149,6 +155,7 @@ if __name__ == '__main__':
             print(feature.shape)
             print(predicted_mod.shape)
             predicted_features_file = output_folder+"/"+args.experiment_name+"/predicted_mods/"+seq_id+"."+mod+".generated"
+            predicted_mod = predicted_mod[:,:,2:]
             np.save(predicted_features_file,predicted_mod)
             predicted_features_file += ".npy"
 

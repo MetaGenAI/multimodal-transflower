@@ -344,6 +344,12 @@ class MultimodalDataset(BaseDataset):
         ## CONSTRUCT TENSOR OF OUTPUT FEATURES ##
         output_windows = [self.process_output(j,yy,index) for j,yy in enumerate(y)]
 
+        #np.save("index.npy", index)
+        #np.save("input0.npy", input_windows[0])
+        #np.save("input1.npy", input_windows[1])
+        #np.save("target.npy", output_windows[0])
+
+
         # print(input_windows[i])
         return_dict = {}
         for i,mod in enumerate(input_mods):
