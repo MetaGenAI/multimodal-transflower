@@ -43,4 +43,4 @@ gsutil=gsutil
 
 ######GESTURE GENERATION
 
-gsutil -m cp -R s://metagen/data/edf_extracted_data_rel data/
+gsutil -m cp -R gs://metagen/data/edf_extracted_data_rel data/
