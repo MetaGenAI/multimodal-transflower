@@ -34,7 +34,7 @@ lr_decay_milestones: [100,200,400,800,1600,3200,6400]
 lr_decay_factor: 0.5
 learning_rate: 1e-5
 gradient_clip_val: 10
-batch_size: 48
+batch_size: 128
 #batch_size: 28
 
 
