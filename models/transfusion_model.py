@@ -261,7 +261,8 @@ class TransfusionModel(BaseModel):
             #model_kwargs={"cond":latents[j][:,0,:], "cfg_scale": 0.0}
             latents[j] = latents[j][:,0,:]
             latents[j] = torch.cat([latents[j],torch.zeros_like(latents[j])],0)
-            model_kwargs={"cond":latents[j][:,:], "cfg_scale": 0.5}
+            #model_kwargs={"cond":latents[j][:,:], "cfg_scale": 0.5}
+            model_kwargs={"cond":latents[j][:,:], "cfg_scale": 5.0}
             #model_kwargs={"cond":latents[j][:,0,:]}
             start_time = time.time()
             samples = diffusion.p_sample_loop(

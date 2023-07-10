@@ -26,7 +26,8 @@ gsutil=gsutil
 
 #mkdir dance_combined3
 #gsutil -m cp -r gs://metagen/data/dance_combined3/*expmap_cr_scaled_20.npy gs://metagen/data/dance_combined3/*audio_feats_scaled_20.npy gs://metagen/data/dance_combined3/*pkl gs://metagen/data/dance_combined3/*sav gs://metagen/data/dance_combined3/base_filenames* ./dance_combined3
-gsutil -m cp -r gs://metagen/data/dance_combined3/*expmap_scaled_20.npy gs://metagen/data/dance_combined3/*audio_feats_scaled_20.npy gs://metagen/data/dance_combined3/*pkl gs://metagen/data/dance_combined3/*sav gs://metagen/data/dance_combined3/base_filenames* ./dance_combined3
+#gsutil -m cp -r gs://metagen/data/dance_combined3/*expmap_scaled_20.npy gs://metagen/data/dance_combined3/*audio_feats_scaled_20.npy gs://metagen/data/dance_combined3/*pkl gs://metagen/data/dance_combined3/*sav gs://metagen/data/dance_combined3/base_filenames* ./dance_combined3
+
 #gsutil -m cp -r gs://metagen/data/dance_combined3/*dance_style.npy ./dance_combined3
 
 #gsutil -m cp gs://metagen/data/features_20/*mel_ddcpca_scaled_20* features/
@@ -39,3 +40,7 @@ gsutil -m cp -r gs://metagen/data/dance_combined3/*expmap_scaled_20.npy gs://met
 
 # but you can download gsutil here curl -O https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-336.0.0-linux-x86_64.tar.gz
 # and follow instructions here https://cloud.google.com/storage/docs/gsutil_install#linux 
+
+######GESTURE GENERATION
+
+gsutil -m cp -R s://metagen/data/edf_extracted_data_rel data/
