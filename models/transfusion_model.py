@@ -149,7 +149,8 @@ class TransfusionModel(BaseModel):
         parser.add_argument('--num_sampling_steps', type=int, default=50)
         parser.add_argument('--diffu_depth', type=int, default=6)
         parser.add_argument('--diffu_mlp_ratio', type=float, default=4.0)
-        parser.add_argument('--prev_outputs_factor', type=float, default=0.5)
+        parser.add_argument('--prev_outputs_factor', type=float, default=0.5, help="a factor determining how much of the previous output is used as starting point for next output")
+        parser.add_argument('--cfg_scale', type=float, default=0.5, help="the cfg scale to use during inference")
         parser.add_argument('--cond_dropout_probs', type=str, default="0.1", help="the probabilities of dropping out the conditioning vector for each output, to be used for CFG")
         parser.add_argument('--diffu_model_var_type', type=str, default="LEARNED", help="the type of parametrization for the variance parameter of the diffusion head. One of LEARNED, FIXED_SMALL, FIXED_LARGE, LEARNED_RANGE")
         parser.add_argument('--diffu_model_mean_type', type=str, default="START_X", help="the type of parametrization for the mean parameter of the diffusion head. One of PREVIOUS_X, START_X, EPSILON")
@@ -262,7 +263,7 @@ class TransfusionModel(BaseModel):
             latents[j] = latents[j][:,0,:]
             latents[j] = torch.cat([latents[j],torch.zeros_like(latents[j])],0)
             #model_kwargs={"cond":latents[j][:,:], "cfg_scale": 0.5}
-            model_kwargs={"cond":latents[j][:,:], "cfg_scale": 5.0}
+            model_kwargs={"cond":latents[j][:,:], "cfg_scale": self.opt.cfg_scale}
             #model_kwargs={"cond":latents[j][:,0,:]}
             start_time = time.time()
             samples = diffusion.p_sample_loop(
