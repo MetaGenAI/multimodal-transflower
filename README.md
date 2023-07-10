@@ -2,11 +2,12 @@
 
 - Clone the repository
 - Get the data and put inside the `data` folder
+- `pip install -r requirements_dev.txt`
 - [if not processed] then run relevant feature extraction scripts
-- run the relevant training script `script_train.sh` with the right data_dir and the exerpiment name `transflower_expmap` as the first argument (which matches the training/hparams/dance_combined/transflower_expmap.yaml hparams file), optionally increase epochs with argumetn `--max_epochs 100`.
-  - You can also edit the file `base_filenames.txt` in the data folder to train on fewer sequences.
+- run the relevant training script `script_train.sh` with the right data_dir and the exerpiment name `transflower_expmap_new` as the first argument (which matches the training/hparams/dance_combined/transflower_expmap.yaml hparams file), optionally increase epochs with argumetn `--max_epochs 100`.
+  - You can also edit the file `base_filenames_train.txt` in the data folder to train on fewer sequences.
   - You can use tensorboard by running `tensorboard --port 6006 --logdir training/experiments` to follow the training
-- Generate an example with `./script_generate.sh transflower_expmap [a squence id] --generate_bvh --data_dir data/dance_combined3 --generate_video`. You can get the list of sequence ids for the dance dataset inside the `base_filenames.txt` file in the data folder. The resulting dance will be in `inference/generated/transflower_exmap/videos`.
+- Generate an example with `./script_generate.sh transflower_expmap_new  [a squence id] --generate_bvh --data_dir data/dance_combined3 --generate_video`. You can get the list of sequence ids for the dance dataset inside the `base_filenames.txt` file in the data folder. The resulting dance will be in `inference/generated/transflower_exmap/videos`.
 
 # mt-lightning
 multimodal transformer
