@@ -31,14 +31,14 @@ exp=$1
 #data_dir=${root_dir}/dance_combined
 #data_dir=${root_dir}/dance_combined2
 data_dir=${root_dir}/dance_combined3
-#hparams_file=dance_combined/${exp}
-hparams_file=neos/${exp}
+hparams_file=dance_combined/${exp}
+#hparams_file=neos/${exp}
 
 echo $exp
 #echo $RANK
 #echo $LOCAL_RANK
 echo $SLURM_PROCID
-export LOCAL_RANK=$SLURM_LOCALID
+#export LOCAL_RANK=$SLURM_LOCALID
 
 $py training/train.py --data_dir=${data_dir} \
     --max_epochs=10\

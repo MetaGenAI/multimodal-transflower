@@ -35,6 +35,7 @@ if __name__ == '__main__':
     parser.add_argument('--seeds', type=str, help='sequences to use as seeds for each modality. in the format: mod,seq_id;mod,seq_id')
     parser.add_argument('--zero_seeds', type=str, help='modalities to seed with zeros, in the format: mod,mod')
     parser.add_argument('--zero_pads', type=str, help='modalities whose seeds to pad with zeros, in the format: mod,mod')
+    parser.add_argument('--unpad_amount', type=int, default=0, help='amount of padding to remove from the beggining')
     parser.add_argument('--seeds_file', type=str, help='file from which to choose a random seed')
     parser.add_argument('--output_folder', type=str)
     parser.add_argument('--audio_format', type=str, default="wav")
@@ -155,7 +156,7 @@ if __name__ == '__main__':
             print(feature.shape)
             print(predicted_mod.shape)
             predicted_features_file = output_folder+"/"+args.experiment_name+"/predicted_mods/"+seq_id+"."+mod+".generated"
-            predicted_mod = predicted_mod[:,:,2:]
+            predicted_mod = predicted_mod[:,:,args.unpad_amount:]
             np.save(predicted_features_file,predicted_mod)
             predicted_features_file += ".npy"
 
