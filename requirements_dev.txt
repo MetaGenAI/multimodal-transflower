@@ -5,6 +5,7 @@ librosa
 pytorch-lightning==1.8.6
 lightning-bolts==0.6.0.post1
 #torch==1.13.1+cu117
+torch==1.13.1
 pandas
 matplotlib
 mpi4py
