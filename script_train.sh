@@ -38,6 +38,7 @@ echo $exp
 #echo $RANK
 #echo $LOCAL_RANK
 echo $SLURM_PROCID
+### UNCOMMENT THIS IF IN SLURM
 #export LOCAL_RANK=$SLURM_LOCALID
 
 $py training/train.py --data_dir=${data_dir} \
