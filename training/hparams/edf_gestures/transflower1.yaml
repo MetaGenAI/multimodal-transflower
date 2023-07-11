@@ -3,7 +3,8 @@ dins: 1,21
 douts: 21
 input_modalities: "speech.wav_envelope_scaled,motion_features_scaled1"
 output_modalities: motion_features_scaled1
-input_lengths: 61,60
+#input_lengths: 61,60
+input_lengths: 60,60
 output_lengths: 1
 output_time_offsets: 60
 input_dropouts: 0,0
@@ -29,12 +30,19 @@ dropout: 0
 #lr_policy: cosine
 #lr_policy: multistep
 lr_policy: plateau
-#lr_decay_milestones: [1,2,4,8,16,32,64]
 lr_decay_milestones: [100,200,400,800,1600,3200,6400]
+lr_decay_iters: 50
 lr_decay_factor: 0.5
+scheduler_interval: step
+#lr_policy: LinearWarmupCosineAnnealing
+#optimizer: adamw
+optimizer: adam
+momentum: 0
+weight_decay: 0
 learning_rate: 1e-5
 gradient_clip_val: 10
-batch_size: 128
+batch_size: 48
+#batch_size: 128
 #batch_size: 28
 
 
