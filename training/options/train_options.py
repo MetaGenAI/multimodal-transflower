@@ -18,6 +18,7 @@ class TrainOptions(BaseOptions):
         #parser.add_argument('--lr_scheduler_interval', type=str, default='step', help='the interval at which to call the lr scheduler. epoch, step')
         parser.add_argument('--lr_scheduler_warmup_iters', type=int, default=10000, help='the number of warmup iters when using lr policy LinearWarmupCosineAnnealing')
         parser.add_argument('--lr_decay_iters', type=int, default=50, help='multiply by a gamma every lr_decay_iters iterations')
+        parser.add_argument('--lr_scheduler_frequency', type=int, default=1, help='the number of intervals (epochs or steps) to wait for next lr scheduler step')
         parser.add_argument('--lr_plateau_threshold', type=float, default=0.01, help='amount by which loss shouldnt vary to consider it a plateau')
         parser.add_argument('--lr_plateau_patience', type=int, default=5, help='the amount of intervals (epochs by default) to wait with no loss improvement when using plateau lr schedule')
         parser.add_argument('--lr_decay_factor', default=0.999, type=float, help="decay factor to use with multiplicative learning rate schedulers")

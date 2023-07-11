@@ -50,7 +50,7 @@ def get_scheduler(optimizer, opt, info={}):
     elif opt.lr_policy == 'multistep':
         scheduler = lr_scheduler.MultiStepLR(optimizer, milestones=ast.literal_eval(opt.lr_decay_milestones), gamma=opt.lr_decay_factor)
     elif opt.lr_policy == 'plateau':
-        scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=opt.lr_decay_factor, threshold=opt.lr_plateau_threshold, patience=opt.lr_plateau_patience)
+        scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=opt.lr_decay_factor, threshold=opt.lr_plateau_threshold, patience=opt.lr_plateau_patience, verbose=True)
     elif opt.lr_policy == 'cosine':
         if interval == "step":
             num_iters_per_epoch = info["num_train_data_points"]//opt.batch_size
@@ -61,8 +61,6 @@ def get_scheduler(optimizer, opt, info={}):
     elif opt.lr_policy == 'cyclic':
         scheduler = CyclicLR(optimizer, base_lr=opt.learning_rate / 10, max_lr=opt.learning_rate,
                              step_size=opt.nepoch_decay, mode='triangular2')
-    elif opt.lr_policy == 'reduceOnPlateau':
-        scheduler = ReduceLROnPlateau(optimizer, 'min', factor=opt.lr_decay_factor)
     elif opt.lr_policy == 'LinearWarmupCosineAnnealing':
         if interval == "step":
             num_iters_per_epoch = info["num_train_data_points"]//opt.batch_size
@@ -75,7 +73,8 @@ def get_scheduler(optimizer, opt, info={}):
         scheduler = None
     else:
         return NotImplementedError('learning rate policy [%s] is not implemented', opt.lr_policy)
-    return {'scheduler': scheduler, 'interval': interval, 'monitor': 'loss'}
+    #return {'scheduler': scheduler, 'interval': interval, 'monitor': 'loss'}
+    return {'scheduler': scheduler, 'interval': interval, 'monitor': 'loss', 'frequency': opt.lr_scheduler_frequency, "reduce_on_plateau": opt.lr_policy == "plateau"}
 
 
 class CyclicLR(object):

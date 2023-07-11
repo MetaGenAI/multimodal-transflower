@@ -12,12 +12,13 @@ from training.datasets import create_dataset, create_dataloader
 print("HIII")
 from models import create_model
 import pytorch_lightning as pl
+#from lightning.pytorch.cli import LightningCLI
 from training.options.train_options import TrainOptions
 from pytorch_lightning import Trainer
 from pytorch_lightning.loggers import TensorBoardLogger
 print("HIII")
 #from pytorch_lightning.plugins import DDPPlugin
-from pytorch_lightning.plugins.training_type.deepspeed import DeepSpeedPlugin
+#from lightning.pytorch.plugins.training_type.deepspeed import DeepSpeedPlugin
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 
 
@@ -58,7 +59,7 @@ if __name__ == '__main__':
                     'initial_scale_power': 15,
                 },
             }
-        plugins = DeepSpeedPlugin(config=deepspeed_config)
+        #plugins = DeepSpeedPlugin(config=deepspeed_config)
     else:
         #ddpplugin = DDPPlugin(find_unused_parameters=opt.find_unused_parameters, num_nodes=opt.num_nodes)
         #plugins = [ddpplugin, opt.plugins]
@@ -97,6 +98,8 @@ if __name__ == '__main__':
     lr_monitor = LearningRateMonitor(logging_interval='step')
     callbacks = [checkpoint_callback, lr_monitor]
     args = Trainer.parse_argparser(opt)
+    #cli = LightningCLI(model, run=False)
+    #args = cli.parse_argparser(opt)
 
     if opt.continue_train:
         print("CONTINUE TRAIN")
