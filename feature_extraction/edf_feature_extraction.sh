@@ -16,11 +16,14 @@ mpirun="mpirun"
 #to use with patching of size 3
 $mpirun -n $n $py feature_extraction/pad_features.py data/edf_extracted_data_rel --pad_along_feature_dim --length 21 --feature_name motion_features #TODO: add new_feature_name option here
 echo EXTRACT TRANSFORM MOTION
-#$py feature_extraction/extract_transform2.py $@ --feature_name motion_features --transforms scaler
-$py feature_extraction/extract_transform2.py $@ --feature_name motion_features_padded --transforms scaler
+$py feature_extraction/extract_transform2.py $@ --feature_name motion_features --transforms scaler
+#$py feature_extraction/extract_transform2.py $@ --feature_name motion_features_padded --transforms scaler
 echo APPLY TRANSFORM MOTION
 #$mpirun -n $n $py feature_extraction/apply_transforms.py $@ --feature_name motion_features --transform_name scaler --new_feature_name motion_features_scaled1
-$mpirun -n $n $py feature_extraction/apply_transforms.py $@ --feature_name motion_features_padded --transform_name scaler --new_feature_name motion_features_scaled1
+#$mpirun -n $n $py feature_extraction/apply_transforms.py $@ --feature_name motion_features_padded --transform_name scaler --new_feature_name motion_features_scaled1
+$mpirun -n $n $py feature_extraction/apply_transforms.py $@ --feature_name motion_features --transform_name scaler --new_feature_name motion_features_scaled_nonpadded1
+
+exit 0
 
 
 format=wav
