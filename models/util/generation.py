@@ -120,6 +120,7 @@ def autoregressive_generation_multimodal(features, model, autoreg_mods=[], teach
                                 #trace = torch.jit.trace(lambda x,y: model.output_mod_glows[0](x,y), (noise,latent), check_trace=False)
                                 #trace = torch.jit.script(model.forward, example_inputs=(inputs,1.0))
                     else:
+                        #TODO: clean up
                         input_dropouts0 = float(model.opt.input_dropouts.split(",")[0])
                         #inputs[0] *= 1.0 - input_dropouts0
                         mask = torch.rand(inputs[0].shape[0])<(1-input_dropouts0)
@@ -136,6 +137,8 @@ def autoregressive_generation_multimodal(features, model, autoreg_mods=[], teach
                         inputs[1] = inputs[1]*mask
                         #print(inputs[1].shape)
                         outputs = model.forward(inputs)
+                        if type(outputs) is tuple:
+                            outputs=outputs[0]
                         if save_jit and t==0:
                             with torch.no_grad():
                                 trace = torch.jit.trace(model, (inputs,), check_trace=False)
@@ -150,7 +153,7 @@ def autoregressive_generation_multimodal(features, model, autoreg_mods=[], teach
                     # output[:,0,:-3] = torch.clamp(output[:,0,:-3],-3,3)
 
                     if not ground_truth:
-                        # import pdb;pdb.set_trace()
+                        #import pdb;pdb.set_trace()
                         output = outputs[i]
                     else:
                         j = input_mods.index(mod)

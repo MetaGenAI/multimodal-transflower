@@ -50,7 +50,7 @@ def get_scheduler(optimizer, opt, info={}):
     elif opt.lr_policy == 'multistep':
         scheduler = lr_scheduler.MultiStepLR(optimizer, milestones=ast.literal_eval(opt.lr_decay_milestones), gamma=opt.lr_decay_factor)
     elif opt.lr_policy == 'plateau':
-        scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=opt.lr_decay_factor, threshold=0.01, patience=5)
+        scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=opt.lr_decay_factor, threshold=opt.lr_plateau_threshold, patience=opt.lr_plateau_patience)
     elif opt.lr_policy == 'cosine':
         if interval == "step":
             num_iters_per_epoch = info["num_train_data_points"]//opt.batch_size
