@@ -1399,12 +1399,14 @@ class GaussianDiffusion:
 
             assert model_output.shape == target.shape == x_start.shape
 
-            terms["rot_mse"] = self.masked_l2(
-                target,
-                model_output,
-            )
+            # terms["rot_mse"] = self.masked_l2(
+            #     target,
+            #     model_output,
+            # )
 
-            terms["loss"] = terms["rot_mse"] + terms.get("vb", 0.0)
+            terms["mse"] = mean_flat((target - model_output) ** 2)
+
+            terms["loss"] = terms["mse"] + terms.get("vb", 0.0)
 
         else:
             raise NotImplementedError(self.loss_type)
