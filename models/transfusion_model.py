@@ -276,13 +276,7 @@ class TransfusionModel(BaseModel):
             output = samples[0]
             outputs.append(output.permute(1,0,2))
             z = z.unsqueeze(3)
-            # print(z.shape)
-            # print(sldj.shape)
-            # if compute_logPs:
-            #     logP = glow.loss_generative(z, sldj)
-            #     logPs.append(logP)
 
-        # return outputs, sldj, logPs
         self.prev_outputs = outputs
         return outputs
 
