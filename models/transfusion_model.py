@@ -13,9 +13,13 @@ from torch.distributions.distribution import Distribution
 import numpy as np
 
 from diffusion.models import DiT
-from diffusion import create_diffusion
+# from diffusion.models_old import DiT
+
 from diffusion.gaussian_diffusion import LossType, ModelMeanType, ModelVarType
-from diffusion.gaussian_diffusion import GaussianDiffusion, get_beta_schedule
+from diffusion.gaussian_diffusion import GaussianDiffusion, get_named_beta_schedule
+
+# from diffusion.gaussian_diffusion_old import LossType, ModelMeanType, ModelVarType
+# from diffusion.gaussian_diffusion_old import GaussianDiffusion, get_named_beta_schedule
 
 import time
 
@@ -57,15 +61,16 @@ class TransfusionModel(BaseModel):
         # print(ModelVarType[opt.diffu_model_var_type])
 
         self.gd = GaussianDiffusion(
-            betas=get_beta_schedule(
-                opt.diffu_beta_schedule, beta_start=opt.diffu_beta_start, beta_end=opt.diffu_beta_end,
+            betas=get_named_beta_schedule(
+                opt.diffu_beta_schedule,
                 num_diffusion_timesteps=opt.num_diff_steps,
+                scale_betas=opt.diffu_scale_betas,
             ),
             model_mean_type=ModelMeanType[opt.diffu_model_mean_type],
             model_var_type=ModelVarType[opt.diffu_model_var_type],
             loss_type=LossType[opt.diffu_loss_type],
         )
-        # self.diffusion = create_diffusion(str(opt.num_sampling_steps))
+
         self.diffusion = self.gd
         cond_dropout_probs = opt.cond_dropout_probs.split(",")
         if len(cond_dropout_probs) == 1:
@@ -107,15 +112,15 @@ class TransfusionModel(BaseModel):
 
             # import pdb;pdb.set_trace()
             #print(self.douts[i])
-            diffu = DiT(depth=opt.diffu_depth,
-                        hidden_size=opt.dhid_diffu,
-                        patch_size=self.diffu_patch_size,
-                        num_heads=opt.diffu_num_heads,
-                        input_size=(self.output_lengths[i], self.douts[i]),
+            diffu = DiT(layers=opt.diffu_depth,
+                        hidden_dim=opt.dhid_diffu,
+                        patch_dim=self.diffu_patch_size,
+                        attention_heads=opt.diffu_num_heads,
+                        input_dim=(self.output_lengths[i], self.douts[i]),
                         mlp_ratio=opt.diffu_mlp_ratio,
                         cond_dropout_prob=self.cond_dropout_probs[i],
-                        learn_sigma=(ModelVarType[opt.diffu_model_var_type] in [ModelVarType.LEARNED, ModelVarType.LEARNED_RANGE]),
-                        in_channels=1)
+                        sigma_learning=(ModelVarType[opt.diffu_model_var_type] in [ModelVarType.LEARNED, ModelVarType.LEARNED_RANGE]),
+                        input_channels=1)
             name = "_output_diffu_"+mod.replace(".","_")
             setattr(self, "net"+name, diffu)
             self.output_mod_diffus.append(diffu)
@@ -157,6 +162,7 @@ class TransfusionModel(BaseModel):
         parser.add_argument('--diffu_loss_type', type=str, default="MSE", help="the type of loss for the diffusion model")
         parser.add_argument('--diffu_beta_start', type=float, default=0.0001, help="the initial value for the diffusion weighting parameter")
         parser.add_argument('--diffu_beta_end', type=float, default=0.02, help="the final value for the diffusion weighting parameter")
+        parser.add_argument('--diffu_scale_betas', type=float, default=1.0, help="the scale by which to multiply betas in diffusion")
         parser.add_argument('--diffu_beta_schedule', type=str, default="linear", help="the type of schedule by which to change the beta parameter")
         parser.add_argument('--use_shared_crossmodal_encoder', action='store_true', help="whether to feed different elements of the latent sequence of a single x-modal encoder to each output mod, or use a different encoder for each mod")
         parser.add_argument('--use_rel_pos_emb_inputs', action='store_true', help="whether to use T5 relative positional embeddings for input modality transformers")
@@ -216,62 +222,57 @@ class TransfusionModel(BaseModel):
 
     def forward(self, data, temp=1.0, noises=None, output_mods=None, compute_logPs=True):
         # in lightning, forward defines the prediction/inference actions
-        #temp=1.0
-        #temp=0.1
         outputs = []
-        logPs = []
         if output_mods is None:
             output_mods = self.output_mods
+
+        #Cross-modal transformers part
         start_time = time.time()
         latents = self.get_latents(data, output_mods)
         print("--- TF part: %s seconds ---" % (time.time() - start_time))
+
+        #Diffusion part
         for j,mod in enumerate(output_mods):
             i = self.output_mods.index(mod)
             # noise = noises[i] if noises is not None else None
             diffu = self.output_mod_diffus[i]
-            # output, sldj, z = diffu(x=None, cond=latents[j])
             z1 = torch.randn(1, 1, self.output_lengths[i], self.douts[i], device=self.device)
-            #TODO: use this prev_outputs when generating to use the prev pose as initial estimate for next one awo!
-            #TODO: during training sometimes dont condition (i think this is not currently done)
-            #if False:
-            if self.prev_outputs is not None:
-                betas = get_beta_schedule(
-                        self.opt.diffu_beta_schedule, beta_start=self.opt.diffu_beta_start, beta_end=self.opt.diffu_beta_end,
+            if self.opt.prev_outputs_factor > 0.0 and self.prev_outputs is not None:
+                betas = get_named_beta_schedule(
+                        self.opt.diffu_beta_schedule,
                         num_diffusion_timesteps=self.opt.num_diff_steps,
+                        scale_betas=self.opt.diffu_scale_betas,
                     )
                 #betas=betas[int(self.opt.num_diff_steps*(1.0-self.opt.prev_outputs_factor)):]
                 betas=betas[:int(self.opt.num_diff_steps*(1.0-self.opt.prev_outputs_factor))]
-                #betas=betas[:int(self.opt.num_diff_steps*self.opt.prev_outputs_factor)]
                 diffusion = GaussianDiffusion(
                     betas=betas,
                     model_mean_type=ModelMeanType[self.opt.diffu_model_mean_type],
                     model_var_type=ModelVarType[self.opt.diffu_model_var_type],
                     loss_type=LossType[self.opt.diffu_loss_type],
                 )
-                # self.diffusion = create_diffusion(str(opt.num_sampling_steps))
-                #z = self.prev_outputs[j] + z1*(1.0-self.opt.prev_outputs_factor)
-                #z = self.prev_outputs[j]*np.prod(np.sqrt(1-betas)) + np.sqrt(np.sum(betas))*z1
                 device = self.prev_outputs[j].device
                 z = self.diffusion.q_sample(self.prev_outputs[j].unsqueeze(0),torch.tensor(len(betas)-1, device=device))
             else:
                 diffusion = self.diffusion
                 z = z1
-            # Setup classifier-free guidance:
-            z = torch.cat([z, z], 0)
-            #print(z.shape)
-            #model_kwargs={"cond":latents[j][:,0,:], "cfg_scale": 0.0}
+
             latents[j] = latents[j][:,0,:]
-            latents[j] = torch.cat([latents[j],torch.zeros_like(latents[j])],0)
-            #model_kwargs={"cond":latents[j][:,:], "cfg_scale": 0.5}
-            model_kwargs={"cond":latents[j][:,:], "cfg_scale": self.opt.cfg_scale}
-            #model_kwargs={"cond":latents[j][:,0,:]}
             start_time = time.time()
-            samples = diffusion.p_sample_loop(
-                diffu.forward_with_cfg, z.shape, z, clip_denoised=False, model_kwargs=model_kwargs, progress=True, device=self.device
-            )
-            #samples = diffusion.p_sample_loop(
-            #    diffu.forward, z.shape, z, clip_denoised=True, model_kwargs=model_kwargs, progress=True, device=self.device
-            #)
+            # Setup classifier-free guidance:
+            if self.opt.cfg_scale != 1.0:
+                z = torch.cat([z, z], 0)
+                latents[j] = torch.cat([latents[j],torch.zeros_like(latents[j])],0)
+                model_kwargs={"cond":latents[j], "cfg_scale": self.opt.cfg_scale}
+
+                samples = diffusion.p_sample_loop(
+                    diffu.forward_with_cfg, z.shape, z, clip_denoised=False, model_kwargs=model_kwargs, progress=False, device=self.device
+                )
+            else:
+                model_kwargs={"cond":latents[j]}
+                samples = diffusion.p_sample_loop(
+                   diffu.forward, z.shape, z, clip_denoised=False, model_kwargs=model_kwargs, progress=False, device=self.device
+                )
             print("--- Diffu part: %s seconds ---" % (time.time() - start_time))
             output = samples[0]
             outputs.append(output.permute(1,0,2))
@@ -287,24 +288,8 @@ class TransfusionModel(BaseModel):
         for i, mod in enumerate(self.output_mods):
             diffu = self.output_mod_diffus[i]
             x = self.targets[i].permute(1,0,2).unsqueeze(1) #time, batch, features -> batch, time, features
-            #np.save("targets.npy", x.cpu().numpy())
-            #np.save("inputs0.npy", self.inputs[0].cpu().numpy())
-            #np.save("inputs1.npy", self.inputs[1].cpu().numpy())
-            #print(x.shape)
-            #print(x.mean())
-            #print(x.std())
-            #print(self.inputs[1].shape)
-            #print(self.inputs[0].mean())
-            #print(self.inputs[0].std())
-            #print(self.inputs[1].mean())
-            #print(self.inputs[1].std())
-            #print(latents[i].shape)
             t = torch.randint(0,self.num_diff_steps,(x.size(0),)).to(x.device)
             losses = self.gd.training_losses(diffu, x, t, model_kwargs={'cond':latents[i][:,0,:]})
-            #print(losses)
-            #print(torch.sum(losses["loss"]))
-            #TODO: make average?
-            #loss += torch.sum(losses["loss"])
             loss += torch.mean(losses["loss"])
 
         self.log('loss', loss)
