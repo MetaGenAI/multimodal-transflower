@@ -1323,7 +1323,7 @@ class GaussianDiffusion:
         return {"output": output, "pred_xstart": out["pred_xstart"]}
 
     def training_losses(
-        self, model, x_start, t, sparse, model_kwargs=None, noise=None, dataset=None
+        self, model, x_start, t, sparse=None, model_kwargs=None, noise=None, dataset=None
     ):
         pass
 
