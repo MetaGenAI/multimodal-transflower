@@ -7,7 +7,7 @@ export XRT_WORKERS="localservice:0;grpc://localhost:40934"
 export XRT_DEVICE_MAP="CPU:0;/job:localservice/replica:0/task:0/device:XLA_CPU:0|GPU:0;/job:localservice/replica:0/task:0/device:XLA_GPU:0"
 #export PYTHONPATH=$SCRATCH/:${PYTHONPATH}
 #export PYTHONPATH=/gpfsscratch/rech/imi/usc19dv/lib/python3.7/site-packages:${PYTHONPATH}
-module load pytorch-gpu/py3/1.8.0
+#module load pytorch-gpu/py3/1.8.0
 
 py=python3
 
