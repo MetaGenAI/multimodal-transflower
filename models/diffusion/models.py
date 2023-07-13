@@ -121,7 +121,7 @@ class VisionTransformerBlock(nn.Module):
             b, l, c = input_tensor.shape
             b2, l2, c2 = conditioning_tensor.shape
             input_tensor = torch.cat([input_tensor, conditioning_tensor], dim=1)
-            ada_cond_tensor = conditioning_tensor[:,0:1,:]
+        ada_cond_tensor = conditioning_tensor[:,0:1,:]
         shift_attention, scale_attention, gate_attention, shift_mlp, scale_mlp, gate_mlp = self.adaLN_modulation(ada_cond_tensor).chunk(6, dim=2)
         # input_tensor = input_tensor + gate_attention.unsqueeze(1) * self.attn(modulate(self.norm1(input_tensor), shift_attention, scale_attention))
         # import pdb; pdb.set_trace()
@@ -152,7 +152,7 @@ class VisionTransformerFinalLayer(nn.Module):
             b, l, c = input_tensor.shape
             b2, l2, c2 = conditioning_tensor.shape
             input_tensor = torch.cat([input_tensor, conditioning_tensor], dim=1)
-            ada_cond_tensor = conditioning_tensor[:,0:1,:]
+        ada_cond_tensor = conditioning_tensor[:,0:1,:]
         shift_value, scale_value = self.adaLN_modulation(ada_cond_tensor).chunk(2, dim=2)
         input_tensor = modulate(self.norm_final(input_tensor), shift_value, scale_value)
         input_tensor = self.linear(input_tensor)
