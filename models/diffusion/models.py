@@ -245,9 +245,10 @@ class DiT(nn.Module):
         t = self.t_embedder(t)                   # (N, D)
 
         # Apply conditioning dropout, to use in combination with classifier-free guidance:
-        mask = torch.rand(cond.shape[0])<(1-self.cond_dropout_prob)
-        mask = mask.unsqueeze(1).to(cond.device)
-        cond = cond * mask
+        if self.cond_dropout_prob > 0:
+            mask = torch.rand(cond.shape[0])<(1-self.cond_dropout_prob)
+            mask = mask.unsqueeze(1).to(cond.device)
+            cond = cond * mask
         c = t + cond                             # (N, D)
 
         for block in self.blocks:

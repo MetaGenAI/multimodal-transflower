@@ -160,6 +160,7 @@ class TransfusionModel(BaseModel):
         parser.add_argument('--diffu_model_var_type', type=str, default="LEARNED", help="the type of parametrization for the variance parameter of the diffusion head. One of LEARNED, FIXED_SMALL, FIXED_LARGE, LEARNED_RANGE")
         parser.add_argument('--diffu_model_mean_type', type=str, default="START_X", help="the type of parametrization for the mean parameter of the diffusion head. One of PREVIOUS_X, START_X, EPSILON")
         parser.add_argument('--diffu_loss_type', type=str, default="MSE", help="the type of loss for the diffusion model")
+        # the beta_start and beta_end are not used atm.
         parser.add_argument('--diffu_beta_start', type=float, default=0.0001, help="the initial value for the diffusion weighting parameter")
         parser.add_argument('--diffu_beta_end', type=float, default=0.02, help="the final value for the diffusion weighting parameter")
         parser.add_argument('--diffu_scale_betas', type=float, default=1.0, help="the scale by which to multiply betas in diffusion")
