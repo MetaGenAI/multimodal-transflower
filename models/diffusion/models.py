@@ -130,7 +130,7 @@ class VisionTransformerBlock(nn.Module):
         input_tensor = input_tensor + gate_mlp * self.mlp(modulate(self.norm2(input_tensor), shift_mlp, scale_mlp))
         if concat_cond:
             input_tensor, conditioning_tensor = input_tensor.split([l, l2], dim=1)
-        return input_tensor
+        return input_tensor, conditioning_tensor
 
 
 
@@ -274,7 +274,7 @@ class DiT(nn.Module):
         # import pdb; pdb.set_trace()
 
         for block in self.blocks:
-            x = block(x, c, concat_cond=self.concat_cond)                      # (N, T, D)
+            x, c = block(x, c, concat_cond=self.concat_cond)                      # (N, T, D)
         x = self.final_layer(x, c, concat_cond=self.concat_cond)               # (N, T, patch_size ** 2 * out_channels)
         x = self.unpatchify(x)                   # (N, out_channels, H, W)
 
