@@ -120,7 +120,9 @@ class TransfusionModel(BaseModel):
                         mlp_ratio=opt.diffu_mlp_ratio,
                         cond_dropout_prob=self.cond_dropout_probs[i],
                         sigma_learning=(ModelVarType[opt.diffu_model_var_type] in [ModelVarType.LEARNED, ModelVarType.LEARNED_RANGE]),
-                        input_channels=1)
+                        input_channels=1,
+                        concat_cond=opt.diffu_concat_conds,
+                        )
             name = "_output_diffu_"+mod.replace(".","_")
             setattr(self, "net"+name, diffu)
             self.output_mod_diffus.append(diffu)
@@ -166,6 +168,7 @@ class TransfusionModel(BaseModel):
         parser.add_argument('--diffu_scale_betas', type=float, default=1.0, help="the scale by which to multiply betas in diffusion")
         parser.add_argument('--diffu_beta_schedule', type=str, default="linear", help="the type of schedule by which to change the beta parameter")
         parser.add_argument('--use_shared_crossmodal_encoder', action='store_true', help="whether to feed different elements of the latent sequence of a single x-modal encoder to each output mod, or use a different encoder for each mod")
+        parser.add_argument('--diffu_concat_conds', action='store_true', help="whehter to concatenate the conditioning vectors for DiT conditioning, on top of using Ada moluation")
         parser.add_argument('--use_rel_pos_emb_inputs', action='store_true', help="whether to use T5 relative positional embeddings for input modality transformers")
         parser.add_argument('--use_rel_pos_emb_output', action='store_true', help="whether to use T5 relative positional embeddings for output modality transformers")
         parser.add_argument('--use_pos_emb_inputs', action='store_true', help="whether to use positional embeddings for input modality transformers")
@@ -258,7 +261,7 @@ class TransfusionModel(BaseModel):
                 diffusion = self.diffusion
                 z = z1
 
-            latents[j] = latents[j][:,0,:]
+            # latents[j] = latents[j][:,0,:]
             start_time = time.time()
             # Setup classifier-free guidance:
             if self.opt.cfg_scale != 1.0:
@@ -290,7 +293,8 @@ class TransfusionModel(BaseModel):
             diffu = self.output_mod_diffus[i]
             x = self.targets[i].permute(1,0,2).unsqueeze(1) #time, batch, features -> batch, time, features
             t = torch.randint(0,self.num_diff_steps,(x.size(0),)).to(x.device)
-            losses = self.gd.training_losses(diffu, x, t, model_kwargs={'cond':latents[i][:,0,:]})
+            # losses = self.gd.training_losses(diffu, x, t, model_kwargs={'cond':latents[i][:,0,:]})
+            losses = self.gd.training_losses(diffu, x, t, model_kwargs={'cond':latents[i]})
             loss += torch.mean(losses["loss"])
 
         self.log('loss', loss)

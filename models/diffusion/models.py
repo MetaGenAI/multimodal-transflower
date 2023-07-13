@@ -52,7 +52,8 @@ class AsymPatchEmbed(nn.Module):
 
 
 def modulate(x, shift, scale):
-    return x * (1 + scale.unsqueeze(1)) + shift.unsqueeze(1)
+    # return x * (1 + scale.unsqueeze(1)) + shift.unsqueeze(1)
+    return x * (1 + scale) + shift
 
 
 # Embedding layers for timestep and condioning vector
@@ -115,10 +116,20 @@ class VisionTransformerBlock(nn.Module):
             nn.Linear(feature_dim, 6 * feature_dim, bias=True)
         )
 
-    def forward(self, input_tensor, conditioning_tensor):
-        shift_attention, scale_attention, gate_attention, shift_mlp, scale_mlp, gate_mlp = self.adaLN_modulation(conditioning_tensor).chunk(6, dim=1)
-        input_tensor = input_tensor + gate_attention.unsqueeze(1) * self.attn(modulate(self.norm1(input_tensor), shift_attention, scale_attention))
-        input_tensor = input_tensor + gate_mlp.unsqueeze(1) * self.mlp(modulate(self.norm2(input_tensor), shift_mlp, scale_mlp))
+    def forward(self, input_tensor, conditioning_tensor, concat_cond=False):
+        if concat_cond:
+            b, l, c = input_tensor.shape
+            b2, l2, c2 = conditioning_tensor.shape
+            input_tensor = torch.cat([input_tensor, conditioning_tensor], dim=1)
+            ada_cond_tensor = conditioning_tensor[:,0:1,:]
+        shift_attention, scale_attention, gate_attention, shift_mlp, scale_mlp, gate_mlp = self.adaLN_modulation(ada_cond_tensor).chunk(6, dim=2)
+        # input_tensor = input_tensor + gate_attention.unsqueeze(1) * self.attn(modulate(self.norm1(input_tensor), shift_attention, scale_attention))
+        # import pdb; pdb.set_trace()
+        input_tensor = input_tensor + gate_attention * self.attn(modulate(self.norm1(input_tensor), shift_attention, scale_attention))
+        # input_tensor = input_tensor + gate_mlp.unsqueeze(1) * self.mlp(modulate(self.norm2(input_tensor), shift_mlp, scale_mlp))
+        input_tensor = input_tensor + gate_mlp * self.mlp(modulate(self.norm2(input_tensor), shift_mlp, scale_mlp))
+        if concat_cond:
+            input_tensor, conditioning_tensor = input_tensor.split([l, l2], dim=1)
         return input_tensor
 
 
@@ -136,10 +147,17 @@ class VisionTransformerFinalLayer(nn.Module):
             nn.Linear(feature_dim, 2 * feature_dim, bias=True)
         )
 
-    def forward(self, input_tensor, conditioning_tensor):
-        shift_value, scale_value = self.adaLN_modulation(conditioning_tensor).chunk(2, dim=1)
+    def forward(self, input_tensor, conditioning_tensor, concat_cond=False):
+        if concat_cond:
+            b, l, c = input_tensor.shape
+            b2, l2, c2 = conditioning_tensor.shape
+            input_tensor = torch.cat([input_tensor, conditioning_tensor], dim=1)
+            ada_cond_tensor = conditioning_tensor[:,0:1,:]
+        shift_value, scale_value = self.adaLN_modulation(ada_cond_tensor).chunk(2, dim=2)
         input_tensor = modulate(self.norm_final(input_tensor), shift_value, scale_value)
         input_tensor = self.linear(input_tensor)
+        if concat_cond:
+            input_tensor, conditioning_tensor = input_tensor.split([l, l2], dim=1)
         return input_tensor
 
 
@@ -159,6 +177,7 @@ class DiT(nn.Module):
         mlp_ratio=4.0,
         cond_dropout_prob=0.1,
         sigma_learning=True,
+        concat_cond=False,
     ):
         super().__init__()
 
@@ -175,6 +194,7 @@ class DiT(nn.Module):
         self.image_patch_dim = patch_dim
         self.attention_heads = attention_heads
         self.cond_dropout_prob = cond_dropout_prob
+        self.concat_cond = concat_cond
 
         self.x_embedder = AsymPatchEmbed(input_dim, patch_dim, input_channels, hidden_dim, bias=True)
         self.t_embedder = TimestepEmbedder(hidden_dim)
@@ -249,11 +269,13 @@ class DiT(nn.Module):
             mask = torch.rand(cond.shape[0])<(1-self.cond_dropout_prob)
             mask = mask.unsqueeze(1).to(cond.device)
             cond = cond * mask
-        c = t + cond                             # (N, D)
+        c = t.unsqueeze(1) + cond                             # (N, D)
+
+        # import pdb; pdb.set_trace()
 
         for block in self.blocks:
-            x = block(x, c)                      # (N, T, D)
-        x = self.final_layer(x, c)               # (N, T, patch_size ** 2 * out_channels)
+            x = block(x, c, concat_cond=self.concat_cond)                      # (N, T, D)
+        x = self.final_layer(x, c, concat_cond=self.concat_cond)               # (N, T, patch_size ** 2 * out_channels)
         x = self.unpatchify(x)                   # (N, out_channels, H, W)
 
         return x
