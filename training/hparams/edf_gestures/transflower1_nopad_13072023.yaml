@@ -10,7 +10,7 @@ output_time_offsets: 60
 input_dropouts: 0,0
 nlayers: 12
 nhead: 10
-scales: "[[24,0]]"
+scales: "[[16,0]]"
 num_glow_coupling_blocks: 2
 glow_use_attn: True
 use_transformer_nn: True
@@ -36,13 +36,13 @@ lr_decay_milestones: "[2000,4000,8000,16000,32000,64000,120000]"
 scheduler_interval: step
 #lr_plateau_patience: 1000
 #lr_policy: LinearWarmupCosineAnnealing
-#optimizer: adamw
-optimizer: adam
+optimizer: adamw
+#optimizer: adam
 momentum: 0
 weight_decay: 0
-learning_rate: 1e-5
+learning_rate: 5e-5
 gradient_clip_val: 10
-batch_size: 48
+batch_size: 128
 #batch_size: 128
 #batch_size: 28
 
