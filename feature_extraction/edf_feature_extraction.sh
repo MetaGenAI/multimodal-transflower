@@ -6,7 +6,8 @@
 folder=$1
 #py=python3.8
 #py=python
-py=python3
+#py=python3
+export py=/home/guillefix/miniconda3/bin/python
 n=$(nproc)
 #n=1
 mpirun="mpirun --use-hwthread-cpus"

@@ -1,8 +1,10 @@
 
 folder=$1
-py=python3
+#py=python3
 #py=python3.8
-#py=python
+if [ -z "$py" ]; then
+    py=python
+fi
 n=$(nproc)
 #n=6
 
