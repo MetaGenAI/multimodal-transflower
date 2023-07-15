@@ -32,7 +32,7 @@ lr_policy: multistep
 #lr_policy: plateau
 lr_decay_milestones: "[2000,4000,8000,16000,32000,64000,120000]"
 #lr_decay_iters: 50
-#lr_decay_factor: 0.5
+lr_decay_factor: 0.5
 scheduler_interval: step
 #lr_plateau_patience: 1000
 #lr_policy: LinearWarmupCosineAnnealing
