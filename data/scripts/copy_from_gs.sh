@@ -1,8 +1,7 @@
 #!/bin/bash
 
-target_dir=$1
 src_dir=$1
-gsutil -m cp -R gs://metagen/data/${src_dir} data/
+gsutil -m cp -R gs://metagen/${src_dir} data/
 
 exit 0
 
