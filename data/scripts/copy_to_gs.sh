@@ -2,7 +2,7 @@
 root_dir=$1
 target_dir=$1
 
-gsutil -m cp ${root_dir}/* gs://metagen/data/${target_dir}
+gsutil -m cp ${root_dir}/* gs://metagen/${target_dir}
 
 exit 0
 
