@@ -1,4 +1,10 @@
 #!/bin/bash
+root_dir=$1
+target_dir=$1
+
+gsutil -m cp ${root_dir}/* gs://metagen/data/${target_dir}
+
+exit 0
 
 root_dir=dance_combined3
 target_dir=dance_combined3
