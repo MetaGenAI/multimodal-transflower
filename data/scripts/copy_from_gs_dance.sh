@@ -3,8 +3,6 @@
 src_dir=$1
 #gsutil -m cp -R gs://metagen/${src_dir} data/
 
-exit 0
-
 data_dir=.
 #data_dir=$SCRATCH/data
 gsutil=gsutil
