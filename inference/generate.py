@@ -160,7 +160,10 @@ if __name__ == '__main__':
             predicted_features_file += ".npy"
 
             if args.generate_video:
-                trim_audio = output_time_offsets[i] / fps #converting trim_audio from being in frames (which is more convenient as thats how we specify the output_shift in the models), to seconds
+                if args.no_concat_autoreg_mods:
+                    trim_audio = output_time_offsets[i] / fps #converting trim_audio from being in frames (which is more convenient as thats how we specify the output_shift in the models), to seconds
+                else:
+                    trim_audio = 0
                 print("trim_audio: ",trim_audio)
 
                 audio_file = data_dir + "/" + seq_id + "."+audio_format
