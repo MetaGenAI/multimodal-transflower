@@ -22,7 +22,7 @@ parser.add_argument("--mel_feature_size", metavar='', type=int, default=None)
 # parser.add_argument("--step_size", metavar='', type=float, default=0.01666666666)
 parser.add_argument("--fps", metavar='', type=float, default=60)
 parser.add_argument("--sampling_rate", metavar='', type=float, default=96000)
-parser.add_argument("--replace_existing", action="store_true")
+parser.add_argument("--no_replace_existing", action="store_true")
 parser.add_argument("--notranspose", action="store_true")
 
 args = parser.parse_args()
@@ -60,7 +60,7 @@ for i in tasks:
         features_file = song_file_path+"_"+combined_feature_name+"_"+str(mel_feature_size)+".npy"
     else:
         features_file = song_file_path+"_"+combined_feature_name+".npy"
-    if replace_existing or not os.path.isfile(features_file):
+    if not no_replace_existing or not os.path.isfile(features_file):
         print("creating feature file",i)
         featuress = []
         for feature_name in feature_names:

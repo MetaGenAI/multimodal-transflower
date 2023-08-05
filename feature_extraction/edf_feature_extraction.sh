@@ -47,6 +47,7 @@ $mpirun -n $n $py feature_extraction/apply_transforms.py $@ --feature_name motio
 #./feature_extraction/fix_lengths.sh $1 speech.wav_envelope_scaled,motion_features_abs_quat_scaled1
 #./feature_extraction/fix_lengths.sh $1 speech.wav_envelope_scaled,motion_features_abs_quat_smoothed_scaled1
 ./feature_extraction/fix_lengths.sh $1 speech.wav_audio_feats_scaled,motion_features_abs_quat_smoothed_scaled1
+#./feature_extraction/fix_lengths.sh $1 speech.wav_audio_feats_scaled,motion_features_abs_quat_scaled1
 #./feature_extraction/fix_lengths.sh $1 speech.wav_audio_feats_scaled,motion_features_abs_expmap_nonsmoothed_scaled1
 
 exit 0

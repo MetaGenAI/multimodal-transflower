@@ -22,7 +22,7 @@ parser = argparse.ArgumentParser(description="Preprocess motion data")
 
 parser.add_argument("data_path", type=str, help="Directory contining Beat Saber level folders")
 parser.add_argument("--fps", type=float, default=60)
-parser.add_argument("--replace_existing", action="store_true")
+parser.add_argument("--no_replace_existing", action="store_true")
 
 args = parser.parse_args()
 
@@ -43,7 +43,7 @@ for i in tasks:
     path = candidate_motion_files[i]
     motion_file_path = path.__str__()
     bvh_file = motion_file_path[:-4]+".bvh"
-    if replace_existing or not os.path.isfile(bvh_file):
+    if not no_replace_existing or not os.path.isfile(bvh_file):
         result_filename=ntpath.basename(motion_file_path)[:-4]
         print("retargetting "+motion_file_path)
         convert_smpl(motion_file_path, data_path, result_filename,fps)

@@ -24,7 +24,7 @@ parser = argparse.ArgumentParser(description="Preprocess motion data")
 
 parser.add_argument("data_path", type=str, help="Directory contining Beat Saber level folders")
 parser.add_argument("--param", type=str, default="expmap", help="expmap, position")
-parser.add_argument("--replace_existing", action="store_true")
+parser.add_argument("--no_replace_existing", action="store_true")
 parser.add_argument("--do_mirror", action="store_true", help="whether to augment the data with mirrored motion")
 parser.add_argument("--fps", type=int, default=60)
 
@@ -86,16 +86,16 @@ def extract_joint_angles(files):
         if do_mirror:
             for f in files:
                 features_file = f + "_"+param+".npy"
-                if replace_existing or not os.path.isfile(features_file):
+                if not no_replace_existing or not os.path.isfile(features_file):
                     np.save(features_file, out_data[fi])
                 features_file_mirror = f[:-4]+"_mirrored" + ".bvh_"+param+".npy"
-                if replace_existing or not os.path.isfile(features_file_mirror):
+                if not no_replace_existing or not os.path.isfile(features_file_mirror):
                     np.save(features_file_mirror, out_data[len(files)+fi])
                 fi=fi+1
         else:
             for f in files:
                 features_file = f + "_"+param+".npy"
-                if replace_existing or not os.path.isfile(features_file):
+                if not no_replace_existing or not os.path.isfile(features_file):
                     np.save(features_file, out_data[fi])
                 fi=fi+1
 

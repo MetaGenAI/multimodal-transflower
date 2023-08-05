@@ -26,7 +26,7 @@ parser.add_argument("data_path", type=str, help="Directory contining Beat Saber 
 parser.add_argument("--files_extension", type=str, help="file extension (the stuff after the base filename) to match")
 parser.add_argument("--dictionary_file", type=str, help="(optional) dictionary file to use")
 parser.add_argument("--name_processing_function", type=str, default="dance_style", help="function for processing the names")
-parser.add_argument("--replace_existing", action="store_true")
+parser.add_argument("--no_replace_existing", action="store_true")
 
 args = parser.parse_args()
 

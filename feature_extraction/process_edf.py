@@ -23,7 +23,7 @@ import joblib as jl
 parser = argparse.ArgumentParser(description="Preprocess motion data")
 
 parser.add_argument("data_path", type=str, help="Directory contining EDF records")
-parser.add_argument("--replace_existing", action="store_true")
+parser.add_argument("--no_replace_existing", action="store_true")
 # parser.add_argument("--param", type=str, default="expmap", help="expmap, position")
 # parser.add_argument("--do_mirror", action="store_true", help="whether to augment the data with mirrored motion")
 # parser.add_argument("--fps", type=int, default=60)
@@ -51,6 +51,6 @@ for task in tasks:
     folder = task
     features = extract_features(folder)
     features_file = folder + "/motion_features.npy"
-    if replace_existing or not os.path.isfile(features_file):
+    if not no_replace_existing or not os.path.isfile(features_file):
         np.save(features_file, features)
         print("Saved features to {}".format(features_file))

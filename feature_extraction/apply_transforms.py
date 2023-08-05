@@ -22,7 +22,7 @@ parser.add_argument("--transform_name", metavar='', type=str, default="scaler", 
 parser.add_argument("--pca_dims", metavar='', type=int, default=2, help="number of pca dimensions to keep, if applying pca transform")
 parser.add_argument("--keep_feature_name", action="store_true")
 parser.add_argument("--new_feature_name", metavar='', type=str, default=None)
-parser.add_argument("--replace_existing", action="store_true")
+parser.add_argument("--no_replace_existing", action="store_true")
 args = parser.parse_args()
 
 # makes arugments into global variables of the same name, used later in the code
@@ -58,7 +58,7 @@ for i in tasks:
             new_feature_name = feature_name+"_applied_"+transform_name
     base_filename = feature_file[:-(len(feature_name)+4)]
     new_feature_file = base_filename+new_feature_name+".npy"
-    if replace_existing or not os.path.isfile(new_feature_file):
+    if not no_replace_existing or not os.path.isfile(new_feature_file):
         features = np.load(feature_file)
         #print("transforming")
         features = transform.transform(features)
