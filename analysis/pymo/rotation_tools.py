@@ -12,6 +12,18 @@ import numpy as np
 import transforms3d as t3d
 from pymo.Quaternions import Quaternions
 
+def detect_quaternion_flips(quats):
+    flips = []
+
+    for i in range(1, len(quats)):
+        dot_product = np.dot(quats[i-1], quats[i])
+        dot_product_flipped = np.dot(quats[i-1], -quats[i])
+
+        if dot_product_flipped > dot_product:
+            flips.append(i)
+    
+    return flips
+
 def deg2rad(x):
     return x/180*math.pi
 

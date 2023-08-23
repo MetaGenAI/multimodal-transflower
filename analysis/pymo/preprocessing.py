@@ -12,17 +12,21 @@ import scipy.ndimage.filters as filters
 
 from sklearn.base import BaseEstimator, TransformerMixin
 
-from analysis.pymo.rotation_tools import Rotation, euler2expmap, euler2expmap2, expmap2euler, euler_reorder, unroll
+from analysis.pymo.rotation_tools import Rotation, euler2expmap, euler2expmap2, expmap2euler, euler_reorder, unroll, detect_quaternion_flips
 from analysis.pymo.Quaternions import Quaternions
 from analysis.pymo.Pivots import Pivots
+import scipy
+from scipy.spatial.transform import Rotation as R
 
 class MocapParameterizer(BaseEstimator, TransformerMixin):
-    def __init__(self, param_type = 'euler'):
+    def __init__(self, param_type = 'euler', rotation_smoothing=0):
         '''
 
         param_type = {'euler', 'quat', 'expmap', 'position', 'expmap2pos'}
         '''
+        # rn rotation_smoothing only works for expmap
         self.param_type = param_type
+        self.rotation_smoothing = rotation_smoothing
 
     def fit(self, X, y=None):
         return self
@@ -291,7 +295,24 @@ class MocapParameterizer(BaseEstimator, TransformerMixin):
                 exp_df.drop([r1_col, r2_col, r3_col], axis=1, inplace=True)
                 euler = [[f[1][r1_col], f[1][r2_col], f[1][r3_col]] for f in r.iterrows()]
                 #exps = [Rotation(f, 'euler', from_deg=True, order=rot_order).to_expmap() for f in euler] # Convert the eulers to exp maps
-                exps = unroll(np.array([euler2expmap(f, rot_order, True) for f in euler])) # Convert the exp maps to eulers
+                # exps = unroll(np.array([euler2expmap(f, rot_order, True) for f in euler])) # Convert the exp maps to eulers
+                # exps = np.array([euler2expmap(f, rot_order, True) for f in euler]) # Convert the exp maps to eulers
+                exps = np.array([euler2expmap(f, rot_order, False) for f in euler]) # Convert the exp maps to eulers
+                Rs = R.from_rotvec(exps, degrees=False)
+                if self.rotation_smoothing > 0:
+                    filter_width = self.rotation_smoothing
+                    quats = Rs.as_quat()
+                    flips = detect_quaternion_flips(quats)
+                    for flip in flips:
+                        quats[flip:] = -quats[flip:]
+                    flips = detect_quaternion_flips(quats)
+                    quats = scipy.ndimage.gaussian_filter1d(quats, filter_width, axis=0, mode='nearest')
+                    quats = quats/np.linalg.norm(quats, axis=1, keepdims=True)
+                    Rs = R.from_quat(quats)
+                    # mats = Rs.as_matrix()
+                    # mats = scipy.ndimage.gaussian_filter1d(mats, filter_width, axis=0, mode='nearest')
+                    # Rs = R.from_matrix(mats)
+                exps = unroll(Rs.as_rotvec(degrees=False))
                 # exps = np.array([euler2expmap(f, rot_order, True) for f in euler]) # Convert the exp maps to eulers
                 #exps = euler2expmap2(euler, rot_order, True) # Convert the eulers to exp maps
 
@@ -711,7 +732,7 @@ class Slicer(BaseEstimator, TransformerMixin):
             Q.append(new_mocap)
 
         return Q
-
+    
 class RootTransformer(BaseEstimator, TransformerMixin):
     def __init__(self, method, position_smoothing=0, rotation_smoothing=0):
         """

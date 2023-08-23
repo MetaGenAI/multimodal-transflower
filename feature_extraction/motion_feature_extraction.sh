@@ -28,6 +28,12 @@ $mpirun -n 1 $py feature_extraction/extract_transform2.py $1 --feature_name bvh_
 $mpirun -n $n $py feature_extraction/apply_transforms.py $@ --feature_name bvh_${param} --transform_name scaler --new_feature_name ${param}_scaled_${fps}
 cp $1/motion_expmap_data_pipe.sav $1/motion_${param}_scaled_${fps}_data_pipe.sav
 
+#with smoothing
+# $mpirun -n $n $py feature_extraction/process_motions.py $@ --param ${param} --fps $fps --joint_rotation_smoothing 0.5 --feature_name ${param}_smoothed
+# $mpirun -n 1 $py feature_extraction/extract_transform2.py $1 --feature_name bvh_${param}_smoothed --transforms scaler
+# $mpirun -n $n $py feature_extraction/apply_transforms.py $@ --feature_name bvh_${param}_smoothed --transform_name scaler --new_feature_name ${param}_smoothed_scaled_${fps}
+# cp $1/motion_expmap_data_pipe.sav $1/motion_${param}_smoothed_scaled_${fps}_data_pipe.sav
+
 #with constant remover (old)
 #mpirun -n $n $py feature_extraction/process_motions.py $@ --param ${param} --fps $fps --do_mirror
 #rename -f 's/bvh_expmap/bvh_expmap_cr/' $1/*bvh_expmap.npy

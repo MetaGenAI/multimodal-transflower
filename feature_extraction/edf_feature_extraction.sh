@@ -13,6 +13,10 @@ n=$(nproc)
 mpirun="mpirun --use-hwthread-cpus"
 #mpirun="mpirun"
 
+for file in ${1}/*.ogg; do
+  ffmpeg -i "$file" "${file%.ogg}.wav" -y
+done
+
 format=wav
 fps=30
 $mpirun -n $n $py ./feature_extraction/process_audio.py $@ --audio_format $format --feature_names envelope,mel --mel_feature_size 10 --fps $fps
@@ -46,9 +50,11 @@ $mpirun -n $n $py feature_extraction/apply_transforms.py $@ --feature_name motio
 #./feature_extraction/fix_lengths.sh $1 speech.wav_envelope_scaled,motion_features_abs_nonsmooth_scaled1
 #./feature_extraction/fix_lengths.sh $1 speech.wav_envelope_scaled,motion_features_abs_quat_scaled1
 #./feature_extraction/fix_lengths.sh $1 speech.wav_envelope_scaled,motion_features_abs_quat_smoothed_scaled1
+feature_extraction/script_to_list_filenames $folder speech.wav_audio_feats_scaled.npy
 ./feature_extraction/fix_lengths.sh $1 speech.wav_audio_feats_scaled,motion_features_abs_quat_smoothed_scaled1
 #./feature_extraction/fix_lengths.sh $1 speech.wav_audio_feats_scaled,motion_features_abs_quat_scaled1
 #./feature_extraction/fix_lengths.sh $1 speech.wav_audio_feats_scaled,motion_features_abs_expmap_nonsmoothed_scaled1
+
 
 exit 0
 
