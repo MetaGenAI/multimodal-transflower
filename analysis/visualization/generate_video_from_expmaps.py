@@ -35,6 +35,7 @@ def generate_video_from_expmaps(features_file, pipeline_file, output_folder, aud
         bvh_data=pipeline.inverse_transform([data])
     else:
         bvh_data=pipeline.inverse_transform([data[:,0,:]])
+    # import pdb; pdb.set_trace()
     if generate_bvh:
         writer = BVHWriter()
         with open(output_folder+"/"+seq_id+".bvh",'w') as f:

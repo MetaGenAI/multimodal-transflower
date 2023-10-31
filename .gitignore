@@ -38,3 +38,5 @@ tmp*
 training/datasets/__pycache__/**/*
 training/options/__pycache__/**/*
 training/hparams/edf_gestures/*
+training/hparams/genea/*
+sandbox.py

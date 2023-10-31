@@ -79,6 +79,9 @@ def unroll_A(rots):
         pi_mult = find_optimal_pi_mult(new_rots[i-1], new_rots[i])
         # print(pi_mult)
         d_ang = np.linalg.norm(new_rots[i])
+        if d_ang == 0:
+            new_rots[i] = 1e-8 * np.random.rand(*new_rots[i].shape)
+            d_ang = np.linalg.norm(new_rots[i])
         new_rots[i] = (d_ang+pi_mult*2*np.pi)*new_rots[i]/d_ang
     
     return new_rots
@@ -263,7 +266,8 @@ def euler2expmap(rot, order='XYZ',use_deg=False):
     if use_deg:
         rot = np.deg2rad(rot)
     #print("rot:" + str(rot))
-    vec, theta = t3d.euler.euler2axangle(rot[0], rot[1], rot[2], 'r' + order.lower())
+    # print(order)
+    theta, vec = t3d.euler.euler2axangle(rot[0], rot[1], rot[2], 'r' + order.lower())
     return vec*theta
 
 def expmap2euler(rot, order='XYZ',use_deg=False):
@@ -273,6 +277,7 @@ def expmap2euler(rot, order='XYZ',use_deg=False):
     else:
         vector = np.array([1.,0.,0.])
         theta=0.0
+    # print(order)
     eul = t3d.euler.axangle2euler(vector, theta, 'r' + order.lower())
     if use_deg:
         return np.rad2deg(eul)

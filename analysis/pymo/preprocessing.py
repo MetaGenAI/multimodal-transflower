@@ -4,6 +4,13 @@ Preprocessing Tranformers Based on sci-kit's API
 By Omid Alemi
 Created on June 12, 2017
 '''
+
+import pandas as pd
+import warnings
+
+warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
+warnings.simplefilter(action='ignore', category=RuntimeWarning)
+
 import copy
 import pandas as pd
 import numpy as np
@@ -284,22 +291,26 @@ class MocapParameterizer(BaseEstimator, TransformerMixin):
             # List the joints that are not end sites, i.e., have channels
             joints = (joint for joint in track.skeleton if 'Nub' not in joint)
 
+            # expss = None
+
+            # print(list(joints))
             for joint in joints:
                 #print(joint)
-                r = euler_df[[c for c in rots if joint in c]] # Get the columns that belong to this joint
                 rot_order = track.skeleton[joint]['order']
                 r1_col = '%s_%srotation'%(joint, rot_order[0])
                 r2_col = '%s_%srotation'%(joint, rot_order[1])
                 r3_col = '%s_%srotation'%(joint, rot_order[2])
+                r = euler_df[[c for c in rots if c in [r1_col, r2_col, r3_col]]] # Get the columns that belong to this joint
 
                 exp_df.drop([r1_col, r2_col, r3_col], axis=1, inplace=True)
                 euler = [[f[1][r1_col], f[1][r2_col], f[1][r3_col]] for f in r.iterrows()]
                 #exps = [Rotation(f, 'euler', from_deg=True, order=rot_order).to_expmap() for f in euler] # Convert the eulers to exp maps
                 # exps = unroll(np.array([euler2expmap(f, rot_order, True) for f in euler])) # Convert the exp maps to eulers
-                # exps = np.array([euler2expmap(f, rot_order, True) for f in euler]) # Convert the exp maps to eulers
-                exps = np.array([euler2expmap(f, rot_order, False) for f in euler]) # Convert the exp maps to eulers
-                Rs = R.from_rotvec(exps, degrees=False)
+                exps = np.array([euler2expmap(f, rot_order, True) for f in euler]) # Convert the exp maps to eulers
+                # exps = np.array([euler2expmap(f, rot_order, False) for f in euler]) # Convert the exp maps to eulers
+                
                 if self.rotation_smoothing > 0:
+                    Rs = R.from_rotvec(exps, degrees=False)
                     filter_width = self.rotation_smoothing
                     quats = Rs.as_quat()
                     flips = detect_quaternion_flips(quats)
@@ -312,7 +323,17 @@ class MocapParameterizer(BaseEstimator, TransformerMixin):
                     # mats = Rs.as_matrix()
                     # mats = scipy.ndimage.gaussian_filter1d(mats, filter_width, axis=0, mode='nearest')
                     # Rs = R.from_matrix(mats)
-                exps = unroll(Rs.as_rotvec(degrees=False))
+                    exps = unroll(Rs.as_rotvec(degrees=False))
+                else:
+                    exps = unroll(exps)
+                    # pass
+                
+                # exps = Rs.as_rotvec(degrees=False)
+                # if expss is None:
+                #     expss = exps.copy()
+                # else:
+                #     # import pdb; pdb.set_trace()
+                #     np.concatenate([expss, exps])
                 # exps = np.array([euler2expmap(f, rot_order, True) for f in euler]) # Convert the exp maps to eulers
                 #exps = euler2expmap2(euler, rot_order, True) # Convert the eulers to exp maps
 
@@ -327,6 +348,7 @@ class MocapParameterizer(BaseEstimator, TransformerMixin):
             new_track.values = exp_df
             Q.append(new_track)
 
+        # import pdb; pdb.set_trace()
         return Q
 
     def _expmap_to_euler(self, X):
@@ -362,6 +384,7 @@ class MocapParameterizer(BaseEstimator, TransformerMixin):
                 rot_order = track.skeleton[joint]['order']
                 #euler_rots = [Rotation(f, 'expmap').to_euler(True, rot_order) for f in expmap] # Convert the exp maps to eulers
                 euler_rots = [expmap2euler(f, rot_order, True) for f in expmap] # Convert the exp maps to eulers
+                # euler_rots = [expmap2euler(f, rot_order, False) for f in expmap] # Convert the exp maps to eulers
 
                 # Create the corresponding columns in the new DataFrame
 
@@ -395,6 +418,7 @@ class Mirror(BaseEstimator, TransformerMixin):
             for track in X:
                 Q.append(track)
 
+        # import pdb; pdb.set_trace()
         for track in X:
             channels = []
             titles = []
@@ -659,6 +683,8 @@ class Numpyfier(BaseEstimator, TransformerMixin):
             Q.append(track.values.values)
             #print("Numpyfier:" + str(track.values.columns))
 
+        #print(Q)
+        #import pdb; pdb.set_trace()
         return np.array(Q)
 
     def inverse_transform(self, X, copy=None):
@@ -751,6 +777,7 @@ class RootTransformer(BaseEstimator, TransformerMixin):
         print("RootTransformer")
         Q = []
 
+        # import pdb; pdb.set_trace()
         for track in X:
             if self.method == 'abdolute_translation_deltas':
                 new_df = track.values.copy()
@@ -1172,6 +1199,41 @@ class ConstantsRemover(BaseEstimator, TransformerMixin):
             Q.append(t2)
 
         return Q
+
+class PositionRemover(BaseEstimator, TransformerMixin):
+    '''
+    For now it just looks at the first track
+    '''
+
+    def __init__(self, include_root=False):
+        self.include_root = include_root
+
+
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X, y=None):
+        Q = []
+        for track in X:
+            t = track.clone()
+            cols = t.values.columns.values
+            if self.include_root:
+                pos_cols = [c for c in cols if "position" in c]
+            else:
+                pos_cols = [c for c in cols if "position" in c and track.root_name not in c]
+            
+            for bone in t.skeleton.keys():
+                if not self.include_root:
+                    if track.root_name == bone: continue
+                t.skeleton[bone]["channels"] = [c for c in t.skeleton[bone]["channels"] if 'position' not in c]
+            # self.const_values_ = {c:X[0].values[c].values[0] for c in cols if (stds[c] < self.eps).any()}
+            t.values.drop(pos_cols, axis=1, inplace=True)
+            Q.append(t)
+        
+        return Q
+
+    def inverse_transform(self, X, copy=None):
+        return X #TODO: implement
 
 class ListStandardScaler(BaseEstimator, TransformerMixin):
     def __init__(self, is_DataFrame=False):

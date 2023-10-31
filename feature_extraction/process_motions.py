@@ -25,6 +25,7 @@ parser = argparse.ArgumentParser(description="Preprocess motion data")
 parser.add_argument("data_path", type=str, help="Directory contining Beat Saber level folders")
 parser.add_argument("--param", type=str, default="expmap", help="expmap, position")
 parser.add_argument("--feature_name", type=str, default=None, help="optional name for the feature")
+parser.add_argument("--joints", type=str, default=None, help="comma separated list of joints")
 parser.add_argument("--joint_rotation_smoothing", type=float, default=0.0, help="the rotation smoothing applied to joints")
 parser.add_argument("--no_replace_existing", action="store_true")
 parser.add_argument("--do_mirror", action="store_true", help="whether to augment the data with mirrored motion")
@@ -43,31 +44,29 @@ rank = comm.Get_rank()
 size = comm.Get_size()
 print(rank)
 
+# joints = ['Spine','Spine1','Neck','Head','RightShoulder', 'RightArm', 'RightForeArm', 'RightHand', 'LeftShoulder', 'LeftArm', 'LeftForeArm', 'LeftHand', 'RightUpLeg', 'RightLeg', 'RightFoot', 'LeftUpLeg', 'LeftLeg', 'LeftFoot']
+
 p = BVHParser()
-p = BVHParser()
+#            ('cnst', ConstantsRemover()),
+# ('root', RootTransformer('pos_rot_deltas', position_smoothing=3, rotation_smoothing=3)),
+
+pipeline = [('dwnsampl', DownSampler(tgt_fps=fps, keep_all=False))]
+
 if do_mirror:
-    data_pipe = Pipeline([
-        ('dwnsampl', DownSampler(tgt_fps=fps, keep_all=False)),
-        ('mir', Mirror(axis='X', append=True)),
-        ('jtsel', JointSelector(['Spine','Spine1','Neck','Head','RightShoulder', 'RightArm', 'RightForeArm', 'RightHand', 'LeftShoulder', 'LeftArm', 'LeftForeArm', 'LeftHand', 'RightUpLeg', 'RightLeg', 'RightFoot', 'LeftUpLeg', 'LeftLeg', 'LeftFoot'], include_root=True)),
-        #('root', RootTransformer('pos_rot_deltas', position_smoothing=3, rotation_smoothing=3)),
-        ('root', RootTransformer('pos_rot_deltas')),
-        #(param, MocapParameterizer(param)),
-        (param, MocapParameterizer(param, rotation_smoothing=joint_rotation_smoothing)),
-        # (param, MocapParameterizer(param)),
-#            ('cnst', ConstantsRemover()),
-        ('npf', Numpyfier())
-    ])
-else:
-    data_pipe = Pipeline([
-        ('dwnsampl', DownSampler(tgt_fps=fps, keep_all=False)),
-#        ('mir', Mirror(axis='X', append=True)),
-        ('jtsel', JointSelector(['Spine','Spine1','Neck','Head','RightShoulder', 'RightArm', 'RightForeArm', 'RightHand', 'LeftShoulder', 'LeftArm', 'LeftForeArm', 'LeftHand', 'RightUpLeg', 'RightLeg', 'RightFoot', 'LeftUpLeg', 'LeftLeg', 'LeftFoot'], include_root=True)),
-        ('root', RootTransformer('pos_rot_deltas', position_smoothing=3, rotation_smoothing=3)),
-        (param, MocapParameterizer(param)),
-#            ('cnst', ConstantsRemover()),
-        ('npf', Numpyfier())
-    ])
+    pipeline.append(('mir', Mirror(axis='X', append=True)))
+# not working for the genea challenge skeleton ^^ as it doesnt have "Left" and "Right" in the skeletons
+# and actually also coz it has position info too hmm
+if joints is not None:
+    joints = joints.split(",")
+    pipeline.append(('jtsel', JointSelector(joints, include_root=True)))
+
+pipeline.append(('root', RootTransformer('pos_rot_deltas')))
+pipeline.append((param, MocapParameterizer(param, rotation_smoothing=joint_rotation_smoothing)))
+# pipeline.append(('euler', MocapParameterizer('euler', rotation_smoothing=joint_rotation_smoothing)))
+pipeline.append(('position_remover', PositionRemover()))
+pipeline.append(('npf', Numpyfier()))
+
+data_pipe = Pipeline(pipeline)
 
 def extract_joint_angles(files):
     if len(files)>0:
